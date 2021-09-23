@@ -79,7 +79,6 @@ void SimpleRenderer::RenderFrame()
 		processInfo.append(L"is not running.");
 		TextOut(_memDC, 25, _windowRect.bottom - 45, processInfo.c_str(), processInfo.length());
 	}
-
 	SelectObject(_memDC, oldFont);
 	RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }
