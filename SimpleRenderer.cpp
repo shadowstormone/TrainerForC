@@ -93,7 +93,6 @@ HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontHeight, bool 
 SimpleRenderer::SimpleRenderer(Cheat*cheat, LPCWSTR title, int width, int height) : BaseRender(cheat, title, width, height)
 {
 	GetClientRect(_wnd, &_windowRect);
-
 	BITMAPINFO bi;
 	ZeroMemory(&bi, sizeof(BITMAPINFO));
 
