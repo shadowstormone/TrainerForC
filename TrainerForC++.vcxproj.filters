@@ -77,4 +77,8 @@
       <Filter>Файлы заголовков\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="ResourceExtern\activ.wav" />
+    <Media Include="ResourceExtern\deactiv.wav" />
+  </ItemGroup>
 </Project>

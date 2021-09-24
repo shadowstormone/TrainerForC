@@ -1,5 +1,7 @@
 #include "Include.h"
 #include "NopPatch.h"
+#include <playsoundapi.h>
+#pragma comment(lib, "Winmm.lib")
 
 bool CheatOption::Enable(int pid)
 {
@@ -12,6 +14,7 @@ bool CheatOption::Enable(int pid)
 			p->Hack(hProc);
 		}
 		CloseHandle(hProc);
+		PlaySoundW(L"ResourceExtern\\activ.wav", NULL, SND_FILENAME | SND_ASYNC);
 		return true;
 	}
 	return false;
@@ -28,6 +31,7 @@ bool CheatOption::Disable(int pid)
 			p->Restore(hProc);
 		}
 		CloseHandle(hProc);
+		PlaySoundW(L"ResourceExtern\\deactiv.wav", NULL, SND_FILENAME | SND_ASYNC);
 		return true;
 	}
 	return false;

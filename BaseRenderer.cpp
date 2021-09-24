@@ -35,9 +35,10 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 		WS_EX_APPWINDOW,
 		wcx.lpszClassName,
 		title,
-		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX,
-		(GetSystemMetrics(SM_CXSCREEN) - width) / 700,
-		(GetSystemMetrics(SM_CXSCREEN) - height) / 700,
+		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION & 
+		~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE,
+		(GetSystemMetrics(SM_CXSCREEN) - width) / 2, // Длина
+		(GetSystemMetrics(SM_CXSCREEN) - height) / 5, //Высота
 		width,
 		height,
 		NULL,

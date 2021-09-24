@@ -43,7 +43,7 @@ bool CavePatch::Hack(HANDLE hProcess)
 	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, &jmpSize);
 
 	int offset = 0;
-	int bufferSize = 32;
+	size_t bufferSize = 32;
 
 	do
 	{
