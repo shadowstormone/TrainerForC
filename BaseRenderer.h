@@ -1,5 +1,8 @@
 #pragma once
-#include "Include.h"
+#include <Windows.h>
+#include <map>
+
+#include "Cheat.h"
 
 class BaseRender
 {

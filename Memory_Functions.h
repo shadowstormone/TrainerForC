@@ -2,7 +2,13 @@
 #ifndef _MEMORY_FUNCTIONS
 #define _MEMORY_FUNCTION 1
 
-#include "Include.h"
+#include <string>
+#include <Windows.h>
+#include <TlHelp32.h>
+#include <sstream>
+#include <vector>
+#include <iterator>
+#include <Psapi.h>
 
 int GetProcessIdByWindowName(LPCWSTR className, LPCWSTR windowName);
 int GetProcessIdByProcessName(LPCWSTR processName);
@@ -50,7 +56,6 @@ int GetProcessIdByProcessName(LPCWSTR processName)
 			}
 		} while (Process32Next(snapshot,&pe));
 	}
-
 	CloseHandle(snapshot);
 	return pid;
 }
@@ -62,7 +67,7 @@ DWORD_PTR GetProcessBaseAddress(HANDLE hProcess)
 	LPBYTE	  moduleArrayBytes = NULL;
 	DWORD	  bytesRequired = 0;
 
-	if (!EnumProcessModules(hProcess, NULL,0, &bytesRequired) || !bytesRequired) 
+	if (!EnumProcessModules(hProcess, NULL, 0, &bytesRequired) || !bytesRequired) 
 	{
 		return 0;
 	}
@@ -152,7 +157,6 @@ LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount)
 	if (!bytesRead) 
 	{
 		ShowErrorMessage(NULL, L"Read memory failed.\r\nError code: ");
-		return NULL;
 	}
 	return reinterpret_cast<LPVOID>(buf);
 }
@@ -162,7 +166,7 @@ LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
 	if (!hProcess)
 	{
 		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
-		return nullptr;
+		return NULL;
 	}
 
 	int bytesWrite = 0;

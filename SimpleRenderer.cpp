@@ -1,4 +1,4 @@
-#include "Include.h"
+#include "SimpleRenderer.h"
 
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -116,13 +116,12 @@ SimpleRenderer::SimpleRenderer(Cheat*cheat, LPCWSTR title, int width, int height
 void SimpleRenderer::Start()
 {
 	SetBkMode(_memDC, TRANSPARENT);
-	_rState.optionFont = SimpleCreateFont(L"Tahoma", 23);
+	_rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
 	_rState.processInformationFont = SimpleCreateFont(L"Tahoma", 18);
 	_rState.optionColor = RGB(255, 255, 255);
 	_rState.enabledOptionColor = RGB(0, 220, 0);
 	_rState.processInfoColor = RGB(146, 146, 146);
 	_rState.processRunningColor = RGB(255, 50, 50);
-
 
 	SetTimer(_wnd, 1000, 1000 / 60, NULL);
 	BaseRender::Start();

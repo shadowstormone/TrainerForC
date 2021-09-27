@@ -1,5 +1,7 @@
-#include "Include.h"
+#include "Memory_Functions.h"
+#include "CheatOption.h"
 #include "NopPatch.h"
+#include "CavePatch.h"
 #include <playsoundapi.h>
 #pragma comment(lib, "Winmm.lib")
 

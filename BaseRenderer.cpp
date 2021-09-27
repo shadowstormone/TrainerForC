@@ -1,4 +1,4 @@
-#include "Include.h"
+#include "BaseRenderer.h"
 
 LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -20,27 +20,42 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 	WNDCLASSEX wcx = { 0 };
 	HWND mainWnd = NULL;
 
-	wcx.cbSize = sizeof wcx;
-	wcx.hInstance = hInstance;
-	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcx.style = CS_HREDRAW | CS_VREDRAW;
-	wcx.hbrBackground = NULL;
-	wcx.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));
-	wcx.lpfnWndProc = BaseWindowProc;
-	wcx.lpszClassName = L"Trainer By ShadowStorm";
+	wcx.cbSize = sizeof wcx;										// Размер этой структуры, в байтах.
+	wcx.hInstance = hInstance;										// Дескриптор экземпляра, который содержит оконную процедуру для класса.
+	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);						// Дескриптор курсора класса.
+	wcx.style = CS_HREDRAW | CS_VREDRAW;							// Устанавливает стиль(и) класса.
+	wcx.hbrBackground = NULL;									    // Дескриптор кисти фона класса.
+	wcx.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));	// Дескриптор значка класса.
+	wcx.lpfnWndProc = BaseWindowProc;								// Указатель на оконную процедуру.
+	wcx.lpszClassName = L"Trainer By ShadowStorm";					// Символьная строка, она задает имя класса окна
+	wcx.hIconSm = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION)); // Дескриптор маленького значка, который связан с классом окна.
 
 	RegisterClassEx(&wcx);
 
+
+	// Параметры для CreateWindowEx объясняются:
+	// WS_EX_APPWINDOW: необязательный стиль расширенного окна.
+	// wcx.lpszClassName: имя приложения.
+	// title: текст, который отображается в строке заголовка
+	// WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION & 
+	// ~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE &
+	// ~WS_EX_STATICEDGE, : тип создаваемого окна
+	// (GetSystemMetrics(SM_CXSCREEN) - width) / 2, (GetSystemMetrics(SM_CXSCREEN) - height): начальное положение (x, y)
+	// width, height: начальный размер (ширина, длина)
+	// NULL: родитель этого окна
+	// NULL: у этого приложения нет строки меню
+	// hInstance: первый параметр из WinMain
+	// NULL: не используется в данном приложении
 	_wnd = CreateWindowEx(
 		WS_EX_APPWINDOW,
 		wcx.lpszClassName,
 		title,
 		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION & 
 		~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE,
-		(GetSystemMetrics(SM_CXSCREEN) - width) / 2, // Длина
-		(GetSystemMetrics(SM_CXSCREEN) - height) / 5, //Высота
-		width,
-		height,
+		(GetSystemMetrics(SM_CXSCREEN) - width) / 2,	// Ширина
+		(GetSystemMetrics(SM_CXSCREEN) - height) / 5,	// Длина
+		width,											// Начальный размер (ширина)
+		height,											// Начальный размер (длина)
 		NULL,
 		NULL,
 		hInstance,

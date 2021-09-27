@@ -1,5 +1,7 @@
 #pragma once
-#include "Include.h"
+#include <Windows.h>
+#include <vector>
+#include <string>
 
 extern class Patch;
 

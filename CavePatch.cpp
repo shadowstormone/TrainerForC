@@ -1,4 +1,9 @@
-#include "Include.h"
+#include "CavePatch.h"
+#include "CheatOption.h"
+#include "Memory_Functions.h"
+
+#define NMD_ASSEMBLY_IMPLEMENTATION
+#include "nmd_assembly.h"
 
 PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE* outSize)
 {
@@ -32,8 +37,9 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE* outSize)
 bool CavePatch::Hack(HANDLE hProcess)
 {
 	bool x64 = isTargetX64Process(hProcess);
-	ULONG scanSize = isTargetX64Process(hProcess) ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
-	DWORD_PTR baseAddress = parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0 ? GetModuleBaseAddress(hProcess, parent->GetModuleName()) : GetProcessBaseAddress(hProcess);
+	ULONG scanSize = x64 ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
+	DWORD_PTR baseAddress = parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0 ? 
+		GetModuleBaseAddress(hProcess, parent->GetModuleName()) : GetProcessBaseAddress(hProcess);
 
 	originalAddress = reinterpret_cast<LPVOID>(reinterpret_cast<PBYTE>(ScanSignature(hProcess, baseAddress, scanSize, pattern, mask)) + patchOffset);
 	originalBytes = reinterpret_cast<PBYTE>(ReadMem(hProcess, originalAddress, 32));
@@ -42,12 +48,13 @@ bool CavePatch::Hack(HANDLE hProcess)
 	BYTE jmpSize = 0;
 	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, &jmpSize);
 
+	
 	int offset = 0;
-	size_t bufferSize = 32;
+	size_t buffer = 32;
 
 	do
 	{
-		int length = nmd_x86_ldisasm(originalBytes + offset, bufferSize, x64 ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
+		int length = nmd_x86_ldisasm(originalBytes + offset, buffer ,x64 ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
 		originalSize += length;
 		offset += length;
 	} while (originalSize < jmpSize);

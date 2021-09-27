@@ -9,9 +9,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Файлы заголовков\IncludeFile">
-      <UniqueIdentifier>{093cb2da-ae37-48c2-9cc6-18b900770d16}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Файлы заголовков\Renderer">
       <UniqueIdentifier>{691a7718-d09e-43fb-ae8a-d0c856a6cb4f}</UniqueIdentifier>
     </Filter>
@@ -45,9 +42,6 @@
   <ItemGroup>
     <ClInclude Include="Cheat.h">
       <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include.h">
-      <Filter>Файлы заголовков\IncludeFile</Filter>
     </ClInclude>
     <ClInclude Include="CheatOption.h">
       <Filter>Файлы заголовков</Filter>

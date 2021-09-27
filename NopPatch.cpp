@@ -1,4 +1,6 @@
-#include "Include.h"
+#include "NopPatch.h"
+#include "Memory_Functions.h"
+#include "CheatOption.h"
 
 bool NopPatch::Hack(HANDLE hProcess)
 {

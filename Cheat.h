@@ -1,7 +1,10 @@
 #pragma once
-#include "Include.h"
-
-extern class CheatOption;
+#include <Windows.h>
+#include <vector>
+#include <string>
+#include <map>
+#include "CheatOption.h"
+#include "Memory_Functions.h"
 
 class Cheat
 {
