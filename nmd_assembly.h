@@ -2454,11 +2454,11 @@ Parameters:
 NMD_ASSEMBLY_API void nmd_x86_format(const nmd_x86_instruction* instruction, char* buffer, uint64_t runtime_address, uint32_t flags);
 
 /*
-Returns the instruction's length if it's valid, zero otherwise.
-Parameters:
- - buffer      [in] A pointer to a buffer containing a encoded instruction.
- - buffer_size [in] The buffer's size in bytes.
- - mode        [in] The architecture mode. 'NMD_X86_MODE_32', 'NMD_X86_MODE_64' or 'NMD_X86_MODE_16'.
+Возвращает длину инструкции, если она действительна, ноль в противном случае.
+Параметры:
+ - buffer		[in] Указатель на буфер, содержащий закодированную инструкцию.
+ - buffer_size  [in] Размер буфера в байтах.
+ - mode			[in] Режим архитектуры. 'NMD_X86_MODE_32', 'NMD_X86_MODE_64' или 'NMD_X86_MODE_16'.
 */
 NMD_ASSEMBLY_API size_t nmd_x86_ldisasm(const void* buffer, size_t buffer_size, NMD_X86_MODE mode);
 

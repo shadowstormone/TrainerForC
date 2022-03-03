@@ -54,7 +54,7 @@ bool CavePatch::Hack(HANDLE hProcess)
 
 	do
 	{
-		int length = nmd_x86_ldisasm(originalBytes + offset, buffer ,x64 ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
+		int length = nmd_x86_ldisasm(originalBytes + offset, buffer, x64 ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
 		originalSize += length;
 		offset += length;
 	} while (originalSize < jmpSize);
@@ -89,5 +89,6 @@ bool CavePatch::Restore(HANDLE hProcess)
 {
 	WriteMem(hProcess, originalAddress, originalBytes, originalSize);
 	FreeMem(hProcess, allocatedAddress, 4096);
+	originalSize = 0;
 	return true;
 }
