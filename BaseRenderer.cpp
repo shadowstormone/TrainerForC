@@ -32,7 +32,6 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 
 	RegisterClassEx(&wcx);
 
-
 	// Параметры для CreateWindowEx объясняются:
 	// WS_EX_APPWINDOW: необязательный стиль расширенного окна.
 	// wcx.lpszClassName: имя приложения.
@@ -46,7 +45,7 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 	// NULL: у этого приложения нет строки меню
 	// hInstance: первый параметр из WinMain
 	// NULL: не используется в данном приложении
-	_wnd = CreateWindowEx(
+	_wnd = CreateWindowExW(
 		WS_EX_APPWINDOW,
 		wcx.lpszClassName,
 		title,

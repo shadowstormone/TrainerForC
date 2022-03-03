@@ -29,7 +29,8 @@ class SimpleRenderer : public BaseRender
 	LRESULT DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void RenderFrame();
 
-	/*LPCWSTR fontFamily - Семейство шрифта
+	/*HFONT SimpleCreateFont
+	LPCWSTR fontFamily - Семейство шрифта
 	int fontHeight - Размер,
 	bool isItalic - Курсив
 	bool isUnderline - Подчеркнутый
