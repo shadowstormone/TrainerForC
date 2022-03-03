@@ -10,12 +10,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	std::vector<int> option1keys = { 0x61 };
 	CheatOption* option1 = new CheatOption(NULL, L"[Numpad 1] First  Function(Nop)", option1keys);
-	option1->AddNopPatch(L"D9 9E C0 04 00 00", 6);
+	option1->AddNopPatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", 6);
 
 	std::vector<int> option2keys = { 0x60 };
 	CheatOption* option2 = new CheatOption(NULL, L"[Numpad 0] Test  Function(Cave)", option2keys);
-	BYTE bytes[] = { 0x50, 0xB8, 0x00, 0x40, 0x9C, 0x45, 0x66, 0x0F, 0x6E, 0xC8, 0x58 };
-	option2->AddCavePatch(L"D9 9E C0 04 00 00", bytes, 6);
+	BYTE bytes[] = { 0xB8, 0xD0, 0x07, 0x00, 0x00 };
+	option2->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", bytes, 5);
 
 	cheat->AddCheatOption(option1);
 	cheat->AddCheatOption(option2);
