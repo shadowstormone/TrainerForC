@@ -178,9 +178,6 @@
   <ItemGroup>
     <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\desktop\wave3.bin" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

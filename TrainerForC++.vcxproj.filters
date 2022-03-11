@@ -84,7 +84,4 @@
   <ItemGroup>
     <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\desktop\wave3.bin" />
-  </ItemGroup>
 </Project>

@@ -121,7 +121,7 @@ void SimpleRenderer::Start()
 	_rState.optionColor = RGB(255, 255, 255);
 	_rState.enabledOptionColor = RGB(0, 220, 0);
 	_rState.processInfoColor = RGB(146, 146, 146);
-	_rState.processRunningColor = RGB(255, 50, 50);
+	_rState.processRunningColor = RGB(38, 176, 1); //RED - RGB(250, 50, 50);
 
 	SetTimer(_wnd, 1000, 1000 / 60, NULL);
 	BaseRender::Start();
