@@ -1,9 +1,33 @@
 #include "BaseRenderer.h"
+#include "main.h"
+#include "resource.h"
 
 LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_COMMAND:
+		switch (wParam)
+		{
+		case ButtonClickExit:
+			exit(0);
+			break;
+		}
+		break;
+	case WM_CREATE:
+		CreateWindowA("button",
+			"X",
+			WS_VISIBLE | WS_CHILD | ES_CENTER,
+			382,
+			3,
+			15,
+			15,
+			hWnd,
+			(HMENU)ButtonClickExit,
+			NULL,
+			NULL);
+		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(S_OK);
 		break;
@@ -25,10 +49,10 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);						// Дескриптор курсора класса.
 	wcx.style = CS_HREDRAW | CS_VREDRAW;							// Устанавливает стиль(и) класса.
 	wcx.hbrBackground = NULL;									    // Дескриптор кисти фона класса.
-	wcx.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));	// Дескриптор значка класса.
+	wcx.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));	// Дескриптор значка класса.
 	wcx.lpfnWndProc = BaseWindowProc;								// Указатель на оконную процедуру.
 	wcx.lpszClassName = L"Trainer By ShadowStorm";					// Символьная строка, она задает имя класса окна
-	wcx.hIconSm = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION)); // Дескриптор маленького значка, который связан с классом окна.
+	wcx.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));	// Дескриптор маленького значка, который связан с классом окна.
 
 	RegisterClassEx(&wcx);
 
@@ -49,7 +73,7 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 		WS_EX_APPWINDOW,
 		wcx.lpszClassName,
 		title,
-		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION & 
+		WS_OVERLAPPEDWINDOW & WS_VISIBLE | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION &
 		~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE,
 		(GetSystemMetrics(SM_CXSCREEN) - width) / 2,	// Ширина
 		(GetSystemMetrics(SM_CXSCREEN) - height) / 5,	// Длина

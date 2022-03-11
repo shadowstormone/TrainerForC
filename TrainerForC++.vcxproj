@@ -165,11 +165,21 @@
     <ClInclude Include="nmd_assembly.h" />
     <ClInclude Include="NopPatch.h" />
     <ClInclude Include="Patch.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />
     <Media Include="ResourceExtern\deactiv.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TrainerForC++.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\desktop\wave3.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

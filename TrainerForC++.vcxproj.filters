@@ -70,9 +70,21 @@
     <ClInclude Include="SimpleRenderer.h">
       <Filter>Файлы заголовков\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />
     <Media Include="ResourceExtern\deactiv.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TrainerForC++.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\desktop\wave3.bin" />
   </ItemGroup>
 </Project>
