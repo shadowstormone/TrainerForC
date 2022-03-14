@@ -49,6 +49,9 @@ void SimpleRenderer::RenderFrame()
 	HGDIOBJ oldFont = SelectObject(_memDC, _rState.optionFont);
 	int deltaY = 25;
 
+	//TCHAR Creator[] = L"Created By ShadowStormOne";
+	//TextOutW(_memDC, 160, 385, Creator, ARRAYSIZE(Creator));
+
 	for (auto &pair : _cheat->GetCheatOptionState())
 	{
 		if (pair.second)
@@ -62,6 +65,7 @@ void SimpleRenderer::RenderFrame()
 		TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
 		deltaY += 25;
 	}
+
 	SelectObject(_memDC, _rState.processInformationFont);
 	processInfo.clear();
 	processInfo.append(_cheat->GetProcessName());
@@ -79,6 +83,7 @@ void SimpleRenderer::RenderFrame()
 		processInfo.append(L"is not running.");
 		TextOut(_memDC, 25, _windowRect.bottom - 45, processInfo.c_str(), processInfo.length());
 	}
+
 	SelectObject(_memDC, oldFont);
 	RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }

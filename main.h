@@ -7,4 +7,4 @@
 
 #define ButtonClickExit 1
 
-LPCWSTR WindowTitle = L"Trainer Test"; //Заголовок Окна
+LPCWSTR WindowTitle = L"Call of Duty - Modern Warfare"; //Заголовок Окна

@@ -2,6 +2,7 @@
 // Включаемый файл, созданный в Microsoft Visual C++.
 // Используется TrainerForC++.rc
 //
+#define VS_VERSION_INFO                 1
 #define IDI_ICON1                       101
 #define IDR_WAVE1                       107
 #define IDR_WAVE2                       108

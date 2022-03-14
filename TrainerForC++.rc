@@ -64,6 +64,44 @@ IDR_WAVE1               WAVE                    "ResourceExtern\\activ.wav"
 
 IDR_WAVE2               WAVE                    "ResourceExtern\\deactiv.wav"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "001904b0"
+        BEGIN
+            VALUE "CompanyName", "ShadowStormOne"
+            VALUE "FileDescription", "Трейнер для игры."
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "TrainerC++.exe"
+            VALUE "LegalCopyright", "Copyright (C) 2022"
+            VALUE "ProductName", "Trainer"
+            VALUE "ProductVersion", "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x19, 1200
+    END
+END
+
 #endif    // Русский (Россия) resources
 /////////////////////////////////////////////////////////////////////////////
 
