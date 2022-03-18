@@ -49,9 +49,6 @@ void SimpleRenderer::RenderFrame()
 	HGDIOBJ oldFont = SelectObject(_memDC, _rState.optionFont);
 	int deltaY = 25;
 
-	//TCHAR Creator[] = L"Created By ShadowStormOne";
-	//TextOutW(_memDC, 160, 385, Creator, ARRAYSIZE(Creator));
-
 	for (auto &pair : _cheat->GetCheatOptionState())
 	{
 		if (pair.second)

@@ -14,20 +14,6 @@ LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			break;
 		}
 		break;
-	/*case WM_CREATE:
-		CreateWindowA("button",
-			"X",
-			WS_VISIBLE | WS_CHILD | ES_CENTER,
-			382,
-			3,
-			15,
-			15,
-			hWnd,
-			(HMENU)ButtonClickExit,
-			NULL,
-			NULL);
-		break;*/
-
 	case WM_DESTROY:
 		PostQuitMessage(S_OK);
 		break;
@@ -73,7 +59,7 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 		WS_EX_APPWINDOW,
 		wcx.lpszClassName,
 		title,
-		WS_OVERLAPPEDWINDOW & /*WS_VISIBLE | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN &*/ ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION &
+		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION &
 		~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE,
 		(GetSystemMetrics(SM_CXSCREEN) - width) / 2,	// Ўирина
 		(GetSystemMetrics(SM_CXSCREEN) - height) / 5,	// ƒлина
