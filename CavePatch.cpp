@@ -24,18 +24,19 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize, HANDL
 		bytes = new BYTE[14];
 		bytes[0] = 0xFF;
 		bytes[1] = 0x25;
-		memset(bytes + 2, 0, 6);
+		bytes[2] = 0x00;
+		bytes[3] = 0x00;
+		bytes[4] = 0x00;
+		bytes[5] = 0x00;
 		memcpy_s(bytes + 6, 8, &to, 8);
-		*reinterpret_cast<DWORD*>(bytes + 14) = 0xE9;
 		outSize = 14;
 	}
 	else
 	{
 		bytes = new BYTE[5];
-		bytes[0] = 0xE9;
+		bytes[0] = 0xe9;
 		delta -= 5;
-		*reinterpret_cast<LONG*>(bytes + 1) = delta;
-		//memcpy_s(bytes + 1, 4, &delta, 4);
+		memcpy_s(bytes + 1, 4, &delta, 4);
 		outSize = 5;
 	}
 	return bytes;
