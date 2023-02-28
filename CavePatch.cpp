@@ -1,43 +1,54 @@
 #include "CavePatch.h"
 #include "CheatOption.h"
 #include "Memory_Functions.h"
+#include <iostream>
 
 #define NMD_ASSEMBLY_IMPLEMENTATION
 #include "nmd_assembly.h"
 
-PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE* outSize)
-{
-	PBYTE bytes = NULL;
-	LONG delta = reinterpret_cast<LONG>(to) - reinterpret_cast<LONG>(from);
 
-	if (abs(delta) < 2147483648)
+PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize, HANDLE hProcess)
+{
+	PBYTE bytes = nullptr;
+	LONG delta = reinterpret_cast<LONG>(to) - reinterpret_cast<LONG>(from);
+	bool is64BitProcess = isTargetX64Process(hProcess);
+
+	if (abs(delta) >= INT_MAX)
 	{
-		bytes = new BYTE[5];
-		bytes[0] = 0xe9;
-		delta -= 5;
-		memcpy_s(bytes + 1, 4, &delta, 4);
-		*outSize = 5;
+		std::cerr << "Jump offset too large: " << abs(delta);
+		return nullptr;
 	}
-	else
+
+	if (is64BitProcess)
 	{
 		bytes = new BYTE[14];
 		bytes[0] = 0xFF;
 		bytes[1] = 0x25;
-		bytes[2] = 0x00;
-		bytes[3] = 0x00;
-		bytes[4] = 0x00;
-		bytes[5] = 0x00;
+		memset(bytes + 2, 0, 6);
 		memcpy_s(bytes + 6, 8, &to, 8);
-		*outSize = 14;
+		*reinterpret_cast<DWORD*>(bytes + 14) = 0xE9;
+		outSize = 14;
 	}
-
+	else
+	{
+		bytes = new BYTE[5];
+		bytes[0] = 0xE9;
+		delta -= 5;
+		*reinterpret_cast<LONG*>(bytes + 1) = delta;
+		//memcpy_s(bytes + 1, 4, &delta, 4);
+		outSize = 5;
+	}
 	return bytes;
 }
 
+
 bool CavePatch::Hack(HANDLE hProcess)
 {
-	bool x64 = isTargetX64Process(hProcess);
-	ULONG scanSize = x64 ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
+	constexpr ULONG MAX_INT_SIZE_32_BIT = 0x7FFFFFFF;
+	constexpr ULONG MAX_INT_SIZE_64_BIT = 0x7FFFFFFFFFFF;
+
+	bool is64BitProcess = isTargetX64Process(hProcess);
+	ULONG scanSize = is64BitProcess ? MAX_INT_SIZE_64_BIT : MAX_INT_SIZE_32_BIT;
 	DWORD_PTR baseAddress = parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0 ? 
 		GetModuleBaseAddress(hProcess, parent->GetModuleName()) : GetProcessBaseAddress(hProcess);
 
@@ -46,23 +57,22 @@ bool CavePatch::Hack(HANDLE hProcess)
 	allocatedAddress = AllocMem(hProcess, NULL, 4096);
 
 	BYTE jmpSize = 0;
-	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, &jmpSize);
+	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize, hProcess);
 
-	
-	int offset = 0;
+	size_t offset = 0;
 	size_t buffer = 32;
 
 	do
 	{
-		int length = nmd_x86_ldisasm(originalBytes + offset, buffer, x64 ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
+		size_t length = nmd_x86_ldisasm(originalBytes + offset, buffer, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
 		originalSize += length;
 		offset += length;
 	} while (originalSize < jmpSize);
 
 	BYTE backJmpSize = 0;
-	PBYTE backJmpBytes = CalculateJumpBytes(reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize, reinterpret_cast<PBYTE>(originalAddress) + jmpSize, &backJmpSize);
+	PBYTE backJmpBytes = CalculateJumpBytes(reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize, reinterpret_cast<PBYTE>(originalAddress) + jmpSize, backJmpSize, hProcess);
 
-	int caveSize = patchSize + originalSize + backJmpSize;
+	size_t caveSize = patchSize + originalSize + backJmpSize;
 	PBYTE caveBytes = new BYTE[caveSize];
 	memcpy_s(caveBytes, patchSize, patchBytes, patchSize);
 	memcpy_s(caveBytes + patchSize, originalSize, originalBytes, originalSize);
@@ -71,7 +81,7 @@ bool CavePatch::Hack(HANDLE hProcess)
 	WriteMem(hProcess, allocatedAddress, caveBytes, caveSize);
 	delete[] caveBytes;
 
-	int nops = originalSize - jmpSize;
+	size_t nops = originalSize - jmpSize;
 
 	if (nops)
 	{

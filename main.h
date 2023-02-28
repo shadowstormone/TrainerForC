@@ -7,4 +7,4 @@
 
 #define ButtonClickExit 1
 
-LPCWSTR WindowTitle = L"Final Fantasy VII Remake Intergrade Trainer (+6)"; //Заголовок Окна
+LPCWSTR WindowTitle = L"Test Trainer (+1)"; //Заголовок Окна
