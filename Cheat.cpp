@@ -3,7 +3,7 @@
 
 void Cheat::ProcessorOptions()
 {
-	while (isRunning) 
+	while (isRunning)
 	{
 		processId = GetProcessIdByProcessName(_processName);
 		if (processId)
@@ -14,7 +14,7 @@ void Cheat::ProcessorOptions()
 				m_optionsState[option->GetDescription()] = option->IsEnabled();
 			}
 		}
-		Sleep(50);
+		Sleep(100);
 	}
 }
 

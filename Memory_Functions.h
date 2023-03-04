@@ -118,7 +118,43 @@ DWORD_PTR GetModuleBaseAddress(HANDLE hProcess, LPCWSTR lpszModuleName)
 
 int WriteMem(HANDLE hProcess, LPVOID address, LPVOID source, SIZE_T writeAmount) 
 {
-	if (!hProcess) 
+	if (!hProcess)
+	{
+		ShowErrorMessage(NULL, L"Failed to open process.\r\nError code: ");
+		return -1;
+	}
+
+	SIZE_T bytesWritten = 0;
+	DWORD oldProtect = 0;
+
+	if (!VirtualProtectEx(hProcess, address, writeAmount, PAGE_READWRITE, &oldProtect))
+	{
+		ShowErrorMessage(NULL, L"VirtualProtectEx failed.\r\nError code: ");
+		return -1;
+	}
+
+	if (!WriteProcessMemory(hProcess, address, source, writeAmount, &bytesWritten))
+	{
+		ShowErrorMessage(NULL, L"WriteProcessMemory failed.\r\nError code: ");
+		VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect);
+		return -1;
+	}
+
+	if (bytesWritten != writeAmount)
+	{
+		ShowErrorMessage(NULL, L"Failed to write specified bytes.\r\nBytes written: ");
+		VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect);
+		return -1;
+	}
+
+	if (!VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect))
+	{
+		ShowErrorMessage(NULL, L"VirtualProtectEx failed.\r\nError code: ");
+		return -1;
+	}
+
+	return 0;
+	/*if (!hProcess) 
 	{
 		ShowErrorMessage(NULL, L"Failed to open process.\r\nError code: ");
 		return -1;
@@ -137,7 +173,7 @@ int WriteMem(HANDLE hProcess, LPVOID address, LPVOID source, SIZE_T writeAmount)
 	}
 
 	VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect);
-	return 0;
+	return 0;*/
 }
 
 LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount) 

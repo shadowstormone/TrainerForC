@@ -6,10 +6,35 @@
 #define NMD_ASSEMBLY_IMPLEMENTATION
 #include "nmd_assembly.h"
 
-
 PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize, HANDLE hProcess)
 {
-	PBYTE bytes = nullptr;
+	bool is64BitProcess = isTargetX64Process(hProcess);
+	std::vector<BYTE> bytes;
+
+	if (is64BitProcess)
+	{
+		bytes.reserve(14);
+		bytes.emplace_back(0xFF);
+		bytes.emplace_back(0x25);
+		bytes.insert(bytes.end(), 4, 0x00);
+		bytes.insert(bytes.end(), reinterpret_cast<PBYTE>(&to), reinterpret_cast<PBYTE>(&to) + sizeof(to));
+		outSize = static_cast<BYTE>(bytes.size());
+	}
+	else
+	{
+		bytes.reserve(5);
+		bytes.emplace_back(0xE9);
+		DWORD offset = reinterpret_cast<DWORD>(to) - (reinterpret_cast<DWORD>(from) + 5);
+		bytes.insert(bytes.end(), reinterpret_cast<PBYTE>(&offset), reinterpret_cast<PBYTE>(&offset) + sizeof(offset));
+		outSize = static_cast<BYTE>(bytes.size());
+	}
+
+	// Allocate a new buffer and copy the bytes
+	PBYTE jumpBytes = new BYTE[outSize];
+	std::copy(bytes.begin(), bytes.end(), jumpBytes);
+
+	return jumpBytes;
+	/*PBYTE bytes = nullptr;
 	LONG delta = reinterpret_cast<LONG>(to) - reinterpret_cast<LONG>(from);
 	bool is64BitProcess = isTargetX64Process(hProcess);
 
@@ -39,60 +64,118 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize, HANDL
 		memcpy_s(bytes + 1, 4, &delta, 4);
 		outSize = 5;
 	}
-	return bytes;
+	return bytes;*/
 }
-
 
 bool CavePatch::Hack(HANDLE hProcess)
 {
-	constexpr ULONG MAX_INT_SIZE_32_BIT = 0x7FFFFFFF;
-	constexpr ULONG MAX_INT_SIZE_64_BIT = 0x7FFFFFFFFFFF;
-
 	bool is64BitProcess = isTargetX64Process(hProcess);
-	ULONG scanSize = is64BitProcess ? MAX_INT_SIZE_64_BIT : MAX_INT_SIZE_32_BIT;
-	DWORD_PTR baseAddress = parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0 ? 
-		GetModuleBaseAddress(hProcess, parent->GetModuleName()) : GetProcessBaseAddress(hProcess);
+	ULONG scanSize;
+	DWORD_PTR baseAddress;
 
-	originalAddress = reinterpret_cast<LPVOID>(reinterpret_cast<PBYTE>(ScanSignature(hProcess, baseAddress, scanSize, pattern, mask)) + patchOffset);
-	originalBytes = reinterpret_cast<PBYTE>(ReadMem(hProcess, originalAddress, 32));
+	if (is64BitProcess)
+	{
+		scanSize = 0x7FFFFFFFFFFFFFFF;
+	}
+	else
+	{
+		scanSize = 0x7FFFFFFF;
+	}
+
+	if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
+	{
+		baseAddress = GetModuleBaseAddress(hProcess, parent->GetModuleName());
+	}
+	else
+	{
+		baseAddress = GetProcessBaseAddress(hProcess);
+	}
+
+	patternAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern, mask);
+	patchAddress = reinterpret_cast<LPBYTE>(patternAddress) + patchOffset;
+	originalAddress = reinterpret_cast<LPVOID>(patchAddress);
+
+
+	originalBytes = reinterpret_cast<PBYTE>(ReadMem(hProcess, originalAddress, 15));
 	allocatedAddress = AllocMem(hProcess, NULL, 4096);
 
 	BYTE jmpSize = 0;
 	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize, hProcess);
 
-	size_t offset = 0;
-	size_t buffer = 32;
+	int offset = 0;
+	size_t buffer = 15;
 
 	do
 	{
-		size_t length = nmd_x86_ldisasm(originalBytes + offset, buffer, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
+		int length = nmd_x86_ldisasm(originalBytes + offset, buffer, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
 		originalSize += length;
 		offset += length;
 	} while (originalSize < jmpSize);
 
-	BYTE backJmpSize = 0;
-	PBYTE backJmpBytes = CalculateJumpBytes(reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize, reinterpret_cast<PBYTE>(originalAddress) + jmpSize, backJmpSize, hProcess);
+	//BYTE backJmpSize = 0;
+	//PBYTE backJmpBytes = CalculateJumpBytes(reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize, reinterpret_cast<PBYTE>(originalAddress) + jmpSize, backJmpSize, hProcess);
 
-	size_t caveSize = patchSize + originalSize + backJmpSize;
-	PBYTE caveBytes = new BYTE[caveSize];
-	memcpy_s(caveBytes, patchSize, patchBytes, patchSize);
-	memcpy_s(caveBytes + patchSize, originalSize, originalBytes, originalSize);
-	memcpy_s(caveBytes + patchSize + originalSize, backJmpSize, backJmpBytes, backJmpSize);
-
-	WriteMem(hProcess, allocatedAddress, caveBytes, caveSize);
-	delete[] caveBytes;
-
-	size_t nops = originalSize - jmpSize;
-
-	if (nops)
+	if (jmpSize == originalSize)
 	{
-		PBYTE bytes = new BYTE[originalSize];
-		memcpy_s(bytes, jmpSize, jmpBytes, jmpSize);
-		memset(bytes + jmpSize, 0x90, nops);
-		WriteMem(hProcess, originalAddress, bytes, originalSize);
-		delete[] bytes;
+		// If the size of the jump and original instruction are the same, we can patch in place
+		BYTE jumpSize = 0;
+		PBYTE jumpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jumpSize, hProcess);
+		WriteMem(hProcess, originalAddress, jumpBytes, jumpSize);
+		delete[] jumpBytes;
 	}
+	else
+	{
+		// Calculate the backward jump to be inserted after the original code
+		BYTE backJmpSize = 0;
+		PBYTE backJmpBytes = CalculateJumpBytes(
+			reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize,
+			reinterpret_cast<PBYTE>(originalAddress) + jmpSize,
+			backJmpSize,
+			hProcess // Pass the process handle to allocate memory in the target process
+		);
 
+		if (backJmpBytes == nullptr)
+		{
+			// Failed to allocate memory for the backward jump, return an error
+			std::cerr << "Failed to allocate memory for the backward jump." << std::endl;
+			return false;
+		}
+
+		// Determine the size of the cave needed to store patch, original, and backward jump
+		int caveSize = patchSize + originalSize + backJmpSize;
+		PBYTE caveBytes = new BYTE[caveSize];
+
+		// Copy the patch, original, and backward jump into the cave buffer
+		memcpy_s(caveBytes, patchSize, patchBytes, patchSize);
+		memcpy_s(caveBytes + patchSize, originalSize, originalBytes, originalSize);
+		memcpy_s(caveBytes + patchSize + originalSize, backJmpSize, backJmpBytes, backJmpSize);
+
+		// Write the contents of the cave buffer to the allocated memory address
+		WriteMem(hProcess, allocatedAddress, caveBytes, caveSize);
+
+		// Free the cave buffer
+		delete[] caveBytes;
+
+		// Free the backward jump buffer
+		delete[] backJmpBytes;
+
+		// Insert "NOP" instructions after the jump instruction (if necessary)
+		size_t nops = originalSize - jmpSize;
+		if (nops)
+		{
+			PBYTE bytes = new BYTE[originalSize];
+
+			// Copy the jump bytes and insert "NOP" instructions in the remaining space
+			memcpy_s(bytes, jmpSize, jmpBytes, jmpSize);
+			memset(bytes + jmpSize, 0x90, nops);
+
+			// Write the modified bytes to the original memory address
+			WriteMem(hProcess, originalAddress, bytes, originalSize);
+
+			// Free the temporary buffer
+			delete[] bytes;
+		}
+	}
 	return true;
 }
 

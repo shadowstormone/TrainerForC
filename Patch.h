@@ -17,6 +17,8 @@ protected:
 	PBYTE originalBytes = NULL;
 	SIZE_T patchSize = 0;
 	CheatOption* parent = NULL;
+	LPBYTE patchAddress = nullptr;
+	LPVOID patternAddress = nullptr;
 
 	void convertPattern(LPCWSTR sign)
 	{
