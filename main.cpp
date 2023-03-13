@@ -9,7 +9,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	Cheat* cheat = new Cheat(L"Tutorial-x86_64.exe"); //Процесс атакуемой игры
-	//Cheat* cheat = new Cheat(L"Tutorial-i386.exe");
 
 	/*std::vector<int> option1keys = { 0x61 };
 	CheatOption* option1 = new CheatOption(NULL, L"[Numpad 1] First  Function(Nop)", option1keys);
@@ -23,15 +22,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	std::vector<int> optionkeys1 = { 0x60 };
 	CheatOption* option1 = new CheatOption(NULL, L"[Numpad 0] - Cheat Test", optionkeys1);
 	BYTE bytes1[] = { 0x48, 0xBE, 0xEA, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0xB3, 0xF8, 0x07, 0x00, 0x00 };
-	option1->AddCavePatch(L"0x29, 0x83, 0xF8, 0x07, 0x00, 0x00", bytes1, 17);
-
-	/*std::vector<int> optionkeys1 = { 0x60 };
-	CheatOption* option1 = new CheatOption(NULL, L"Numpad 0 - 1111", optionkeys1);
-	BYTE bytes1[] = { 0xBE, 0xE9, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
-	option1->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", bytes1, 17);*/
+	option1->AddCavePatch(L"0x83, 0xC0, 0x01, 0x29, 0x83, 0xF8, 0x07, 0x00, 0x00", bytes1, 17);
 
 	cheat->AddCheatOption(option1);
 
+	cheat->OpenConsole();
 	cheat->Start();
 	BaseRender* renderer = new SimpleRenderer(cheat, WindowTitle, W_WIDTH, W_HEIGHT);
 	renderer->Start();
