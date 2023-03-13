@@ -32,11 +32,9 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 		outSize = 14;
 	}
 
-	// Выводим значение delta
 	printf("----------------------------------------------------------------------------------------------\n");
 	printf("delta: 0x%p\n", delta);
 
-	// Вывод в консоль содержимое массива bytes
 	printf("Bytes array: ");
 	for (int i = 0; i < outSize; i++)
 	{
@@ -44,11 +42,9 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 	}
 	printf("\n");
 
-	// Вывод в консоль адресов from и to
 	printf("from = patternAddress: 0x%p\n", from);
 	printf("to = allocatedAddress: 0x%p\n", to);
 
-	// Вывод в консоль переменной bytes
 	printf("bytes: 0x%p\n", bytes);
 
 	return bytes;
@@ -150,16 +146,8 @@ bool CavePatch::Hack(HANDLE hProcess)
 	patternAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern, mask);
 	patchAddress = reinterpret_cast<LPBYTE>(patternAddress) + patchOffset;
 	originalAddress = reinterpret_cast<LPVOID>(patchAddress);
-
 	originalBytes = reinterpret_cast<PBYTE>(ReadMem(hProcess, originalAddress, 15));
 	allocatedAddress = AllocMem(hProcess, NULL, 4096);
-
-	printf("baseAddress: 0x%p\n", baseAddress);
-	printf("patternAddress: 0x%p\n", patternAddress);
-	printf("patchAddress: 0x%p\n", patchAddress);
-	printf("originalAddress: 0x%p\n", originalAddress);
-	printf("allocatedAddress: 0x%p\n", allocatedAddress);
-	printf("originalBytes: 0x%p\n", originalBytes);
 
 	BYTE jmpSize = 0;
 	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize);
@@ -174,62 +162,60 @@ bool CavePatch::Hack(HANDLE hProcess)
 		offset += length;
 	} while (originalSize < jmpSize);
 
+	if (originalSize > patchSize)
+	{
+		std::cerr << "Original instructions too large to fit in the cave." << std::endl;
+		return false;
+	}
+
 	if (jmpSize == originalSize)
 	{
-		// If the size of the jump and original instruction are the same, we can patch in place
 		BYTE jumpSize = 0;
 		PBYTE jumpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jumpSize);
+
 		WriteMem(hProcess, originalAddress, jumpBytes, jumpSize);
+
 		delete[] jumpBytes;
 	}
 	else
 	{
-		// Calculate the backward jump to be inserted after the original code
 		BYTE backJmpSize = 0;
 		PBYTE backJmpBytes = CalculateJumpBytes(
 			reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize,
-			reinterpret_cast<PBYTE>(originalAddress) + jmpSize,backJmpSize);
+			reinterpret_cast<PBYTE>(originalAddress) + jmpSize, backJmpSize);
 
 		if (backJmpBytes == nullptr)
 		{
-			// Failed to allocate memory for the backward jump, return an error
 			std::cerr << "Failed to allocate memory for the backward jump." << std::endl;
 			return false;
 		}
 
-		// Determine the size of the cave needed to store patch, original, and backward jump
-		int caveSize = patchSize + originalSize + backJmpSize;
+		int caveSize = patchSize + backJmpSize;
 		PBYTE caveBytes = new BYTE[caveSize];
 
-		// Copy the patch, original, and backward jump into the cave buffer
 		memcpy_s(caveBytes, patchSize, patchBytes, patchSize);
-		memcpy_s(caveBytes + patchSize, originalSize, originalBytes, originalSize);
-		memcpy_s(caveBytes + patchSize + originalSize, backJmpSize, backJmpBytes, backJmpSize);
-
-		// Write the contents of the cave buffer to the allocated memory address
+		memcpy_s(caveBytes + patchSize, backJmpSize, backJmpBytes, backJmpSize);
 		WriteMem(hProcess, allocatedAddress, caveBytes, caveSize);
 
-		// Free the cave buffer
 		delete[] caveBytes;
-
-		// Free the backward jump buffer
 		delete[] backJmpBytes;
 
-		// Insert "NOP" instructions after the jump instruction (if necessary)
 		size_t nops = originalSize - jmpSize;
-		if (nops)
+		if (nops > 0)
 		{
 			PBYTE bytes = new BYTE[originalSize];
 
-			// Copy the jump bytes and insert "NOP" instructions in the remaining space
 			memcpy_s(bytes, jmpSize, jmpBytes, jmpSize);
 			memset(bytes + jmpSize, 0x90, nops);
+			memcpy_s(bytes + jmpSize + nops, originalSize - jmpSize - nops, originalBytes + jmpSize, originalSize - jmpSize - nops);
 
-			// Write the modified bytes to the original memory address
 			WriteMem(hProcess, originalAddress, bytes, originalSize);
 
-			// Free the temporary buffer
 			delete[] bytes;
+		}
+		else
+		{
+			WriteMem(hProcess, originalAddress, jmpBytes, jmpSize);
 		}
 	}
 	return true;
