@@ -54,6 +54,9 @@ END
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "ResourceExtern\\TrainerIcon.ico"
 
+IDI_ICON2               ICON                    "ResourceExtern\\newLogo.ico"
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // WAVE

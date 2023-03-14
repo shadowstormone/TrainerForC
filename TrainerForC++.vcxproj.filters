@@ -83,5 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
+    <Image Include="ResourceExtern\newLogo.ico" />
+    <Image Include="ResourceExtern\TrainerIcon.ico" />
   </ItemGroup>
 </Project>
