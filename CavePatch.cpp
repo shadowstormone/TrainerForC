@@ -31,9 +31,9 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 		memcpy_s(bytes + 6, 8, &to, 8);
 		outSize = 14;
 	}
-
-	printf("----------------------------------------------------------------------------------------------\n");
+	/*printf("----------------------------------------------------------------------------------------------\n");
 	printf("delta: 0x%p\n", delta);
+
 
 	printf("Bytes array: ");
 	for (int i = 0; i < outSize; i++)
@@ -45,8 +45,7 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 	printf("from = patternAddress: 0x%p\n", from);
 	printf("to = allocatedAddress: 0x%p\n", to);
 
-	printf("bytes: 0x%p\n", bytes);
-
+	printf("bytes: 0x%p\n", bytes);*/
 	return bytes;
 }
 
@@ -122,7 +121,7 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 bool CavePatch::Hack(HANDLE hProcess)
 {
 	bool is64BitProcess = isTargetX64Process(hProcess);
-	ULONG scanSize;
+	unsigned __int64 scanSize;
 	DWORD_PTR baseAddress;
 
 	if (is64BitProcess)
@@ -152,12 +151,12 @@ bool CavePatch::Hack(HANDLE hProcess)
 	BYTE jmpSize = 0;
 	PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize);
 
-	int offset = 0;
+	size_t offset = 0;
 	size_t buffer = 64;
 
 	do
 	{
-		int length = nmd_x86_ldisasm(originalBytes + offset, buffer, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
+		size_t length = nmd_x86_ldisasm(originalBytes + offset, buffer, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
 		originalSize += length;
 		offset += length;
 	} while (originalSize < jmpSize);
@@ -190,7 +189,7 @@ bool CavePatch::Hack(HANDLE hProcess)
 			return false;
 		}
 
-		int caveSize = patchSize + backJmpSize;
+		size_t caveSize = patchSize + backJmpSize;
 		PBYTE caveBytes = new BYTE[caveSize];
 
 		memcpy_s(caveBytes, patchSize, patchBytes, patchSize);

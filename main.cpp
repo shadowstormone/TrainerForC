@@ -26,7 +26,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	cheat->AddCheatOption(option1);
 
-	cheat->OpenConsole();
+	
 	cheat->Start();
 	BaseRender* renderer = new SimpleRenderer(cheat, WindowTitle, W_WIDTH, W_HEIGHT);
 	renderer->Start();

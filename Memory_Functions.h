@@ -93,7 +93,7 @@ DWORD_PTR GetProcessBaseAddress(HANDLE hProcess)
 DWORD_PTR GetModuleBaseAddress(HANDLE hProcess, LPCWSTR lpszModuleName)
 {
 	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetProcessId(hProcess));
-	DWORD dwModuleBaseAddress = 0;
+	DWORD_PTR dwModuleBaseAddress = 0;
 
 	if (hSnapshot != INVALID_HANDLE_VALUE)
 	{
@@ -249,7 +249,7 @@ LPVOID ScanSignature(HANDLE hProcess, ULONG_PTR startAddress, SIZE_T scanSize, P
 
 	while (offset < (scanSize - mask.size()) && result == 0)
 	{
-		int count = VirtualQueryEx(hProcess, reinterpret_cast<LPCVOID>(startAddress + offset), &mbi, sizeof(mbi));
+		SIZE_T count = VirtualQueryEx(hProcess, reinterpret_cast<LPCVOID>(startAddress + offset), &mbi, sizeof(mbi));
 
 		if (!count)
 		{
@@ -278,7 +278,9 @@ LPVOID ScanSignature(HANDLE hProcess, ULONG_PTR startAddress, SIZE_T scanSize, P
 			}
 			delete[] buffer;
 		}
-		offset += mbi.RegionSize;
+		//offset += mbi.RegionSize;
+		offset += static_cast<DWORD>(mbi.RegionSize);
+
 	}
 	return reinterpret_cast<LPVOID>(result);
 }
