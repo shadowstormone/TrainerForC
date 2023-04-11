@@ -180,8 +180,9 @@ bool CavePatch::Hack(HANDLE hProcess)
 	{
 		BYTE backJmpSize = 0;
 		PBYTE backJmpBytes = CalculateJumpBytes(
-			reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize,
-			reinterpret_cast<PBYTE>(originalAddress) + jmpSize, backJmpSize);
+			reinterpret_cast<PBYTE>(allocatedAddress) + caveSize + patchSize,
+			reinterpret_cast<PBYTE>(originalAddress) + originalSize,
+			backJmpSize);
 
 		if (backJmpBytes == nullptr)
 		{

@@ -1,4 +1,6 @@
 #include "SimpleRenderer.h"
+#include <commctrl.h>
+#include <iostream>
 
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -20,12 +22,15 @@ LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 	switch (uMsg)
 	{
+	case WM_ERASEBKGND:
+		return TRUE;
+
 	case WM_LBUTTONDOWN:
 		SendMessage(hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 		break;
 
 	case WM_TIMER:
-		if (wParam == 1000)
+		if (wParam == 1)
 		{
 			this->RenderFrame();
 		}
@@ -33,8 +38,14 @@ LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
+		if (hdc == NULL)
+		{
+			std::cerr << "Handle the error." << std::endl;
+			break;
+		}
 		BitBlt(hdc, _windowRect.left, _windowRect.top, _windowRect.right, _windowRect.bottom, _memDC, 0, 0, SRCCOPY);
 		EndPaint(hWnd, &ps);
+		ReleaseDC(hWnd, hdc);
 		break;
 
 	default:
@@ -87,7 +98,7 @@ void SimpleRenderer::RenderFrame()
 
 HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontHeight, bool isItalic = false, bool isUnderline = false, bool isStrikesOut = false)
 {
-
+	
 	return CreateFont(fontHeight, 0, 0, 0, 0, isItalic, isUnderline, isStrikesOut, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
 		CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, fontFamily);
 }
@@ -124,14 +135,16 @@ void SimpleRenderer::Start()
 	_rState.enabledOptionColor = RGB(0, 220, 0);
 	_rState.processInfoColor = RGB(146, 146, 146);
 	_rState.processRunningColor = RGB(38, 176, 1); //RED - RGB(250, 50, 50);
-
-	SetTimer(_wnd, 1000, 1000 / 60, NULL);
+	//SetTimer(_wnd, 1000, 1000 / 60, NULL);
+	SetTimer(_wnd, 1, 16, NULL);
+	RenderFrame();
 	BaseRender::Start();
 }
 
 void SimpleRenderer::Stop()
 {
-	KillTimer(_wnd, 1000);
+	//KillTimer(_wnd, 1000);
+	KillTimer(_wnd, 1);
 	SelectObject(_memDC, _defMemBmp);
 	DeleteObject(_memBitmap);
 	DeleteDC(_memDC);
