@@ -6,7 +6,7 @@ struct RENDER_STATE
 	HFONT optionFont;				// Шрифт надписей в трейнере
 	HFONT processInformationFont;	// Шрифт информации о процессе
 	COLORREF optionColor;			// Цвет опций
-	COLORREF enabledOptionColor;	// Цвет активированных опций трейнера
+	COLORREF enabledOptionColor;	// Цвет активированных опций
 	COLORREF processInfoColor;		// Цвет информации о процессе
 	COLORREF processRunningColor;	// Цвет когда процесс активен
 };
@@ -31,7 +31,7 @@ class SimpleRenderer : public BaseRender
 
 	/*HFONT SimpleCreateFont
 	LPCWSTR fontFamily - Семейство шрифта
-	int fontHeight - Размер,
+	int fontHeight - Размер
 	bool isItalic - Курсив
 	bool isUnderline - Подчеркнутый
 	bool isStrikesOut - Перечеркнутый*/
@@ -40,6 +40,7 @@ class SimpleRenderer : public BaseRender
 public:
 	SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int height);
 
+	void RenderLoop(HWND hWnd);
 	void Start();
 	void Stop();
 };
