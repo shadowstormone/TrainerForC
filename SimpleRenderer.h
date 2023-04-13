@@ -5,7 +5,7 @@ struct RENDER_STATE
 {
 	HFONT optionFont;				// Шрифт надписей в трейнере
 	HFONT processInformationFont;	// Шрифт информации о процессе
-	COLORREF optionColor;			// Цвет опций
+	COLORREF optionColor;			// Цвет опций не активных
 	COLORREF enabledOptionColor;	// Цвет активированных опций
 	COLORREF processInfoColor;		// Цвет информации о процессе
 	COLORREF processRunningColor;	// Цвет когда процесс активен

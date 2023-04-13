@@ -1,6 +1,8 @@
 #include "SimpleRenderer.h"
 #include <commctrl.h>
 #include <iostream>
+#include <thread>
+#include <algorithm>
 
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -19,6 +21,7 @@ LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 {
 	PAINTSTRUCT ps;
 	HDC hdc;
+	static std::thread renderingThread;
 
 	switch (uMsg)
 	{
@@ -27,13 +30,6 @@ LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 	case WM_LBUTTONDOWN:
 		SendMessage(hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-		break;
-
-	case WM_TIMER:
-		if (wParam == 1)
-		{
-			this->RenderFrame();
-		}
 		break;
 
 	case WM_PAINT:
@@ -48,17 +44,69 @@ LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 		ReleaseDC(hWnd, hdc);
 		break;
 
-	default:
+	case WM_CREATE:
+		renderingThread = std::thread(&SimpleRenderer::RenderLoop, this, hWnd);
 		break;
+
+	case WM_CLOSE:
+		if (renderingThread.joinable())
+		{
+			renderingThread.join();
+		}
+		break;
+
+	default:
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
+
 	return 0;
 }
+
+//LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+//{
+//	PAINTSTRUCT ps;
+//	HDC hdc;
+//
+//	switch (uMsg)
+//	{
+//	case WM_ERASEBKGND:
+//		return TRUE;
+//
+//	case WM_LBUTTONDOWN:
+//		SendMessage(hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+//		break;
+//
+//	case WM_TIMER:
+//		if (wParam == 1)
+//		{
+//			this->RenderFrame();
+//		}
+//		break;
+//
+//	case WM_PAINT:
+//		hdc = BeginPaint(hWnd, &ps);
+//		if (hdc == NULL)
+//		{
+//			std::cerr << "Handle the error." << std::endl;
+//			break;
+//		}
+//		BitBlt(hdc, _windowRect.left, _windowRect.top, _windowRect.right, _windowRect.bottom, _memDC, 0, 0, SRCCOPY);
+//		EndPaint(hWnd, &ps);
+//		ReleaseDC(hWnd, hdc);
+//		break;
+//
+//	default:
+//		break;
+//	}
+//	return 0;
+//}
 
 void SimpleRenderer::RenderFrame()
 {
 	ZeroMemory(_memBitmapBits, _memDibSectionSize);
 	HGDIOBJ oldFont = SelectObject(_memDC, _rState.optionFont);
 	int deltaY = 25;
+
 
 	for (auto &pair : _cheat->GetCheatOptionState())
 	{
@@ -75,8 +123,23 @@ void SimpleRenderer::RenderFrame()
 	}
 
 	SelectObject(_memDC, _rState.processInformationFont);
+
+	std::wstring processName = _cheat->GetProcessName();
+	size_t dotPos = processName.find_last_of(L"."); // убираем .exe из имени процесса
+
+	if (dotPos != std::wstring::npos)
+	{
+		processName = processName.substr(0, dotPos);
+	}
+
+	processName.erase(std::remove_if(processName.begin(), processName.end(), ::isspace), processName.end());
+	/* //заменяем все символы '-' на пробелы ' '
+	std::replace(processName.begin(), processName.end(), L'-', L' ');
+	 //заменяем все символы '_' на пробелы ' '
+	std::replace(processName.begin(), processName.end(), L'_', L' ');*/
+
 	processInfo.clear();
-	processInfo.append(_cheat->GetProcessName());
+	processInfo.append(processName);
 	processInfo.append(L" ");
 
 	if (_cheat->isProcessRunning())
@@ -126,6 +189,17 @@ SimpleRenderer::SimpleRenderer(Cheat*cheat, LPCWSTR title, int width, int height
 	SetWindowLongPtr(_wnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ThisWindowProc));
 }
 
+void SimpleRenderer::RenderLoop(HWND hWnd)
+{
+	while (true)
+	{
+		RenderFrame();
+		RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+		std::this_thread::sleep_for(std::chrono::milliseconds(16));
+	}
+}
+
+
 void SimpleRenderer::Start()
 {
 	SetBkMode(_memDC, TRANSPARENT);
@@ -135,16 +209,12 @@ void SimpleRenderer::Start()
 	_rState.enabledOptionColor = RGB(0, 220, 0);
 	_rState.processInfoColor = RGB(146, 146, 146);
 	_rState.processRunningColor = RGB(38, 176, 1); //RED - RGB(250, 50, 50);
-	//SetTimer(_wnd, 1000, 1000 / 60, NULL);
-	SetTimer(_wnd, 1, 16, NULL);
 	RenderFrame();
 	BaseRender::Start();
 }
 
 void SimpleRenderer::Stop()
 {
-	//KillTimer(_wnd, 1000);
-	KillTimer(_wnd, 1);
 	SelectObject(_memDC, _defMemBmp);
 	DeleteObject(_memBitmap);
 	DeleteDC(_memDC);

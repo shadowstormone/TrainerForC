@@ -133,6 +133,14 @@ bool CavePatch::Hack(HANDLE hProcess)
 		scanSize = 0x7FFFFFFF;
 	}
 
+	/*if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
+	{
+		baseAddress = GetModuleBaseAddress(hProcess, parent->GetModuleName());
+	}
+	else
+	{
+		baseAddress = GetProcessBaseAddress(hProcess);
+	}*/
 	if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
 	{
 		baseAddress = GetModuleBaseAddress(hProcess, parent->GetModuleName());
@@ -141,6 +149,13 @@ bool CavePatch::Hack(HANDLE hProcess)
 	{
 		baseAddress = GetProcessBaseAddress(hProcess);
 	}
+
+	if (!baseAddress)
+	{
+		std::cerr << "Failed to get base address." << std::endl;
+		return false;
+	}
+
 
 	patternAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern, mask);
 	patchAddress = reinterpret_cast<LPBYTE>(patternAddress) + patchOffset;
@@ -171,7 +186,6 @@ bool CavePatch::Hack(HANDLE hProcess)
 	{
 		BYTE jumpSize = 0;
 		PBYTE jumpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jumpSize);
-
 		WriteMem(hProcess, originalAddress, jumpBytes, jumpSize);
 
 		delete[] jumpBytes;
@@ -179,6 +193,9 @@ bool CavePatch::Hack(HANDLE hProcess)
 	else
 	{
 		BYTE backJmpSize = 0;
+		/*PBYTE backJmpBytes = CalculateJumpBytes(
+			reinterpret_cast<PBYTE>(allocatedAddress) + patchSize + originalSize,
+			reinterpret_cast<PBYTE>(originalAddress) + jmpSize, backJmpSize);*/
 		PBYTE backJmpBytes = CalculateJumpBytes(
 			reinterpret_cast<PBYTE>(allocatedAddress) + caveSize + patchSize,
 			reinterpret_cast<PBYTE>(originalAddress) + originalSize,
