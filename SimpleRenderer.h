@@ -41,6 +41,7 @@ public:
 	SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int height);
 
 	void RenderLoop(HWND hWnd);
+
 	void Start();
 	void Stop();
 };
