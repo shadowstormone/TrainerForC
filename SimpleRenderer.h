@@ -22,6 +22,7 @@ class SimpleRenderer : public BaseRender
 	LONG _memDibSectionSize = 0;
 	RENDER_STATE _rState = { 0 };
 	std::wstring processInfo;
+	bool _isRunning;
 
 	static LRESULT (*baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -36,6 +37,8 @@ class SimpleRenderer : public BaseRender
 	bool isUnderline - Подчеркнутый
 	bool isStrikesOut - Перечеркнутый*/
 	HFONT SimpleCreateFont(LPCWSTR fontFamily, int fontHeight, bool isItalic, bool isUnderline, bool isStrikesOut);
+
+	void SimpleThreadFunc();
 
 public:
 	SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int height);
