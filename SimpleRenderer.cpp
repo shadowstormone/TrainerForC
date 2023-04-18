@@ -44,6 +44,9 @@ void SimpleRenderer::RenderFrame()
     HGDIOBJ oldFont = SelectObject(_memDC, _rState.optionFont);
     int deltaY = 25;
 
+    starField->UpdateStars();
+    starField->DrowToDest(_memDC, 0, 0);
+
     for (auto& pair : _cheat->GetCheatOptionState())
     {
         if (pair.second)
@@ -118,6 +121,10 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
     _windowDC = GetDC(_wnd);
     _memDC = CreateCompatibleDC(_windowDC);
     _memBitmap = CreateDIBSection(_memDC, &bi, DIB_RGB_COLORS, reinterpret_cast<LPVOID*>(&_memBitmapBits), NULL, 0);
+    if (_memBitmap == 0)
+    {
+        throw std::runtime_error("Error creating _memBitmap");
+    }
     _defMemBmp = SelectObject(_memDC, _memBitmap);
     _memDibSectionSize = _windowRect.right * _windowRect.bottom * 4L;
 
@@ -138,6 +145,7 @@ void SimpleRenderer::Start()
 
     _isRunning = true;
     _renderThread = std::thread(&SimpleRenderer::SimpleThreadFunc, this);
+    starField = new StarFieldEffect(_memDC, 100, 2, 1, _windowRect.right, _windowRect.bottom);
     BaseRender::Start();
 }
 

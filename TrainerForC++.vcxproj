@@ -156,6 +156,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NopPatch.cpp" />
     <ClCompile Include="SimpleRenderer.cpp" />
+    <ClCompile Include="StarFieldEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseRenderer.h" />
@@ -169,6 +170,7 @@
     <ClInclude Include="Patch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleRenderer.h" />
+    <ClInclude Include="StarFieldEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />

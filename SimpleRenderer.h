@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseRenderer.h"
+#include "StarFieldEffect.h"
 
 struct RENDER_STATE
 {
@@ -23,6 +24,7 @@ class SimpleRenderer : public BaseRender
 	RENDER_STATE _rState = { 0 };
 	std::wstring processInfo;
 	bool _isRunning;
+	StarFieldEffect* starField = NULL;
 
 	static LRESULT (*baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
