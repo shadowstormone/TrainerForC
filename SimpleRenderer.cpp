@@ -44,8 +44,10 @@ void SimpleRenderer::RenderFrame()
     HGDIOBJ oldFont = SelectObject(_memDC, _rState.optionFont);
     int deltaY = 25;
 
+    //Enable StarEffect
     starField->UpdateStars();
     starField->DrowToDest(_memDC, 0, 0);
+    //Enable StarEffect
 
     for (auto& pair : _cheat->GetCheatOptionState())
     {
