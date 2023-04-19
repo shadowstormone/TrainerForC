@@ -1,22 +1,44 @@
 #include "Cheat.h"
 #include "Memory_Functions.h"
 
+//void Cheat::ProcessorOptions()
+//{
+//	while (isRunning)
+//	{
+//		processId = GetProcessIdByProcessName(_processName);
+//		if (processId)
+//		{
+//			for (CheatOption* option : options)
+//			{
+//				option->Process(processId);
+//				m_optionsState[option->GetDescription()] = option->IsEnabled();
+//			}
+//		}
+//		Sleep(16);
+//	}
+//}
+
 void Cheat::ProcessorOptions()
 {
-	while (isRunning)
-	{
-		processId = GetProcessIdByProcessName(_processName);
-		if (processId)
+	std::thread processorThread([&]()
 		{
-			for (CheatOption* option : options)
+			while (isRunning)
 			{
-				option->Process(processId);
-				m_optionsState[option->GetDescription()] = option->IsEnabled();
+				processId = GetProcessIdByProcessName(_processName);
+				if (processId)
+				{
+					for (CheatOption* option : options)
+					{
+						option->Process(processId);
+						m_optionsState[option->GetDescription()] = option->IsEnabled();
+					}
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(16));
 			}
-		}
-		Sleep(100);
-	}
+		});
+	processorThread.detach();
 }
+
 
 int Cheat::AddCheatOption(CheatOption* option)
 {

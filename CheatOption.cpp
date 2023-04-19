@@ -14,11 +14,11 @@ bool CheatOption::Enable(int pid)
 
 	if (hProc)
 	{
+		PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_SYNC);
 		for (Patch* p : patches) 
 		{
 			p->Hack(hProc);
 		}
-		PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_SYNC);
 		CloseHandle(hProc);
 		return true;
 	}
@@ -31,11 +31,11 @@ bool CheatOption::Disable(int pid)
 
 	if (hProc)
 	{
+		PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_SYNC);
 		for (Patch* p : patches)
 		{
 			p->Restore(hProc);
 		}
-		PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_SYNC);
 		CloseHandle(hProc);
 		return true;
 	}

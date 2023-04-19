@@ -25,6 +25,7 @@ class SimpleRenderer : public BaseRender
 	std::wstring processInfo;
 	bool _isRunning;
 	StarFieldEffect* starField = NULL;
+	std::thread _renderThread;
 
 	static LRESULT (*baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -44,7 +45,17 @@ class SimpleRenderer : public BaseRender
 
 public:
 	SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int height);
+	~SimpleRenderer();
 
-	void Start();
 	void Stop();
 };
+
+SimpleRenderer::~SimpleRenderer()
+{
+	_isRunning = false;
+	_renderThread.join();
+	SelectObject(_memDC, _defMemBmp);
+	DeleteObject(_memBitmap);
+	DeleteDC(_memDC);
+	ReleaseDC(_wnd, _windowDC);
+}

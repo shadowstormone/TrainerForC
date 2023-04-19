@@ -1,7 +1,5 @@
 #include "SimpleRenderer.h"
-#include <thread>
 
-std::thread _renderThread;
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 LRESULT SimpleRenderer::ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -71,23 +69,22 @@ void SimpleRenderer::RenderFrame()
     }
 
     SelectObject(_memDC, _rState.processInformationFont);
-    processInfo.clear();
-    processInfo.append(processName);
-    processInfo.append(L" ");
+    std::wstringstream ss;
+    ss << processName << L" ";
 
     if (_cheat->isProcessRunning())
     {
         SetTextColor(_memDC, _rState.processRunningColor);
-        processInfo.append(L"is running.");
-        TextOut(_memDC, 25, _windowRect.bottom - 45, processInfo.c_str(), processInfo.length());
+        ss << L"is running.";
     }
     else
     {
         SetTextColor(_memDC, _rState.processInfoColor);
-        processInfo.append(L"is not running.");
-        TextOut(_memDC, 25, _windowRect.bottom - 45, processInfo.c_str(), processInfo.length());
+        ss << L"is not running.";
     }
 
+    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), ss.str().length());
+    
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }
@@ -133,10 +130,8 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
     SetWindowLongPtr(_wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
     baseProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_wnd, GWLP_WNDPROC));
     SetWindowLongPtr(_wnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ThisWindowProc));
-}
 
-void SimpleRenderer::Start()
-{
+    //Consructor
     SetBkMode(_memDC, TRANSPARENT);
     _rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
     _rState.processInformationFont = SimpleCreateFont(L"Tahoma", 18);
@@ -153,10 +148,5 @@ void SimpleRenderer::Start()
 
 void SimpleRenderer::Stop()
 {
-    _isRunning = false;
-    _renderThread.join();
-    SelectObject(_memDC, _defMemBmp);
-    DeleteObject(_memBitmap);
-    DeleteDC(_memDC);
-    ReleaseDC(_wnd, _windowDC);
+    SimpleRenderer::~SimpleRenderer();
 }
