@@ -131,7 +131,7 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
     baseProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_wnd, GWLP_WNDPROC));
     SetWindowLongPtr(_wnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ThisWindowProc));
 
-    //Consructor
+    //Constructor
     SetBkMode(_memDC, TRANSPARENT);
     _rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
     _rState.processInformationFont = SimpleCreateFont(L"Tahoma", 18);
@@ -142,7 +142,7 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     _isRunning = true;
     _renderThread = std::thread(&SimpleRenderer::SimpleThreadFunc, this);
-    starField = new StarFieldEffect(_memDC, 100, 2, 1, _windowRect.right, _windowRect.bottom);
+    starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);
     BaseRender::Start();
 }
 
