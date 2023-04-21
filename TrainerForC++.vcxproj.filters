@@ -15,6 +15,9 @@
     <Filter Include="Исходные файлы\Renderer">
       <UniqueIdentifier>{03141567-3842-4777-bbf7-ced33cc1856d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ResourceExtern">
+      <UniqueIdentifier>{c69663be-056c-41a5-b6e0-9c46a023cc7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -81,15 +84,25 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Media Include="ResourceExtern\activ.wav" />
-    <Media Include="ResourceExtern\deactiv.wav" />
+    <Media Include="ResourceExtern\activ.wav">
+      <Filter>ResourceExtern</Filter>
+    </Media>
+    <Media Include="ResourceExtern\deactiv.wav">
+      <Filter>ResourceExtern</Filter>
+    </Media>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TrainerForC++.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
-    <Image Include="ResourceExtern\newLogo.ico" />
-    <Image Include="ResourceExtern\TrainerIcon.ico" />
+    <Image Include="ResourceExtern\TrainerIcon.ico">
+      <Filter>ResourceExtern</Filter>
+    </Image>
+    <Image Include="ResourceExtern\newLogo.ico">
+      <Filter>ResourceExtern</Filter>
+    </Image>
+    <Image Include="ResourceExtern\NewWhiteLogo.ico">
+      <Filter>ResourceExtern</Filter>
+    </Image>
   </ItemGroup>
 </Project>

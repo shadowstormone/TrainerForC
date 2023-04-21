@@ -31,7 +31,7 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 		memcpy_s(bytes + 6, 8, &to, 8);
 		outSize = 14;
 	}
-	/*printf("----------------------------------------------------------------------------------------------\n");
+	printf("----------------------------------------------------------------------------------------------\n");
 	printf("delta: 0x%p\n", delta);
 
 
@@ -45,7 +45,7 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 	printf("from = patternAddress: 0x%p\n", from);
 	printf("to = allocatedAddress: 0x%p\n", to);
 
-	printf("bytes: 0x%p\n", bytes);*/
+	printf("bytes: 0x%p\n", bytes);
 	return bytes;
 }
 
@@ -133,14 +133,6 @@ bool CavePatch::Hack(HANDLE hProcess)
 		scanSize = 0x7FFFFFFF;
 	}
 
-	/*if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
-	{
-		baseAddress = GetModuleBaseAddress(hProcess, parent->GetModuleName());
-	}
-	else
-	{
-		baseAddress = GetProcessBaseAddress(hProcess);
-	}*/
 	if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
 	{
 		baseAddress = GetModuleBaseAddress(hProcess, parent->GetModuleName());
