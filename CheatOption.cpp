@@ -2,7 +2,6 @@
 #include "CheatOption.h"
 #include "NopPatch.h"
 #include "CavePatch.h"
-#include <playsoundapi.h>
 #include "resource.h"
 
 #pragma comment(lib, "Winmm.lib")

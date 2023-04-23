@@ -26,6 +26,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	BYTE bytes1[] = { 0x48, 0xBE, 0xE8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0xB3, 0xF8, 0x07, 0x00, 0x00 };
 	option1->AddCavePatch(L"0x29, 0x83, 0xF8, 0x07, 0x00, 0x00", bytes1, 17);
 
+	std::vector<int> option1keys = { 0x62 };
+	CheatOption* option2 = new CheatOption(NULL, L"[Numpad 2] First  Function(Nop)", option1keys);
+	option2->AddNopPatch(L"0x29, 0x83, 0xF8, 0x07, 0x00, 0x00", 6);
+
 	//X32 Game
 	/*std::vector<int> optionkeys1 = { 0x61 };
 	CheatOption* option1 = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", optionkeys1);
@@ -33,6 +37,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	option1->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", bytes1, 17);*/
 
 	cheat->AddCheatOption(option1);
+	cheat->AddCheatOption(option2);
 
 	cheat->OpenConsole();
 	cheat->Start();
@@ -41,6 +46,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	cheat->Stop();
 
 	delete option1;
+	delete option2;
 	delete cheat;
 
 	return 0;
