@@ -125,6 +125,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -154,6 +155,7 @@
     <ClCompile Include="Cheat.cpp" />
     <ClCompile Include="CheatOption.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Memory_Functions.cpp" />
     <ClCompile Include="NopPatch.cpp" />
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
@@ -163,6 +165,7 @@
     <ClInclude Include="CavePatch.h" />
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
+    <ClInclude Include="CommonFunctions.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Memory_Functions.h" />
     <ClInclude Include="nmd_assembly.h" />
@@ -180,8 +183,8 @@
     <ResourceCompile Include="TrainerForC++.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\Desktop\TrainerIcon.ico" />
     <Image Include="ResourceExtern\newLogo.ico" />
+    <Image Include="ResourceExtern\NewWhiteLogo.ico" />
     <Image Include="ResourceExtern\TrainerIcon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

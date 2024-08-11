@@ -6,18 +6,14 @@ LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	switch (uMsg)
 	{
-	case WM_COMMAND:
-		switch (wParam)
-		{
-		case ButtonClickExit:
-			exit(0);
-			break;
-		}
+	case WM_CLOSE:
+		exit(0);
 		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(S_OK);
 		break;
-
+	
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -35,10 +31,10 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);						// Дескриптор курсора класса.
 	wcx.style = CS_HREDRAW | CS_VREDRAW;							// Устанавливает стиль(и) класса.
 	wcx.hbrBackground = NULL;									    // Дескриптор кисти фона класса.
-	wcx.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Дескриптор значка класса.
+	wcx.hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Дескриптор значка класса.
 	wcx.lpfnWndProc = BaseWindowProc;								// Указатель на оконную процедуру.
 	wcx.lpszClassName = L"Trainer By ShadowStorm";					// Символьная строка, она задает имя класса окна
-	wcx.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Дескриптор маленького значка, который связан с классом окна.
+	wcx.hIconSm = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Дескриптор маленького значка, который связан с классом окна.
 
 	RegisterClassEx(&wcx);
 

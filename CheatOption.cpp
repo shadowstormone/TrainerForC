@@ -2,7 +2,6 @@
 #include "CheatOption.h"
 #include "NopPatch.h"
 #include "CavePatch.h"
-#include <playsoundapi.h>
 #include "resource.h"
 
 #pragma comment(lib, "Winmm.lib")
@@ -14,11 +13,11 @@ bool CheatOption::Enable(int pid)
 
 	if (hProc)
 	{
+		PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_SYNC);
 		for (Patch* p : patches) 
 		{
 			p->Hack(hProc);
 		}
-		PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_SYNC);
 		CloseHandle(hProc);
 		return true;
 	}
@@ -31,11 +30,11 @@ bool CheatOption::Disable(int pid)
 
 	if (hProc)
 	{
+		PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_SYNC);
 		for (Patch* p : patches)
 		{
 			p->Restore(hProc);
 		}
-		PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_SYNC);
 		CloseHandle(hProc);
 		return true;
 	}
@@ -63,7 +62,7 @@ CheatOption* CheatOption::AddNopPatch(LPCWSTR signature, SIZE_T pSize)
 
 CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize)
 {
-	patches.push_back(new CavePatch(this, signature, pBytes, patchSize));
+	patches.push_back(new CavePatch(this, signature, pBytes,static_cast<int>(patchSize)));
 	return this;
 }
 

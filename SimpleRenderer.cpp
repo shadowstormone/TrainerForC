@@ -1,7 +1,5 @@
 #include "SimpleRenderer.h"
-#include <thread>
 
-std::thread _renderThread;
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 LRESULT SimpleRenderer::ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -59,35 +57,36 @@ void SimpleRenderer::RenderFrame()
         {
             SetTextColor(_memDC, _rState.optionColor);
         }
-        TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
+        //TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
+        TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // явное преобразование size_t в int
         deltaY += 25;
     }
 
     std::wstring processName = _cheat->GetProcessName();
-    size_t dotPos = processName.find_last_of(L"."); // убираем .exe из имени процесса
+    size_t dotPos = processName.find_last_of(L'.'); // убираем .exe из имени процесса
     if (dotPos != std::wstring::npos)
     {
         processName = processName.substr(0, dotPos);
     }
 
     SelectObject(_memDC, _rState.processInformationFont);
-    processInfo.clear();
-    processInfo.append(processName);
-    processInfo.append(L" ");
+    std::wstringstream ss;
+    ss << processName << L" ";
 
     if (_cheat->isProcessRunning())
     {
         SetTextColor(_memDC, _rState.processRunningColor);
-        processInfo.append(L"is running.");
-        TextOut(_memDC, 25, _windowRect.bottom - 45, processInfo.c_str(), processInfo.length());
+        ss << L"is running.";
     }
     else
     {
         SetTextColor(_memDC, _rState.processInfoColor);
-        processInfo.append(L"is not running.");
-        TextOut(_memDC, 25, _windowRect.bottom - 45, processInfo.c_str(), processInfo.length());
+        ss << L"is not running.";
     }
 
+    //TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), ss.str().length());
+    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // явное преобразование size_t в int
+    
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }
@@ -133,10 +132,8 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
     SetWindowLongPtr(_wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
     baseProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_wnd, GWLP_WNDPROC));
     SetWindowLongPtr(_wnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ThisWindowProc));
-}
 
-void SimpleRenderer::Start()
-{
+    //Constructor
     SetBkMode(_memDC, TRANSPARENT);
     _rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
     _rState.processInformationFont = SimpleCreateFont(L"Tahoma", 18);
@@ -147,11 +144,16 @@ void SimpleRenderer::Start()
 
     _isRunning = true;
     _renderThread = std::thread(&SimpleRenderer::SimpleThreadFunc, this);
-    starField = new StarFieldEffect(_memDC, 100, 2, 1, _windowRect.right, _windowRect.bottom);
+    starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);
     BaseRender::Start();
 }
 
 void SimpleRenderer::Stop()
+{
+    SimpleRenderer::~SimpleRenderer();
+}
+
+SimpleRenderer::~SimpleRenderer()
 {
     _isRunning = false;
     _renderThread.join();
