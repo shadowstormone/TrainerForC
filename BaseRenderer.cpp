@@ -6,18 +6,14 @@ LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	switch (uMsg)
 	{
-	case WM_COMMAND:
-		switch (wParam)
-		{
-		case ButtonClickExit:
-			exit(0);
-			break;
-		}
+	case WM_CLOSE:
+		exit(0);
 		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(S_OK);
 		break;
-
+	
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}

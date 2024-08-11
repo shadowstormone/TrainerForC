@@ -4,7 +4,8 @@
 #include <string>
 #include <playsoundapi.h>
 
-extern class Patch;
+//extern class Patch;
+class Patch;  // Предварительное объявление класса Patch
 
 class CheatOption
 {

@@ -62,7 +62,7 @@ CheatOption* CheatOption::AddNopPatch(LPCWSTR signature, SIZE_T pSize)
 
 CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize)
 {
-	patches.push_back(new CavePatch(this, signature, pBytes, patchSize));
+	patches.push_back(new CavePatch(this, signature, pBytes,static_cast<int>(patchSize)));
 	return this;
 }
 

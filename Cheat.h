@@ -26,13 +26,7 @@ class Cheat
 	void ProcessorOptions();
 
 public:
-
-	void OpenConsole()
-	{
-		AllocConsole();
-		FILE* pCout;
-		freopen_s(&pCout, "CONOUT$", "w", stdout);
-	}
+	void OpenConsole();
 
 	Cheat(LPCWSTR processName) : _processName(processName) 
 	{

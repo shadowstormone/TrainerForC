@@ -57,12 +57,13 @@ void SimpleRenderer::RenderFrame()
         {
             SetTextColor(_memDC, _rState.optionColor);
         }
-        TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
+        //TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
+        TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // явное преобразование size_t в int
         deltaY += 25;
     }
 
     std::wstring processName = _cheat->GetProcessName();
-    size_t dotPos = processName.find_last_of(L"."); // убираем .exe из имени процесса
+    size_t dotPos = processName.find_last_of(L'.'); // убираем .exe из имени процесса
     if (dotPos != std::wstring::npos)
     {
         processName = processName.substr(0, dotPos);
@@ -83,7 +84,8 @@ void SimpleRenderer::RenderFrame()
         ss << L"is not running.";
     }
 
-    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), ss.str().length());
+    //TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), ss.str().length());
+    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // явное преобразование size_t в int
     
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
@@ -149,4 +151,14 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 void SimpleRenderer::Stop()
 {
     SimpleRenderer::~SimpleRenderer();
+}
+
+SimpleRenderer::~SimpleRenderer()
+{
+    _isRunning = false;
+    _renderThread.join();
+    SelectObject(_memDC, _defMemBmp);
+    DeleteObject(_memBitmap);
+    DeleteDC(_memDC);
+    ReleaseDC(_wnd, _windowDC);
 }

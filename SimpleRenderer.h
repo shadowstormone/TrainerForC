@@ -49,13 +49,3 @@ public:
 
 	void Stop();
 };
-
-SimpleRenderer::~SimpleRenderer()
-{
-	_isRunning = false;
-	_renderThread.join();
-	SelectObject(_memDC, _defMemBmp);
-	DeleteObject(_memBitmap);
-	DeleteDC(_memDC);
-	ReleaseDC(_wnd, _windowDC);
-}

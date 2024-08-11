@@ -6,7 +6,8 @@
 #include <iterator>
 #include "Memory_Functions.h"
 
-extern class CheatOption;
+//extern class CheatOption;
+class CheatOption; // ѕредварительное объ€вление класса
 
 class Patch
 {
@@ -15,7 +16,7 @@ protected:
 	std::wstring mask;
 	LPVOID originalAddress = 0;
 	PBYTE originalBytes = NULL;
-	SIZE_T patchSize = 0;
+	SIZE_T patchSize;
 	CheatOption* parent = NULL;
 	LPBYTE patchAddress = nullptr;
 	LPVOID patternAddress = nullptr;
@@ -37,7 +38,7 @@ protected:
 			else 
 			{
 				mask.append(L"x");
-				BYTE singleByte = wcstoul(str.c_str(), NULL, 16);
+				BYTE singleByte = static_cast<BYTE>(wcstoul(str.c_str(), NULL, 16)); // явное преобразование unsigned long в BYTE
 				bytes.push_back(singleByte);
 			}
 		}
@@ -63,7 +64,6 @@ public:
 	{
 
 	}
-
 
 	virtual bool Hack(HANDLE hProcess) = 0;
 	virtual bool Restore(HANDLE hProcess) = 0;

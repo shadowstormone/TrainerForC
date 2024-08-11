@@ -44,6 +44,9 @@
     <ClCompile Include="StarFieldEffect.cpp">
       <Filter>Исходные файлы\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Memory_Functions.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cheat.h">
@@ -81,6 +84,9 @@
     </ClInclude>
     <ClInclude Include="StarFieldEffect.h">
       <Filter>Файлы заголовков\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonFunctions.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

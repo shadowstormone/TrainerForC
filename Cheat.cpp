@@ -1,23 +1,6 @@
 #include "Cheat.h"
 #include "Memory_Functions.h"
 
-//void Cheat::ProcessorOptions()
-//{
-//	while (isRunning)
-//	{
-//		processId = GetProcessIdByProcessName(_processName);
-//		if (processId)
-//		{
-//			for (CheatOption* option : options)
-//			{
-//				option->Process(processId);
-//				m_optionsState[option->GetDescription()] = option->IsEnabled();
-//			}
-//		}
-//		Sleep(16);
-//	}
-//}
-
 void Cheat::ProcessorOptions()
 {
 	std::thread processorThread([&]()
@@ -39,16 +22,24 @@ void Cheat::ProcessorOptions()
 	processorThread.detach();
 }
 
+void Cheat::OpenConsole()
+{
+	AllocConsole();
+	FILE* pCout;
+	freopen_s(&pCout, "CONOUT$", "w", stdout);
+}
+
 
 int Cheat::AddCheatOption(CheatOption* option)
 {
 	options.push_back(option);
 	m_optionsState.insert(std::make_pair(option->GetDescription(), option->IsEnabled()));
-	return options.size() - 1;
+	return static_cast<int>(options.size()) - 1; // явное преобразование size_t в int
 }
 
 void Cheat::RemoveCheatOption(int index)
 {
 	m_optionsState.erase(options[index]->GetDescription());
-	options.begin() + index;
+	//options.begin() + index;
+	options.erase(options.begin() + index);
 }

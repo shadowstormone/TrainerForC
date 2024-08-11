@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 #include "SimpleRenderer.h"
 
 #define W_WIDTH 400
@@ -7,4 +6,5 @@
 
 #define ButtonClickExit 1
 
-LPCWSTR WindowTitle = L"Test Trainer (+1)"; //Заголовок Окна
+//LPCWSTR WindowTitle = L"Test Trainer (+1)"; //Заголовок Окна
+extern LPCWSTR WindowTitle; // Объявление, а не определение
