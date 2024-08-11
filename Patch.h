@@ -2,11 +2,9 @@
 #include <Windows.h>
 #include <vector>
 #include <string>
-#include <sstream>
 #include <iterator>
 #include "Memory_Functions.h"
 
-//extern class CheatOption;
 class CheatOption; // Предварительное объявление класса
 
 class Patch

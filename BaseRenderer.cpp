@@ -1,5 +1,4 @@
 #include "BaseRenderer.h"
-#include "main.h"
 #include "resource.h"
 
 LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

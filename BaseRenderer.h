@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 #include "Cheat.h"
 
 class BaseRender

@@ -4,7 +4,6 @@
 #include <string>
 #include <playsoundapi.h>
 
-//extern class Patch;
 class Patch;  // Предварительное объявление класса Patch
 
 class CheatOption
@@ -36,17 +35,17 @@ public:
 
 	void Process(int processId);
 
-	bool IsEnabled() 
+	bool IsEnabled() const
 	{
 		return m_enabled;
 	}
 
-	LPCWSTR GetDescription() 
+	LPCWSTR GetDescription() const
 	{
 		return m_description;
 	}
 
-	LPCWSTR GetModuleName() 
+	LPCWSTR GetModuleName() const
 	{
 		return m_moduleName;
 	}
