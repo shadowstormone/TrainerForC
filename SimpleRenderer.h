@@ -4,12 +4,12 @@
 
 struct RENDER_STATE
 {
-	HFONT optionFont;				// РЁСЂРёС„С‚ РЅР°РґРїРёСЃРµР№ РІ С‚СЂРµР№РЅРµСЂРµ
-	HFONT processInformationFont;	// РЁСЂРёС„С‚ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїСЂРѕС†РµСЃСЃРµ
-	COLORREF optionColor;			// Р¦РІРµС‚ РѕРїС†РёР№ РЅРµ Р°РєС‚РёРІРЅС‹С…
-	COLORREF enabledOptionColor;	// Р¦РІРµС‚ Р°РєС‚РёРІРёСЂРѕРІР°РЅРЅС‹С… РѕРїС†РёР№
-	COLORREF processInfoColor;		// Р¦РІРµС‚ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїСЂРѕС†РµСЃСЃРµ
-	COLORREF processRunningColor;	// Р¦РІРµС‚ РєРѕРіРґР° РїСЂРѕС†РµСЃСЃ Р°РєС‚РёРІРµРЅ
+	HFONT optionFont;				// Шрифт надписей в трейнере
+	HFONT processInformationFont;	// Шрифт информации о процессе
+	COLORREF optionColor;			// Цвет опций не активных
+	COLORREF enabledOptionColor;	// Цвет активированных опций
+	COLORREF processInfoColor;		// Цвет информации о процессе
+	COLORREF processRunningColor;	// Цвет когда процесс активен
 };
 
 class SimpleRenderer : public BaseRender
@@ -34,12 +34,12 @@ class SimpleRenderer : public BaseRender
 	void RenderFrame();
 
 	/*HFONT SimpleCreateFont
-	LPCWSTR fontFamily - РЎРµРјРµР№СЃС‚РІРѕ С€СЂРёС„С‚Р°
-	int fontSize - Р Р°Р·РјРµСЂ
-	int fontWidth - РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ С‚РѕР»С‰РёРЅСѓ С€СЂРёС„С‚Р° РІ РґРёР°РїР°Р·РѕРЅРµ РѕС‚ 0 РґРѕ 1000
-	bool isItalic - РљСѓСЂСЃРёРІ
-	bool isUnderline - РџРѕРґС‡РµСЂРєРЅСѓС‚С‹Р№
-	bool isStrikesOut - РџРµСЂРµС‡РµСЂРєРЅСѓС‚С‹Р№*/
+	LPCWSTR fontFamily - Семейство шрифта
+	int fontHeight - Размер
+	int fontWidth - Устанавливает толщину шрифта в диапазоне от 0 до 1000
+	bool isItalic - Курсив
+	bool isUnderline - Подчеркнутый
+	bool isStrikesOut - Перечеркнутый*/
 	HFONT SimpleCreateFont(LPCWSTR fontFamily, int fontSize, int fontWidth, bool isItalic, bool isUnderline, bool isStrikesOut);
 
 	/*

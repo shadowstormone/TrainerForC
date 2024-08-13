@@ -15,19 +15,19 @@ std::wstring StringToWString(const std::string& str)
 TEST(ShowErrorMessageTest, ValidErrorMessage)
 {
     SetLastError(ERROR_ACCESS_DENIED);
-    testing::internal::CaptureStderr();  // Изменено на CaptureStderr для MessageBox
+    testing::internal::CaptureStderr();  //Изменено на CaptureStderr для MessageBox
     ShowErrorMessage(NULL, L"Failed to open process.\r\nError code:");
-    std::string output = testing::internal::GetCapturedStderr();  // Изменено на GetCapturedStderr для MessageBox
+    std::string output = testing::internal::GetCapturedStderr();  //Изменено на GetCaptureStderr для MessageBox
     std::wstring woutput = StringToWString(output);
     ASSERT_NE(woutput.find(L"Error code: 5"), std::wstring::npos);
 }
 
 TEST(ShowErrorMessageTest, UnknownError)
 {
-    SetLastError(9999); // Устанавливаем неизвестный код ошибки
-    testing::internal::CaptureStderr();  // Изменено на CaptureStderr для MessageBox
+    SetLastError(9999); // Устанвливаем неизвестный код ошибки
+    testing::internal::CaptureStderr();  //Изменено на CaptureStderr для MessageBox
     ShowErrorMessage(NULL, L"Unknown error occurred.\r\nError code:");
-    std::string output = testing::internal::GetCapturedStderr();  // Изменено на GetCapturedStderr для MessageBox
+    std::string output = testing::internal::GetCapturedStderr();  //Изменено на GetCaptureStderr для MessageBox
     std::wstring woutput = StringToWString(output);
     ASSERT_NE(woutput.find(L"9999"), std::wstring::npos);
     ASSERT_NE(woutput.find(L"Unknown error"), std::wstring::npos);
@@ -36,9 +36,9 @@ TEST(ShowErrorMessageTest, UnknownError)
 TEST(ShowErrorMessageTest2, ValidErrorMessage2)
 {
     SetLastError(ERROR_INVALID_ACCESS);
-    testing::internal::CaptureStderr();  // Изменено на CaptureStderr для MessageBox
+    testing::internal::CaptureStderr();  //Изменено на CaptureStderr для MessageBox
     ShowErrorMessage(NULL, L"Invalid access.\r\nError code:");
-    std::string output = testing::internal::GetCapturedStderr();  // Изменено на GetCapturedStderr для MessageBox
+    std::string output = testing::internal::GetCapturedStderr();  //Изменено на GetCaptureStderr для MessageBox
     std::wstring woutput = StringToWString(output);
     ASSERT_NE(woutput.find(L"Error code: 12"), std::wstring::npos);
 }

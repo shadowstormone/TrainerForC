@@ -1,26 +1,15 @@
 ﻿#include "main.h"
 #include "Cheat.h"
-#include <gtest/gtest.h>
 
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
 HWND mainWnd;
-
-
-// Функция для запуска тестов
-void RunTests()
-{
-	int argc = 0;
-	char** argv = nullptr;
-	::testing::InitGoogleTest(&argc, argv);
-	RUN_ALL_TESTS();
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// Проверяем аргументы командной строки на наличие флага тестов
+	// Проверяем аргументы командной строки на наличие флагов тестов
 	if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0)
 	{
 		RunTests();
