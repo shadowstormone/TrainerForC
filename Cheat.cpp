@@ -34,7 +34,7 @@ int Cheat::AddCheatOption(CheatOption* option)
 {
 	options.push_back(option);
 	m_optionsState.insert(std::make_pair(option->GetDescription(), option->IsEnabled()));
-	return static_cast<int>(options.size()) - 1; // Явное преобразование size_t в int
+	return static_cast<int>(options.size()) - 1; // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ size_t РІ int
 }
 
 void Cheat::RemoveCheatOption(int index)

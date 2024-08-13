@@ -58,12 +58,12 @@ void SimpleRenderer::RenderFrame()
         {
             SetTextColor(_memDC, _rState.optionColor);
         }
-        TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // Явное преобразование size_t в int
+        TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ size_t РІ int
         deltaY += 25;
     }
 
     std::wstring processName = _cheat->GetProcessName();
-    size_t dotPos = processName.find_last_of(L'.'); // убираем .exe из имени процесса
+    size_t dotPos = processName.find_last_of(L'.'); // РЈР±РёСЂР°РµРј .exe РёР· РёРјРµРЅРё РїСЂРѕС†РµСЃСЃР°
     if (dotPos != std::wstring::npos)
     {
         processName = processName.substr(0, dotPos);
@@ -84,7 +84,7 @@ void SimpleRenderer::RenderFrame()
         ss << L"is not running.";
     }
 
-    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // Явное преобразование size_t в int
+    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ size_t РІ int
     
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);

@@ -4,16 +4,16 @@
 #include <string>
 #include <playsoundapi.h>
 
-class Patch;  // Предварительное объявление класса Patch
+class Patch;  // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ РєР»Р°СЃСЃР° Patch
 
 class CheatOption
 {
-	//Свойства чита
+	//РЎРІРѕР№СЃС‚РІР° С‡РёС‚Р°
 	LPCWSTR m_moduleName = NULL;
 	LPCWSTR m_description = NULL;
 	std::vector<int> m_keys;
 
-	// Функции чита
+	// Р¤СѓРЅРєС†РёРё С‡РёС‚Р°
 	bool m_enabled = false;
 	std::vector<Patch*> patches;
 

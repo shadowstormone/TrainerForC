@@ -5,9 +5,9 @@
 #define W_WIDTH 400
 #define W_HEIGHT 444
 
-extern LPCWSTR WindowTitle; // Объявление, а не определение
+extern LPCWSTR WindowTitle; // РћР±СЉСЏРІР»РµРЅРёРµ, Р° РЅРµ РѕРїСЂРµРґРµР»РµРЅРёРµ
 
-// Функция для запуска тестов
+// Р¤СѓРЅРєС†РёСЏ РґР»СЏ Р·Р°РїСѓСЃРєР° С‚РµСЃС‚РѕРІ
 void RunTests()
 {
 	int argc = 0;

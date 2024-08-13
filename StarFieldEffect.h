@@ -23,7 +23,7 @@ class StarFieldEffect
 	HGDIOBJ oldBitMap = NULL;
 	DWORD* _bits = NULL;
 	
-	//Direction - направление звезд (-1 в лево, 1 в право)
+	//Direction - РЅР°РїСЂР°РІР»РµРЅРёРµ Р·РІРµР·Рґ (-1 РІ Р»РµРІРѕ, 1 РІ РїСЂР°РІРѕ)
 	void MoveStar(Star* star, int derection);
 	void PlotPixel(COLORREF color, int x, int y);
 	HBITMAP CreateImageForCanvas(HDC hdc);

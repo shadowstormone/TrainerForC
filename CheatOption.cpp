@@ -21,7 +21,7 @@ bool CheatOption::Enable(int pid)
             p->Hack(hProc);
         }
         CloseHandle(hProc);
-        // Воспроизведение звука асинхронно после успешного выполнения
+        // Р’РѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ Р·РІСѓРєР° Р°СЃРёРЅС…СЂРѕРЅРЅРѕ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕРіРѕ РІС‹РїРѕР»РЅРµРЅРёСЏ
         std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
         return true;
     }
@@ -39,7 +39,7 @@ bool CheatOption::Disable(int pid)
             p->Restore(hProc);
         }
         CloseHandle(hProc);
-        // Воспроизведение звука асинхронно после успешного выполнения
+        // Р’РѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ Р·РІСѓРєР° Р°СЃРёРЅС…СЂРѕРЅРЅРѕ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕРіРѕ РІС‹РїРѕР»РЅРµРЅРёСЏ
         std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
         return true;
     }
@@ -72,13 +72,13 @@ CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T p
 
 void CheatOption::Process(int processId)
 {
-    static bool keyWasPressed = false; // Флаг, отслеживающий состояние клавиши
+    static bool keyWasPressed = false; // Р¤Р»Р°Рі, РѕС‚СЃР»РµР¶РёРІР°СЋС‰РёР№ СЃРѕСЃС‚РѕСЏРЅРёРµ РєР»Р°РІРёС€Рё
 
     if (KeyPressed())
     {
-        if (!keyWasPressed) // Если клавиша была не нажата до этого
+        if (!keyWasPressed) // Р•СЃР»Рё РєР»Р°РІРёС€Р° Р±С‹Р»Р° РЅРµ РЅР°Р¶Р°С‚Р° РґРѕ СЌС‚РѕРіРѕ
         {
-            keyWasPressed = true; // Устанавливаем флаг, что клавиша нажата
+            keyWasPressed = true; // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С„Р»Р°Рі, С‡С‚Рѕ РєР»Р°РІРёС€Р° РЅР°Р¶Р°С‚Р°
 
             if (m_enabled)
             {
@@ -94,11 +94,11 @@ void CheatOption::Process(int processId)
                     m_enabled = true;
                 }
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Задержка для предотвращения многократного срабатывания
+            std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Р—Р°РґРµСЂР¶РєР° РґР»СЏ РїСЂРµРґРѕС‚РІСЂР°С‰РµРЅРёСЏ РјРЅРѕРіРѕРєСЂР°С‚РЅРѕРіРѕ СЃСЂР°Р±Р°С‚С‹РІР°РЅРёСЏ
         }
     }
     else
     {
-        keyWasPressed = false; // Сбрасываем флаг, если клавиша отпущена
+        keyWasPressed = false; // РЎР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі, РµСЃР»Рё РєР»Р°РІРёС€Р° РѕС‚РїСѓС‰РµРЅР°
     }
 }

@@ -1,4 +1,4 @@
-﻿#include "main.h"
+#include "main.h"
 #include "Cheat.h"
 
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь

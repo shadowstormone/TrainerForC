@@ -5,7 +5,7 @@
 #include <iterator>
 #include "Memory_Functions.h"
 
-class CheatOption; // Предварительное объявление класса
+class CheatOption; // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ РєР»Р°СЃСЃР°
 
 class Patch
 {
@@ -36,7 +36,7 @@ protected:
 			else 
 			{
 				mask.append(L"x");
-				BYTE singleByte = static_cast<BYTE>(wcstoul(str.c_str(), NULL, 16)); // Явное преобразование unsigned long в BYTE
+				BYTE singleByte = static_cast<BYTE>(wcstoul(str.c_str(), NULL, 16)); // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ unsigned long РІ BYTE
 				bytes.push_back(singleByte);
 			}
 		}

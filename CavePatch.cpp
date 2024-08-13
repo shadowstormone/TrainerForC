@@ -86,7 +86,7 @@ bool CavePatch::Hack(HANDLE hProcess)
     size_t offset = 0;
     do{
         const size_t length = nmd_x86_ldisasm(originalBytes + offset, MAX_INSTRUCTION_LENGTH - offset, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
-        originalSize += static_cast<BYTE>(length); // Явное преобразование size_t в BYTE
+        originalSize += static_cast<BYTE>(length); // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ size_t РІ BYTE
         offset += length;
     } while (originalSize < jmpSize);
 

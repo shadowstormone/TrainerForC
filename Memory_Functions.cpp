@@ -287,13 +287,13 @@ bool CheckSignature(PBYTE source, PBYTE pattern, std::wstring& mask)
 
 void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage)
 {
-	// Получаем последний код ошибки
+	// РџРѕР»СѓС‡Р°РµРј РїРѕСЃР»РµРґРЅРёР№ РєРѕРґ РѕС€РёР±РєРё
 	DWORD errCode = GetLastError();
 
-	// Буфер для сообщения об ошибке
+	// Р‘СѓС„РµСЂ РґР»СЏ СЃРѕРѕР±С‰РµРЅРёСЏ РѕР± РѕС€РёР±РєРµ
 	LPWSTR errBuffer = nullptr;
 
-	// Форматируем сообщение об ошибке
+	// Р¤РѕСЂРјР°С‚РёСЂСѓРµРј СЃРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
@@ -304,14 +304,14 @@ void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage)
 		NULL
 	);
 
-	// Создаем итоговое сообщение
+	// РЎРѕР·РґР°РµРј РёС‚РѕРіРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ
 	std::wstringstream ss;
 	ss << errorMessage << L" " << errCode << L": " << (errBuffer ? errBuffer : L"Unknown error");
 
-	// Показ сообщения в MessageBox
+	// РџРѕРєР°Р· СЃРѕРѕР±С‰РµРЅРёСЏ РІ MessageBox
 	MessageBox(hWnd, ss.str().c_str(), L"ERROR", MB_OK | MB_ICONERROR);
 
-	// Освобождаем буфер с сообщением об ошибке
+	// РћСЃРІРѕР±РѕР¶РґР°РµРј Р±СѓС„РµСЂ СЃ СЃРѕРѕР±С‰РµРЅРёРµРј РѕР± РѕС€РёР±РєРµ
 	if (errBuffer)
 	{
 		LocalFree(errBuffer);
