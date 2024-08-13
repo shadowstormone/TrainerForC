@@ -40,6 +40,5 @@ int Cheat::AddCheatOption(CheatOption* option)
 void Cheat::RemoveCheatOption(int index)
 {
 	m_optionsState.erase(options[index]->GetDescription());
-	//options.begin() + index;
 	options.erase(options.begin() + index);
 }

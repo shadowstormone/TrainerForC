@@ -35,11 +35,31 @@ class SimpleRenderer : public BaseRender
 
 	/*HFONT SimpleCreateFont
 	LPCWSTR fontFamily - Семейство шрифта
-	int fontHeight - Размер
+	int fontSize - Размер
+	int fontWidth - Устанавливает толщину шрифта в диапазоне от 0 до 1000
 	bool isItalic - Курсив
 	bool isUnderline - Подчеркнутый
 	bool isStrikesOut - Перечеркнутый*/
-	HFONT SimpleCreateFont(LPCWSTR fontFamily, int fontHeight, bool isItalic, bool isUnderline, bool isStrikesOut);
+	HFONT SimpleCreateFont(LPCWSTR fontFamily, int fontSize, int fontWidth, bool isItalic, bool isUnderline, bool isStrikesOut);
+
+	/*
+		FW_DONTCARE		0
+		FW_THIN			100
+		FW_EXTRALIGHT	200
+		FW_ULTRALIGHT	200
+		FW_LIGHT		300
+		FW_NORMAL		400
+		FW_REGULAR		400
+		FW_MEDIUM		500
+		FW_SEMIBOLD		600
+		FW_DEMIBOLD		600
+		FW_BOLD			700
+		FW_EXTRABOLD	800
+		FW_ULTRABOLD	800
+		FW_HEAVY		900
+		FW_BLACK		1000
+	*/
+
 
 	void SimpleThreadFunc();
 

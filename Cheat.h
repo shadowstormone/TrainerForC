@@ -24,7 +24,6 @@ class Cheat
 	bool isRunning = false;
 
 	void ProcessorOptions();
-
 public:
 	void OpenConsole();
 

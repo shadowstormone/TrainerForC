@@ -124,7 +124,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+      <ForceFileOutput>
+      </ForceFileOutput>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
@@ -146,7 +147,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
-      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+      <ForceFileOutput>
+      </ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -157,6 +159,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory_Functions.cpp" />
     <ClCompile Include="NopPatch.cpp" />
+    <ClCompile Include="ShowErrorMessage_test.cpp" />
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
   </ItemGroup>
@@ -185,6 +188,9 @@
     <Image Include="ResourceExtern\newLogo.ico" />
     <Image Include="ResourceExtern\NewWhiteLogo.ico" />
     <Image Include="ResourceExtern\TrainerIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="ResourceExtern\FRIZQT.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

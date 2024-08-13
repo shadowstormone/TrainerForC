@@ -1,4 +1,5 @@
 #include "SimpleRenderer.h"
+#include "resource.h"
 
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -43,8 +44,8 @@ void SimpleRenderer::RenderFrame()
     int deltaY = 25;
 
     //Enable StarEffect
-    starField->UpdateStars();
-    starField->DrowToDest(_memDC, 0, 0);
+    //starField->UpdateStars();
+    //starField->DrowToDest(_memDC, 0, 0);
     //Enable StarEffect
 
     for (auto& pair : _cheat->GetCheatOptionState())
@@ -57,7 +58,6 @@ void SimpleRenderer::RenderFrame()
         {
             SetTextColor(_memDC, _rState.optionColor);
         }
-        //TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
         TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // явное преобразование size_t в int
         deltaY += 25;
     }
@@ -84,17 +84,16 @@ void SimpleRenderer::RenderFrame()
         ss << L"is not running.";
     }
 
-    //TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), ss.str().length());
     TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // явное преобразование size_t в int
     
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }
 
-HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontHeight, bool isItalic = false, bool isUnderline = false, bool isStrikesOut = false)
+HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontSize, int fontWidth, bool isItalic = false, bool isUnderline = false, bool isStrikesOut = false)
 {
 
-    return CreateFont(fontHeight, 0, 0, 0, 0, isItalic, isUnderline, isStrikesOut, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+    return CreateFont(fontSize, 0, 0, 0, fontWidth, isItalic, isUnderline, isStrikesOut, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, fontFamily);
 }
 
@@ -135,8 +134,9 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     //Constructor
     SetBkMode(_memDC, TRANSPARENT);
-    _rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
-    _rState.processInformationFont = SimpleCreateFont(L"Tahoma", 18);
+    //_rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
+    _rState.optionFont = SimpleCreateFont(L"Friz Quadrata TT", 20, FW_SEMIBOLD);
+    _rState.processInformationFont = SimpleCreateFont(L"Friz Quadrata TT", 18, FW_SEMIBOLD);
     _rState.optionColor = RGB(255, 255, 255);
     _rState.enabledOptionColor = RGB(0, 220, 0);
     _rState.processInfoColor = RGB(146, 146, 146);
@@ -144,19 +144,22 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     _isRunning = true;
     _renderThread = std::thread(&SimpleRenderer::SimpleThreadFunc, this);
-    starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);
+    //starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);
     BaseRender::Start();
 }
 
 void SimpleRenderer::Stop()
 {
+    _isRunning = false;
+    if (_renderThread.joinable())
+    {
+        _renderThread.join();
+    }
     SimpleRenderer::~SimpleRenderer();
 }
 
 SimpleRenderer::~SimpleRenderer()
 {
-    _isRunning = false;
-    _renderThread.join();
     SelectObject(_memDC, _defMemBmp);
     DeleteObject(_memBitmap);
     DeleteDC(_memDC);
