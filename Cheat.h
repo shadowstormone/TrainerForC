@@ -22,7 +22,6 @@ class Cheat
 	}
 
 	bool isRunning = false;
-
 	void ProcessorOptions();
 public:
 	void OpenConsole();
@@ -63,6 +62,5 @@ public:
 	}
 
 	int AddCheatOption(CheatOption* option);
-
 	void RemoveCheatOption(int index);
 };

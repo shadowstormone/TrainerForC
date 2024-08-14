@@ -1,7 +1,6 @@
 #pragma once
 #ifndef _MEMORY_FUNCTIONS
 #define _MEMORY_FUNCTION 1
-
 #include <string>
 #include <Windows.h>
 #include <TlHelp32.h>

@@ -135,7 +135,6 @@ bool CavePatch::Hack(HANDLE hProcess)
             std::memcpy(bytes + jmpSize + nops, originalBytes + jmpSize, originalSize - jmpSize - nops);
 
             WriteMem(hProcess, originalAddress, bytes, originalSize);
-
             delete[] bytes;
         }
         else

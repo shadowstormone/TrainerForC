@@ -40,7 +40,7 @@ int GetProcessIdByProcessName(LPCWSTR processName)
 DWORD_PTR GetProcessBaseAddress(HANDLE hProcess)
 {
 	DWORD_PTR baseAddress = 0;
-	HMODULE* moduleArray = NULL;
+	HMODULE*  moduleArray = NULL;
 	LPBYTE	  moduleArrayBytes = NULL;
 	DWORD	  bytesRequired = 0;
 
@@ -182,7 +182,7 @@ LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
 		return NULL;
 	}
 
-	int bytesWrite = 0;
+	//int bytesWrite = 0;
 
 	LPVOID ptr = VirtualAllocEx(hProcess, startAddress, allocationAmount, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
@@ -201,9 +201,8 @@ int FreeMem(HANDLE hProcess, LPVOID address, SIZE_T amount)
 		return -1;
 	}
 
-	int bytesWrite = 0;
-
-	bool result = VirtualFreeEx(hProcess, address, amount, MEM_DECOMMIT);
+	//int bytesWrite = 0;
+	bool result = VirtualFreeEx(hProcess, address, amount, MEM_DECOMMIT | MEM_RELEASE);
 
 	if (!result)
 	{
@@ -238,7 +237,6 @@ LPVOID ScanSignature(HANDLE hProcess, ULONG_PTR startAddress, SIZE_T scanSize, P
 			BYTE* buffer = new BYTE[mbi.RegionSize];
 			void* baseAddress = mbi.BaseAddress;
 			ReadProcessMemory(hProcess, baseAddress, buffer, mbi.RegionSize, &bytesRead);
-
 
 			if (bytesRead == 0)
 			{
@@ -296,13 +294,7 @@ void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage)
 	// Форматируем сообщение об ошибке
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		errCode,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPWSTR)&errBuffer,
-		0,
-		NULL
-	);
+		NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errBuffer, 0, NULL);
 
 	// Создаем итоговое сообщение
 	std::wstringstream ss;

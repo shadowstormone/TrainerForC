@@ -11,7 +11,6 @@ protected:
 
 	void CreateBaseWindow(LPCWSTR title, int width, int height);
 	void StartMessageCycle();
-
 public:
 	BaseRender(Cheat* cheat, LPCWSTR title, int width, int height);
 	virtual void Start() { StartMessageCycle(); }

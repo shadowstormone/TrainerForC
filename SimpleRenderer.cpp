@@ -134,9 +134,8 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     //Constructor
     SetBkMode(_memDC, TRANSPARENT);
-    //_rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
-    _rState.optionFont = SimpleCreateFont(L"Friz Quadrata TT", 20, FW_SEMIBOLD);
-    _rState.processInformationFont = SimpleCreateFont(L"Friz Quadrata TT", 18, FW_SEMIBOLD);
+    _rState.optionFont = SimpleCreateFont(L"Friz Quadrata TT", 20, FW_REGULAR);
+    _rState.processInformationFont = SimpleCreateFont(L"Friz Quadrata TT", 18, FW_REGULAR);
     _rState.optionColor = RGB(255, 255, 255);
     _rState.enabledOptionColor = RGB(0, 220, 0);
     _rState.processInfoColor = RGB(146, 146, 146);

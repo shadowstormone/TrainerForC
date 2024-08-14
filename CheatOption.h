@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include <vector>
 #include <string>
-#include <playsoundapi.h>
 
 class Patch;  // Предварительное объявление класса Patch
 
@@ -32,7 +31,6 @@ public:
 
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
-
 	void Process(int processId);
 
 	bool IsEnabled() const
