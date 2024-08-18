@@ -162,6 +162,7 @@
     <ClCompile Include="ShowErrorMessage_test.cpp" />
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
+    <ClCompile Include="WriteAdressNum.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseRenderer.h" />
@@ -176,6 +177,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleRenderer.h" />
     <ClInclude Include="StarFieldEffect.h" />
+    <ClInclude Include="WriteAdressNum.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />

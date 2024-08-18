@@ -59,7 +59,6 @@ class SimpleRenderer : public BaseRender
 		FW_HEAVY		900
 		FW_BLACK		1000
 	*/
-
 	void SimpleThreadFunc();
 
 public:

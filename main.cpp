@@ -16,23 +16,29 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return 0;
 	}
 
-	Cheat* cheat = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
+	Cheat* ProcessAttackGame = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
 
-	//X32 Game
-	std::vector<int> optionkeys1 = { 0x61 };
-	CheatOption* option1 = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", optionkeys1);
-	BYTE bytes1[] = { 0xBE, 0xEB, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
-	option1->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", bytes1, 17);
+	std::vector<int> GoodModeKey = { 0x61 };
+	CheatOption* GoodModeOption = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", GoodModeKey);
+	BYTE HackPatchBytes[] = { 0xBE, 0xEB, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
+	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной тнструкции в памяти
 
-	cheat->AddCheatOption(option1);
+	std::vector<int> VriteKey = { 0x62 };
+	std::vector<uintptr_t> offsets = { 0x00256650,0x370, 0xAC, 0x4B0 };
+	CheatOption* addr1 = new CheatOption(NULL, L"[Numpad 2] - Write 9999 for HP", VriteKey);
+	addr1->AddWriteValuePatch(L"Tutorial-i386.exe", offsets, 9999);
 
-	cheat->Start();
-	BaseRender* renderer = new SimpleRenderer(cheat, WindowTitle, W_WIDTH, W_HEIGHT);
+	ProcessAttackGame->AddCheatOption(GoodModeOption);
+	ProcessAttackGame->AddCheatOption(addr1);
+
+	ProcessAttackGame->Start();
+	BaseRender* renderer = new SimpleRenderer(ProcessAttackGame, WindowTitle, W_WIDTH, W_HEIGHT);
 	renderer->Start();
-	cheat->Stop();
+	ProcessAttackGame->Stop();
 
-	delete option1;
-	delete cheat;
+	delete GoodModeOption;
+	delete ProcessAttackGame;
+	delete addr1;
 
 	return 0;
 }

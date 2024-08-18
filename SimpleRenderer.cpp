@@ -58,6 +58,7 @@ void SimpleRenderer::RenderFrame()
         {
             SetTextColor(_memDC, _rState.optionColor);
         }
+
         TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // Явное преобразование size_t в int
         deltaY += 25;
     }
@@ -85,14 +86,13 @@ void SimpleRenderer::RenderFrame()
     }
 
     TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // Явное преобразование size_t в int
-    
+
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }
 
 HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontSize, int fontWidth, bool isItalic = false, bool isUnderline = false, bool isStrikesOut = false)
 {
-
     return CreateFont(fontSize, 0, 0, 0, fontWidth, isItalic, isUnderline, isStrikesOut, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, fontFamily);
 }

@@ -29,7 +29,6 @@ void Cheat::OpenConsole()
 	freopen_s(&pCout, "CONOUT$", "w", stdout);
 }
 
-
 int Cheat::AddCheatOption(CheatOption* option)
 {
 	options.push_back(option);

@@ -153,6 +153,11 @@ int WriteMem(HANDLE hProcess, LPVOID address, LPVOID source, SIZE_T writeAmount)
 	return 0;*/
 }
 
+int WriteMem(HANDLE hProcess, uintptr_t address, int value)
+{
+	return WriteMem(hProcess, reinterpret_cast<LPVOID>(address), &value, sizeof(value));
+}
+
 LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount)
 {
 	if (!hProcess)
@@ -174,6 +179,25 @@ LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount)
 	return reinterpret_cast<LPVOID>(buf);
 }
 
+uintptr_t ReadMem(HANDLE hProcess, uintptr_t address)
+{
+	if (!hProcess)
+	{
+		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
+		return 0;
+	}
+
+	LPVOID result = ReadMem(hProcess, reinterpret_cast<LPVOID>(address), sizeof(uintptr_t));
+	if (result == nullptr)
+	{
+		ShowErrorMessage(NULL, L"Read memory failed.\r\nError code: ");
+		return 0;
+	}
+	uintptr_t value = *reinterpret_cast<uintptr_t*>(result);
+	delete[] reinterpret_cast<unsigned char*>(result);
+	return value;
+}
+
 LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
 {
 	if (!hProcess)
@@ -181,8 +205,6 @@ LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
 		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
 		return NULL;
 	}
-
-	//int bytesWrite = 0;
 
 	LPVOID ptr = VirtualAllocEx(hProcess, startAddress, allocationAmount, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
@@ -201,8 +223,7 @@ int FreeMem(HANDLE hProcess, LPVOID address, SIZE_T amount)
 		return -1;
 	}
 
-	//int bytesWrite = 0;
-	bool result = VirtualFreeEx(hProcess, address, amount, MEM_DECOMMIT | MEM_RELEASE);
+	bool result = VirtualFreeEx(hProcess, address, amount, MEM_DECOMMIT);
 
 	if (!result)
 	{

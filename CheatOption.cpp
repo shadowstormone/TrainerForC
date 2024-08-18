@@ -7,6 +7,7 @@
 #include "NopPatch.h"
 #include "CavePatch.h"
 #include "resource.h"
+#include "WriteAdressNum.h"
 
 #pragma comment(lib, "Winmm.lib")
 
@@ -21,7 +22,6 @@ bool CheatOption::Enable(int pid)
             p->Hack(hProc);
         }
         CloseHandle(hProc);
-        // Воспроизведение звука асинхронно после успешного выполнения
         std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
         return true;
     }
@@ -39,7 +39,6 @@ bool CheatOption::Disable(int pid)
             p->Restore(hProc);
         }
         CloseHandle(hProc);
-        // Воспроизведение звука асинхронно после успешного выполнения
         std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
         return true;
     }
@@ -70,6 +69,12 @@ CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T p
     return this;
 }
 
+CheatOption* CheatOption::AddWriteValuePatch(LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
+{
+    patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
+    return this;
+}
+
 void CheatOption::Process(int processId)
 {
     static bool keyWasPressed = false; // Флаг, отслеживающий состояние клавиши
@@ -89,7 +94,35 @@ void CheatOption::Process(int processId)
             }
             else
             {
-                if (Enable(processId))
+                bool addressPatchApplied = false;
+                for (auto& patch : patches)
+                {
+                    if (auto writePatch = dynamic_cast<WriteAddressPatch*>(patch))
+                    {
+                        if (!writePatch->IsApplied())
+                        {
+                            if (Enable(processId))
+                            {
+                                addressPatchApplied = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (addressPatchApplied)
+                {
+                    // Сразу отключаем WriteAddressPatch после применения
+                    for (auto& patch : patches)
+                    {
+                        if (auto writePatch = dynamic_cast<WriteAddressPatch*>(patch))
+                        {
+                            writePatch->Restore(OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId));
+                            break;
+                        }
+                    }
+                }
+                else if (Enable(processId))
                 {
                     m_enabled = true;
                 }

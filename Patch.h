@@ -14,10 +14,15 @@ protected:
 	std::wstring mask;
 	LPVOID originalAddress = 0;
 	PBYTE originalBytes = NULL;
-	SIZE_T patchSize;
+	SIZE_T patchSize = 0;
 	CheatOption* parent = NULL;
 	LPBYTE patchAddress = nullptr;
 	LPVOID patternAddress = nullptr;
+
+	// Дополнительные атрибуты для конструктора с processName, offset и value
+	std::wstring processName;
+	std::vector<uintptr_t> offsets;
+	int value;
 
 	void convertPattern(LPCWSTR sign)
 	{
@@ -61,6 +66,14 @@ public:
 		Patch(parentInstance, signature, 0 ,pSize)
 	{
 
+	}
+
+	Patch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
+	{
+		parent = parentInstance;
+		this->processName = processName;
+		this->offsets = offsets;
+		this->value = value;
 	}
 
 	virtual bool Hack(HANDLE hProcess) = 0;

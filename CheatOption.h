@@ -19,7 +19,6 @@ class CheatOption
 	bool Enable(int pid);
 	bool Disable(int pid);
 	bool KeyPressed();
-
 public:
 	CheatOption(LPCWSTR moduleName, LPCWSTR description, const std::vector<int>& keys) 
 	{
@@ -29,8 +28,16 @@ public:
 		patches.clear();
 	}
 
+	CheatOption(LPCWSTR moduleName, LPCWSTR description)
+	{
+		m_moduleName = moduleName;
+		m_description = description;
+		patches.clear();
+	}
+
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
+	CheatOption* AddWriteValuePatch(LPCWSTR processName, std::vector<uintptr_t> offsets, int value);
 	void Process(int processId);
 
 	bool IsEnabled() const
