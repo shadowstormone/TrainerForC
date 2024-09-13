@@ -2,8 +2,10 @@
 #include <Windows.h>
 #include <vector>
 #include <string>
+#include "Cheat.h"
 
 class Patch;  // Предварительное объявление класса Patch
+class Cheat;  // Предварительное объявление класса Cheat
 
 class CheatOption
 {
@@ -37,7 +39,7 @@ public:
 
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
-	CheatOption* AddWriteValuePatch(LPCWSTR processName, std::vector<uintptr_t> offsets, int value);
+	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value);
 	void Process(int processId);
 
 	bool IsEnabled() const

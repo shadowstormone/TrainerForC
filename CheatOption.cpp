@@ -69,11 +69,13 @@ CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T p
     return this;
 }
 
-CheatOption* CheatOption::AddWriteValuePatch(LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
+CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value)
 {
+    LPCWSTR processName = cheatProcess->GetProcessName();
     patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
     return this;
 }
+
 
 void CheatOption::Process(int processId)
 {

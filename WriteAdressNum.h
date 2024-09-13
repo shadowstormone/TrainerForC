@@ -23,7 +23,6 @@ public:
 	{
 		if (isApplied)
 		{
-			// Ваш код для восстановления патча
 			isApplied = false;
 		}
 		return false;

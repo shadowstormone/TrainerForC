@@ -26,6 +26,7 @@ class SimpleRenderer : public BaseRender
 	bool _isRunning;
 	StarFieldEffect* starField = NULL;
 	std::thread _renderThread;
+	const double M_PI = 3.141592653589793238;
 
 	static LRESULT (*baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

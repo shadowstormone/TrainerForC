@@ -21,12 +21,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	std::vector<int> GoodModeKey = { 0x61 };
 	CheatOption* GoodModeOption = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", GoodModeKey);
 	BYTE HackPatchBytes[] = { 0xBE, 0xEB, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
-	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной тнструкции в памяти
+	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной инструкции в памяти
 
 	std::vector<int> VriteKey = { 0x62 };
-	std::vector<uintptr_t> offsets = { 0x00256650,0x370, 0xAC, 0x4B0 };
-	CheatOption* addr1 = new CheatOption(NULL, L"[Numpad 2] - Write 9999 for HP", VriteKey);
-	addr1->AddWriteValuePatch(L"Tutorial-i386.exe", offsets, 9999);
+	std::vector<uintptr_t> offsets = { 0x00256650, 0x370, 0xAC, 0x4B0 };
+	CheatOption* addr1 = new CheatOption(NULL, L"[Numpad 2] - Set 9999 HP", VriteKey);
+	addr1->AddWriteValuePatch(ProcessAttackGame, offsets, 9999);
 
 	ProcessAttackGame->AddCheatOption(GoodModeOption);
 	ProcessAttackGame->AddCheatOption(addr1);

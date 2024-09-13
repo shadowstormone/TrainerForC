@@ -44,8 +44,8 @@ void SimpleRenderer::RenderFrame()
     int deltaY = 25;
 
     //Enable StarEffect
-    //starField->UpdateStars();
-    //starField->DrowToDest(_memDC, 0, 0);
+    /*starField->UpdateStars();
+    starField->DrowToDest(_memDC, 0, 0);*/
     //Enable StarEffect
 
     for (auto& pair : _cheat->GetCheatOptionState())
@@ -85,7 +85,22 @@ void SimpleRenderer::RenderFrame()
         ss << L"is not running.";
     }
 
-    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // Явное преобразование size_t в int
+    // Отображаем строку состояния процесса
+    TextOut(_memDC, 25, _windowRect.bottom - 70, ss.str().c_str(), static_cast<int>(ss.str().length()));
+
+    // Подготовка строки для вывода PID процесса или "N/A"
+    std::wstringstream ssPID;
+    if (_cheat->isProcessRunning())
+    {
+        ssPID << L"PID: " << _cheat->GetProcessID(); // Если процесс запущен, показываем его PID
+    }
+    else
+    {
+        ssPID << L"PID: N/A"; // Если процесс не запущен, выводим "N/A"
+    }
+
+    // Отображаем строку с PID под строкой состояния процесса
+    TextOut(_memDC, 25, _windowRect.bottom - 45, ssPID.str().c_str(), static_cast<int>(ssPID.str().length()));
 
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
@@ -134,8 +149,8 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     //Constructor
     SetBkMode(_memDC, TRANSPARENT);
-    _rState.optionFont = SimpleCreateFont(L"Friz Quadrata TT", 20, FW_REGULAR);
-    _rState.processInformationFont = SimpleCreateFont(L"Friz Quadrata TT", 18, FW_REGULAR);
+    _rState.optionFont = SimpleCreateFont(L"ResourceExtern\\FRIZQT.ttf", 20, FW_REGULAR);
+    _rState.processInformationFont = SimpleCreateFont(L"ResourceExtern\\FRIZQT.ttf", 17, FW_REGULAR);
     _rState.optionColor = RGB(255, 255, 255);
     _rState.enabledOptionColor = RGB(0, 220, 0);
     _rState.processInfoColor = RGB(146, 146, 146);

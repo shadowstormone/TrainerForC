@@ -2,8 +2,8 @@
 #include "SimpleRenderer.h"
 #include <gtest/gtest.h>
 
-#define W_WIDTH 400
-#define W_HEIGHT 444
+constexpr auto W_WIDTH = 400;
+constexpr auto W_HEIGHT = 444;
 
 extern LPCWSTR WindowTitle; // Объявление, а не определение
 

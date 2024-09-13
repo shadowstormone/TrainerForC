@@ -192,7 +192,10 @@
     <Image Include="ResourceExtern\TrainerIcon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="ResourceExtern\FRIZQT.ttf" />
+    <Font Include="ResourceExtern\FRIZQT.ttf">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </Font>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

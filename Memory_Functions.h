@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _MEMORY_FUNCTIONS
-#define _MEMORY_FUNCTION 1
 #include <string>
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -23,5 +21,3 @@ void ShowErrorMessage(HWND hWnd, LPCWSTR errorMassage);
 bool isTargetX64Process(HANDLE hProcess);
 DWORD_PTR GetProcessBaseAddress(HANDLE hProcess);
 DWORD_PTR GetModuleBaseAddress(HANDLE hProcess, LPCWSTR lpszModuleName);
-
-#endif // !_MEMORY_FUNCTIONS

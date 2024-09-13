@@ -7,6 +7,8 @@
 #include "CheatOption.h"
 #include "Memory_Functions.h"
 
+class CheatOption; // Предварительное объявление класса CheatOption
+
 class Cheat
 {
 	std::vector<CheatOption*> options;
@@ -57,6 +59,11 @@ public:
 	}
 
 	bool isProcessRunning()
+	{
+		return processId;
+	}
+
+	DWORD GetProcessID() const
 	{
 		return processId;
 	}
