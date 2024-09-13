@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Включаемый файл, созданный в Microsoft Visual C++.
-// Используется TrainerForC++.rc
+// Р’РєР»СЋС‡Р°РµРјС‹Р№ С„Р°Р№Р», СЃРѕР·РґР°РЅРЅС‹Р№ РІ Microsoft Visual C++.
+// РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ TrainerForC++.rc
 //
 #define VS_VERSION_INFO                 1
 #define IDR_WAVE1                       107

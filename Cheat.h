@@ -7,7 +7,7 @@
 #include "CheatOption.h"
 #include "Memory_Functions.h"
 
-class CheatOption; // Предварительное объявление класса CheatOption
+class CheatOption; // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ РєР»Р°СЃСЃР° CheatOption
 
 class Cheat
 {

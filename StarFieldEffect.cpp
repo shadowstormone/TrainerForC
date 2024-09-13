@@ -80,7 +80,7 @@ StarFieldEffect::~StarFieldEffect()
 
 //#include "StarFieldEffect.h"
 //
-//// Метод для перемещения "звезды" (или текста) в определенном направлении
+//// РњРµС‚РѕРґ РґР»СЏ РїРµСЂРµРјРµС‰РµРЅРёСЏ "Р·РІРµР·РґС‹" (РёР»Рё С‚РµРєСЃС‚Р°) РІ РѕРїСЂРµРґРµР»РµРЅРЅРѕРј РЅР°РїСЂР°РІР»РµРЅРёРё
 //void StarFieldEffect::MoveStar(Star* star, int direction)
 //{
 //    star->x = star->x + star->speed * direction;
@@ -98,7 +98,7 @@ StarFieldEffect::~StarFieldEffect()
 //    }
 //}
 //
-//// Метод для создания изображения для холста
+//// РњРµС‚РѕРґ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РґР»СЏ С…РѕР»СЃС‚Р°
 //HBITMAP StarFieldEffect::CreateImageForCanvas(HDC hdc)
 //{
 //    BITMAPINFO bi;
@@ -113,7 +113,7 @@ StarFieldEffect::~StarFieldEffect()
 //    return CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, reinterpret_cast<LPVOID*>(&_bits), NULL, 0);
 //}
 //
-//// Конструктор класса StarFieldEffect
+//// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РєР»Р°СЃСЃР° StarFieldEffect
 //StarFieldEffect::StarFieldEffect(HDC sourceDC, int starsPerPlane, int planesCount, int speed, int width, int height) :
 //    _starsPerPlane(starsPerPlane), _planesCount(planesCount), _speed(speed), _width(width), _height(height)
 //{
@@ -132,34 +132,34 @@ StarFieldEffect::~StarFieldEffect()
 //    }
 //}
 //
-//// Метод для обновления и отрисовки текста на холсте
+//// РњРµС‚РѕРґ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ Рё РѕС‚СЂРёСЃРѕРІРєРё С‚РµРєСЃС‚Р° РЅР° С…РѕР»СЃС‚Рµ
 //void StarFieldEffect::UpdateStars()
 //{
-//    // Очистка экрана
+//    // РћС‡РёСЃС‚РєР° СЌРєСЂР°РЅР°
 //    memset(_bits, 0, _width * _height * 4);
 //
-//    // Устанавливаем параметры текста
+//    // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РїР°СЂР°РјРµС‚СЂС‹ С‚РµРєСЃС‚Р°
 //    SetBkMode(workDC, TRANSPARENT);
-//    SetTextColor(workDC, RGB(255, 255, 255)); // Белый цвет текста
+//    SetTextColor(workDC, RGB(255, 255, 255)); // Р‘РµР»С‹Р№ С†РІРµС‚ С‚РµРєСЃС‚Р°
 //
-//    // Перебираем все "звезды" и рисуем текст вместо них
+//    // РџРµСЂРµР±РёСЂР°РµРј РІСЃРµ "Р·РІРµР·РґС‹" Рё СЂРёСЃСѓРµРј С‚РµРєСЃС‚ РІРјРµСЃС‚Рѕ РЅРёС…
 //    for (int i = 0; i < _starCount; i++)
 //    {
 //        Star* star = &_mStars[i];
-//        MoveStar(star, -1); // Перемещаем текст (направление -1)
+//        MoveStar(star, -1); // РџРµСЂРµРјРµС‰Р°РµРј С‚РµРєСЃС‚ (РЅР°РїСЂР°РІР»РµРЅРёРµ -1)
 //
-//        // Рисуем текст "ShadowStormOne" на позиции "звезды"
+//        // Р РёСЃСѓРµРј С‚РµРєСЃС‚ "ShadowStormOne" РЅР° РїРѕР·РёС†РёРё "Р·РІРµР·РґС‹"
 //        TextOut(workDC, star->x, star->y, L"ShadowStormOne", wcslen(L"ShadowStormOne"));
 //    }
 //}
 //
-//// Метод для копирования холста на конечный DC
+//// РњРµС‚РѕРґ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ С…РѕР»СЃС‚Р° РЅР° РєРѕРЅРµС‡РЅС‹Р№ DC
 //void StarFieldEffect::DrowToDest(HDC destDC, int x, int y)
 //{
 //    BitBlt(destDC, x, y, _width, _height, workDC, 0, 0, SRCCOPY);
 //}
 //
-//// Деструктор для очистки ресурсов
+//// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ РґР»СЏ РѕС‡РёСЃС‚РєРё СЂРµСЃСѓСЂСЃРѕРІ
 //StarFieldEffect::~StarFieldEffect()
 //{
 //    delete[] _mStars;
