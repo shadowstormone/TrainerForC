@@ -56,4 +56,9 @@ public:
 	{
 		return m_moduleName;
 	}
+
+	void SetModuleName(LPCWSTR moduleName)
+	{
+		m_moduleName = moduleName;
+	}
 };

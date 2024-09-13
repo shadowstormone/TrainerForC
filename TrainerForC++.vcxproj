@@ -159,7 +159,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory_Functions.cpp" />
     <ClCompile Include="NopPatch.cpp" />
-    <ClCompile Include="ShowErrorMessage_test.cpp" />
+    <ClCompile Include="Errors_test.cpp" />
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
     <ClCompile Include="WriteAdressNum.cpp" />

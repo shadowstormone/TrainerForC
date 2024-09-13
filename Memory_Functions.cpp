@@ -304,6 +304,30 @@ bool CheckSignature(PBYTE source, PBYTE pattern, std::wstring& mask)
 //	MessageBox(NULL, errStr.c_str(), L"ERROR", MB_OK | MB_ICONERROR);
 //}
 
+void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage, DWORD errCode)
+{
+	// Буфер для сообщения об ошибке
+	LPWSTR errBuffer = nullptr;
+
+	// Форматируем сообщение об ошибке
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errBuffer, 0, NULL);
+
+	// Создаем итоговое сообщение
+	std::wstringstream ss;
+	ss << errorMessage << L" " << errCode << L": " << (errBuffer ? errBuffer : L"Unknown error");
+
+	// Показ сообщения в MessageBox
+	MessageBox(hWnd, ss.str().c_str(), L"ERROR", MB_OK | MB_ICONERROR);
+
+	// Освобождаем буфер с сообщением об ошибке
+	if (errBuffer)
+	{
+		LocalFree(errBuffer);
+	}
+}
+
 void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage)
 {
 	// Получаем последний код ошибки

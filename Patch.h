@@ -78,4 +78,19 @@ public:
 
 	virtual bool Hack(HANDLE hProcess) = 0;
 	virtual bool Restore(HANDLE hProcess) = 0;
+
+	CheatOption* GetParent() const
+	{
+		return parent;
+	}
+
+	LPVOID GetOriginalAddress() const
+	{
+		return originalAddress;
+	}
+
+	void SetParent(CheatOption* newParent)
+	{
+		parent = newParent;
+	}
 };

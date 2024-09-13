@@ -50,7 +50,7 @@
     <ClCompile Include="Memory_Functions.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ShowErrorMessage_test.cpp">
+    <ClCompile Include="Errors_test.cpp">
       <Filter>Google Test</Filter>
     </ClCompile>
     <ClCompile Include="WriteAdressNum.cpp">
