@@ -1,10 +1,7 @@
 #include "CavePatch.h"
 #include "CheatOption.h"
 #include "Memory_Functions.h"
-#include <iostream>
-#include <vector>
 #include <stdexcept>
-#include <algorithm>
 #include <cstring>
 
 #define NMD_ASSEMBLY_IMPLEMENTATION
@@ -68,7 +65,6 @@ bool CavePatch::Hack(HANDLE hProcess)
 
     if (!baseAddress)
     {
-        //std::cerr << "Failed to get base address.\n";
         throw std::runtime_error("Failed to get base address.");
         return false;
     }
@@ -90,14 +86,12 @@ bool CavePatch::Hack(HANDLE hProcess)
     size_t offset = 0;
     do{
         const size_t length = nmd_x86_ldisasm(originalBytes + offset, MAX_INSTRUCTION_LENGTH - offset, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
-        //originalSize += length;
-        originalSize += static_cast<BYTE>(length); // Явное преобразование size_t в BYTE
+        originalSize += static_cast<BYTE>(length); // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ size_t РІ BYTE
         offset += length;
     } while (originalSize < jmpSize);
 
     if (originalSize > patchSize)
     {
-        //std::cerr << "Original instructions too large to fit in the cave.\n";
         throw std::runtime_error("Original instructions too large to fit in the cave.");
         delete[] jmpBytes;
         return false;
@@ -116,7 +110,6 @@ bool CavePatch::Hack(HANDLE hProcess)
 
         if (!back_jmp_bytes)
         {
-            //std::cerr << "Failed to allocate memory for the backward jump.\n";
             throw std::runtime_error("Failed to allocate memory for the backward jump.");
             delete[] jmpBytes;
             return false;
@@ -142,7 +135,6 @@ bool CavePatch::Hack(HANDLE hProcess)
             std::memcpy(bytes + jmpSize + nops, originalBytes + jmpSize, originalSize - jmpSize - nops);
 
             WriteMem(hProcess, originalAddress, bytes, originalSize);
-
             delete[] bytes;
         }
         else

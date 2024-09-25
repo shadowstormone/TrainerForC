@@ -1,4 +1,4 @@
-﻿#include "main.h"
+#include "main.h"
 #include "Cheat.h"
 
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
@@ -9,28 +9,39 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	Cheat* cheat = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
+	// Проверяем аргументы командной строки на наличие флагов тестов
+	if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0)
+	{
+		RunTests();
+		return 0;
+	}
 
-	//X32 Game
-	std::vector<int> optionkeys1 = { 0x61 };
-	CheatOption* option1 = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", optionkeys1);
-	BYTE bytes1[] = { 0xBE, 0xEB, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
-	option1->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", bytes1, 17);
+	Cheat* ProcessAttackGame = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
 
-	cheat->AddCheatOption(option1);
+	std::vector<int> GoodModeKey = { 0x61 };
+	CheatOption* GoodModeOption = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", GoodModeKey);
+	BYTE HackPatchBytes[] = { 0xBE, 0xEB, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
+	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной инструкции в памяти
 
+	std::vector<int> VriteKey = { 0x62 };
+	std::vector<uintptr_t> offsets = { 0x00256650, 0x370, 0xAC, 0x4B0 };
+	CheatOption* addr1 = new CheatOption(NULL, L"[Numpad 2] - Set 9999 HP", VriteKey);
+	addr1->AddWriteValuePatch(ProcessAttackGame, offsets, 9999);
 
-	cheat->Start();
-	BaseRender* renderer = new SimpleRenderer(cheat, WindowTitle, W_WIDTH, W_HEIGHT);
+	ProcessAttackGame->AddCheatOption(GoodModeOption);
+	ProcessAttackGame->AddCheatOption(addr1);
+
+	ProcessAttackGame->Start();
+	BaseRender* renderer = new SimpleRenderer(ProcessAttackGame, WindowTitle, W_WIDTH, W_HEIGHT);
 	renderer->Start();
-	cheat->Stop();
+	ProcessAttackGame->Stop();
 
-	delete option1;
-	delete cheat;
+	delete GoodModeOption;
+	delete ProcessAttackGame;
+	delete addr1;
 
 	return 0;
 }
-
 
 /*
 	//Cheat* cheat = new Cheat(L"Tutorial-x86_64.exe"); //Процесс атакуемой игры

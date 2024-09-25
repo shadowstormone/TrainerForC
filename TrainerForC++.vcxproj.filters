@@ -18,6 +18,9 @@
     <Filter Include="ResourceExtern">
       <UniqueIdentifier>{c69663be-056c-41a5-b6e0-9c46a023cc7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Google Test">
+      <UniqueIdentifier>{145eac6d-1c0d-49da-a48c-a122ffd659df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -45,6 +48,12 @@
       <Filter>Исходные файлы\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Memory_Functions.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Errors_test.cpp">
+      <Filter>Google Test</Filter>
+    </ClCompile>
+    <ClCompile Include="WriteAdressNum.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -85,7 +94,7 @@
     <ClInclude Include="StarFieldEffect.h">
       <Filter>Файлы заголовков\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="CommonFunctions.h">
+    <ClInclude Include="WriteAdressNum.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -110,5 +119,10 @@
     <Image Include="ResourceExtern\NewWhiteLogo.ico">
       <Filter>ResourceExtern</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="ResourceExtern\FRIZQT.ttf">
+      <Filter>ResourceExtern</Filter>
+    </Font>
   </ItemGroup>
 </Project>

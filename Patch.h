@@ -2,12 +2,10 @@
 #include <Windows.h>
 #include <vector>
 #include <string>
-#include <sstream>
 #include <iterator>
 #include "Memory_Functions.h"
 
-//extern class CheatOption;
-class CheatOption; // Предварительное объявление класса
+class CheatOption; // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ РєР»Р°СЃСЃР°
 
 class Patch
 {
@@ -16,10 +14,15 @@ protected:
 	std::wstring mask;
 	LPVOID originalAddress = 0;
 	PBYTE originalBytes = NULL;
-	SIZE_T patchSize;
+	SIZE_T patchSize = 0;
 	CheatOption* parent = NULL;
 	LPBYTE patchAddress = nullptr;
 	LPVOID patternAddress = nullptr;
+
+	// Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ Р°С‚СЂРёР±СѓС‚С‹ РґР»СЏ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР° СЃ processName, offset Рё value
+	std::wstring processName;
+	std::vector<uintptr_t> offsets;
+	int value;
 
 	void convertPattern(LPCWSTR sign)
 	{
@@ -38,7 +41,7 @@ protected:
 			else 
 			{
 				mask.append(L"x");
-				BYTE singleByte = static_cast<BYTE>(wcstoul(str.c_str(), NULL, 16)); // Явное преобразование unsigned long в BYTE
+				BYTE singleByte = static_cast<BYTE>(wcstoul(str.c_str(), NULL, 16)); // РЇРІРЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ unsigned long РІ BYTE
 				bytes.push_back(singleByte);
 			}
 		}
@@ -65,6 +68,29 @@ public:
 
 	}
 
+	Patch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
+	{
+		parent = parentInstance;
+		this->processName = processName;
+		this->offsets = offsets;
+		this->value = value;
+	}
+
 	virtual bool Hack(HANDLE hProcess) = 0;
 	virtual bool Restore(HANDLE hProcess) = 0;
+
+	CheatOption* GetParent() const
+	{
+		return parent;
+	}
+
+	LPVOID GetOriginalAddress() const
+	{
+		return originalAddress;
+	}
+
+	void SetParent(CheatOption* newParent)
+	{
+		parent = newParent;
+	}
 };

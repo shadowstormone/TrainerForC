@@ -1,10 +1,17 @@
 #pragma once
 #include "SimpleRenderer.h"
+#include <gtest/gtest.h>
 
-#define W_WIDTH 400
-#define W_HEIGHT 444
+constexpr auto W_WIDTH = 400;
+constexpr auto W_HEIGHT = 444;
 
-#define ButtonClickExit 1
+extern LPCWSTR WindowTitle; // РћР±СЉСЏРІР»РµРЅРёРµ, Р° РЅРµ РѕРїСЂРµРґРµР»РµРЅРёРµ
 
-//LPCWSTR WindowTitle = L"Test Trainer (+1)"; //Заголовок Окна
-extern LPCWSTR WindowTitle; // Объявление, а не определение
+// Р¤СѓРЅРєС†РёСЏ РґР»СЏ Р·Р°РїСѓСЃРєР° С‚РµСЃС‚РѕРІ
+void RunTests()
+{
+	int argc = 0;
+	char** argv = nullptr;
+	::testing::InitGoogleTest(&argc, argv);
+	RUN_ALL_TESTS();
+}
