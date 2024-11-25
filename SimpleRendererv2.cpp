@@ -82,7 +82,6 @@ LRESULT SimpleRendererv2::ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
     {
         pThis->DynamicWindowProc(hWnd, uMsg, wParam, lParam);
     }
-
     return baseProc(hWnd, uMsg, wParam, lParam);
 }
 
