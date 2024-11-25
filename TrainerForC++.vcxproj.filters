@@ -137,4 +137,9 @@
       <Filter>ResourceExtern</Filter>
     </Font>
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="ResourceExtern\gmock.dll">
+      <Filter>ResourceExtern</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
 </Project>
