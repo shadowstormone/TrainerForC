@@ -127,6 +127,7 @@
       <ForceFileOutput>
       </ForceFileOutput>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -161,6 +162,7 @@
     <ClCompile Include="NopPatch.cpp" />
     <ClCompile Include="Errors_test.cpp" />
     <ClCompile Include="SimpleRenderer.cpp" />
+    <ClCompile Include="SimpleRendererv2.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
     <ClCompile Include="WriteAdressNum.cpp" />
   </ItemGroup>
@@ -176,6 +178,7 @@
     <ClInclude Include="Patch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleRenderer.h" />
+    <ClInclude Include="SimpleRendererv2.h" />
     <ClInclude Include="StarFieldEffect.h" />
     <ClInclude Include="WriteAdressNum.h" />
   </ItemGroup>
@@ -198,6 +201,5 @@
     </Font>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

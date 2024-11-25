@@ -14,7 +14,7 @@ LRESULT SimpleRenderer::ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     return baseProc(hWnd, uMsg, wParam, lParam);
 }
 
-LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
 {
     PAINTSTRUCT ps;
     HDC hdc;
@@ -158,7 +158,9 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     _isRunning = true;
     _renderThread = std::thread(&SimpleRenderer::SimpleThreadFunc, this);
-    //starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);
+    /* Star Effects */
+    /*starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);*/
+    /* Star Effects */
     BaseRender::Start();
 }
 

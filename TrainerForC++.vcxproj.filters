@@ -21,6 +21,12 @@
     <Filter Include="Google Test">
       <UniqueIdentifier>{145eac6d-1c0d-49da-a48c-a122ffd659df}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Файлы заголовков\RendererV2">
+      <UniqueIdentifier>{cc9d1b17-c8fb-4920-a15c-3c215fc32c0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\Rendererv2">
+      <UniqueIdentifier>{1d296029-30f2-44ad-a529-24f7ae75b589}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -55,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="WriteAdressNum.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleRendererv2.cpp">
+      <Filter>Исходные файлы\Rendererv2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -96,6 +105,9 @@
     </ClInclude>
     <ClInclude Include="WriteAdressNum.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleRendererv2.h">
+      <Filter>Файлы заголовков\RendererV2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
