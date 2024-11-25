@@ -120,7 +120,7 @@ struct VKeys {
         KEY_NUMPAD_ADD = 0x6B,      // Numpad +
         KEY_NUMPAD_SUBTRACT = 0x6D,  // Numpad -
         KEY_NUMPAD_DECIMAL = 0x6E,   // Numpad .
-        KEY_NUMPAD_DIVIDE = 0x6F,    // Numpad /
+        KEY_NUMPAD_DIVIDE = 0x6F;    // Numpad /
 };
 
 constexpr auto W_WIDTH = 400;

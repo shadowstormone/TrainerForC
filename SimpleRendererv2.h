@@ -1,42 +1,54 @@
 #pragma once
 #include "BaseRenderer.h"
 #include <gdiplus.h>
+#include <memory>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <string>
 
 #pragma comment(lib, "gdiplus.lib")
 
-struct RENDER_STATEv2
+struct RenderState
 {
-    Gdiplus::Font* optionFont;                  // Шрифт надписей в трейнере
-    Gdiplus::Font* processInformationFont;      // Шрифт информации о процессе
-    Gdiplus::SolidBrush* optionBrush;           // Цвет опций неактивных
-    Gdiplus::SolidBrush* enabledOptionBrush;    // Цвет активированных опций
-    Gdiplus::SolidBrush* processInfoBrush;      // Цвет информации о процессе
-    Gdiplus::SolidBrush* processRunningBrush;   // Цвет когда процесс активен
+    std::unique_ptr<Gdiplus::Font> optionFont;
+    std::unique_ptr<Gdiplus::Font> processInformationFont;
+    std::unique_ptr<Gdiplus::SolidBrush> optionBrush;
+    std::unique_ptr<Gdiplus::SolidBrush> enabledOptionBrush;
+    std::unique_ptr<Gdiplus::SolidBrush> processInfoBrush;
+    std::unique_ptr<Gdiplus::SolidBrush> processRunningBrush;
+
+    void Initialize();
+    void Cleanup();
 };
 
-class SimpleRendererv2 : public BaseRender
+class SimpleRendererV2 : public BaseRender
 {
 private:
-    Gdiplus::Graphics* _graphics = nullptr;     // GDI+ Graphics для рисования
-    Gdiplus::Bitmap* _bitmap = nullptr;         // Рендеринг в буфер
-    RECT _windowRect;
+    std::unique_ptr<Gdiplus::Graphics> graphics;
+    std::unique_ptr<Gdiplus::Bitmap> bitmap;
+    RECT windowRect{};
 
-    RENDER_STATEv2 _rState;
+    RenderState renderState;
     std::wstring processInfo;
-    bool _isRunning;
-    std::thread _renderThread;
+    std::atomic<bool> isRunning{ false };
+    std::thread renderThread;
 
     static LRESULT(*baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static LRESULT ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    LRESULT DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
-    void RenderFrame();
+    LRESULT HandleWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void RenderLoop();
+    void RenderBackground();
+    void RenderOptions();
+    void RenderProcessInfo();
     void InitializeGDIPlus();
     void CleanupGDIPlus();
+
 public:
     ULONG_PTR gdiplusToken;
 
-    SimpleRendererv2(Cheat* cheat, LPCWSTR title, int width, int height);
-    ~SimpleRendererv2();
+    SimpleRendererV2(Cheat* cheat, LPCWSTR title, int width, int height);
+    ~SimpleRendererV2();
     void Stop();
 };

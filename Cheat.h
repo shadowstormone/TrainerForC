@@ -30,7 +30,6 @@ public:
 
 	Cheat(LPCWSTR processName) : _processName(processName) 
 	{
-
 	}
 
 	void Start()

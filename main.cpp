@@ -1,9 +1,16 @@
 #include "main.h"
-#include "Cheat.h"
+//#include "Cheat.h"
 #include "SimpleRendererv2.h"
 
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
 HWND mainWnd;
+
+struct NameFunc
+{
+	static constexpr LPCWSTR
+		Name1 = L"[Numpad 1] - Cheat Test",
+		Name2 = L"[Numpad 2] - Set 9999 HP";
+};
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -20,21 +27,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	Cheat* ProcessAttackGame = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
 
 	std::vector<int> GoodModeKey = { VKeys::KEY_NUMPAD1 };
-	CheatOption* GoodModeOption = new CheatOption(NULL, L"[Numpad 1] - Cheat Test", GoodModeKey);
+	CheatOption* GoodModeOption = new CheatOption(NULL, NameFunc::Name1, GoodModeKey);
 	BYTE HackPatchBytes[] = { 0xBE, 0xEB, 0x03, 0x00, 0x00, 0x89, 0xB3, 0xB0, 0x04, 0x00, 0x00, 0x29, 0x83, 0xB0, 0x04, 0x00, 0x00 };
 	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной инструкции в памяти
 
 	std::vector<int> VriteKey = { VKeys::KEY_NUMPAD2 };
 	std::vector<uintptr_t> offsets = { 0x00256650, 0x370, 0xAC, 0x4B0 };
-	CheatOption* addr1 = new CheatOption(NULL, L"[Numpad 2] - Set 9999 HP", VriteKey);
+	CheatOption* addr1 = new CheatOption(NULL, NameFunc::Name2, VriteKey);
 	addr1->AddWriteValuePatch(ProcessAttackGame, offsets, 9999);
 
 	ProcessAttackGame->AddCheatOption(GoodModeOption);
 	ProcessAttackGame->AddCheatOption(addr1);
 
 	ProcessAttackGame->Start();
-	ProcessAttackGame->OpenConsole();
-	BaseRender* renderer = new SimpleRendererv2(ProcessAttackGame, WindowTitle, W_WIDTH, W_HEIGHT);
+	//ProcessAttackGame->OpenConsole();
+	BaseRender* renderer = new SimpleRendererV2(ProcessAttackGame, WindowTitle, W_WIDTH, W_HEIGHT);
 	renderer->Start();
 	ProcessAttackGame->Stop();
 

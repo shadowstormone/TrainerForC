@@ -5,9 +5,8 @@
 #include <iterator>
 #include "Memory_Functions.h"
 
-class CheatOption; // Предварительное объявление класса
-
-class Patch
+class CheatOption;	// Предварительное объявление класса CheatOption
+class Patch			// Предварительное объявление класса Patch
 {
 protected:
 	PBYTE pattern = NULL;
@@ -65,7 +64,6 @@ public:
 	Patch(CheatOption* parentInstance, LPCWSTR signature, SIZE_T pSize) : 
 		Patch(parentInstance, signature, 0 ,pSize)
 	{
-
 	}
 
 	Patch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
