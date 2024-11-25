@@ -7,10 +7,10 @@ SimpleRendererv2::SimpleRendererv2(Cheat* cheat, LPCWSTR title, int width, int h
 {
     GetClientRect(_wnd, &_windowRect);
 
-    // Инициализация GDI+
+    // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ GDI+
     InitializeGDIPlus();
 
-    // Создаем ресурсы GDI+
+    // РЎРѕР·РґР°РµРј СЂРµСЃСѓСЂСЃС‹ GDI+
     _bitmap = new Gdiplus::Bitmap(_windowRect.right, _windowRect.bottom, PixelFormat32bppARGB);
     _graphics = Gdiplus::Graphics::FromImage(_bitmap);
     _graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
@@ -23,12 +23,12 @@ SimpleRendererv2::SimpleRendererv2(Cheat* cheat, LPCWSTR title, int width, int h
     _rState.processInfoBrush = new Gdiplus::SolidBrush(Gdiplus::Color(255, 146, 146, 146));
     _rState.processRunningBrush = new Gdiplus::SolidBrush(Gdiplus::Color(255, 38, 176, 1));
 
-    // Устанавливаем оконную процедуру
+    // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РѕРєРѕРЅРЅСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ
     SetWindowLongPtr(_wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
     baseProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_wnd, GWLP_WNDPROC));
     SetWindowLongPtr(_wnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ThisWindowProc));
 
-    // Запускаем поток рендеринга
+    // Р—Р°РїСѓСЃРєР°РµРј РїРѕС‚РѕРє СЂРµРЅРґРµСЂРёРЅРіР°
     _renderThread = std::thread(&SimpleRendererv2::RenderFrame, this);
     BaseRender::Start();
 }
@@ -37,7 +37,7 @@ SimpleRendererv2::~SimpleRendererv2()
 {
     Stop();
 
-    // Удаление ресурсов GDI+
+    // РЈРґР°Р»РµРЅРёРµ СЂРµСЃСѓСЂСЃРѕРІ GDI+
     delete _rState.optionFont;
     delete _rState.processInformationFont;
     delete _rState.optionBrush;
@@ -114,15 +114,15 @@ void SimpleRendererv2::RenderFrame()
 {
     while (_isRunning)
     {
-        // Очистка буфера градиентным фоном
+        // РћС‡РёСЃС‚РєР° Р±СѓС„РµСЂР° РіСЂР°РґРёРµРЅС‚РЅС‹Рј С„РѕРЅРѕРј
         Gdiplus::LinearGradientBrush gradientBrush(Gdiplus::Rect(0, 0, _windowRect.right, _windowRect.bottom),
-            Gdiplus::Color(255, 30, 30, 30),  // Верхний цвет
-            Gdiplus::Color(255, 10, 10, 10),  // Нижний цвет
+            Gdiplus::Color(255, 30, 30, 30),  // Р’РµСЂС…РЅРёР№ С†РІРµС‚
+            Gdiplus::Color(255, 10, 10, 10),  // РќРёР¶РЅРёР№ С†РІРµС‚
             Gdiplus::LinearGradientModeVertical);
 
         _graphics->FillRectangle(&gradientBrush, 0, 0, _windowRect.right, _windowRect.bottom);
 
-        // Отрисовка опций
+        // РћС‚СЂРёСЃРѕРІРєР° РѕРїС†РёР№
         int deltaY = 25;
         for (const auto& pair : _cheat->GetCheatOptionState())
         {
@@ -131,7 +131,7 @@ void SimpleRendererv2::RenderFrame()
             deltaY += 25;
         }
 
-        // Обновление информации о процессе
+        // РћР±РЅРѕРІР»РµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїСЂРѕС†РµСЃСЃРµ
         std::wstring processName = _cheat->GetProcessName();
         size_t dotPos = processName.find_last_of(L'.');
         if (dotPos != std::wstring::npos)
@@ -142,12 +142,12 @@ void SimpleRendererv2::RenderFrame()
         std::wstringstream ss;
         ss << processName << L" " << (_cheat->isProcessRunning() ? L"is running" : L"is not running");
 
-        // Рисуем информацию о процессе
+        // Р РёСЃСѓРµРј РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РїСЂРѕС†РµСЃСЃРµ
         _graphics->DrawString(ss.str().c_str(), -1, _rState.processInformationFont,
             Gdiplus::PointF(25.0f, static_cast<Gdiplus::REAL>(_windowRect.bottom - 70)),
             _cheat->isProcessRunning() ? _rState.processRunningBrush : _rState.processInfoBrush);
 
-        // PID процесса
+        // PID РїСЂРѕС†РµСЃСЃР°
         std::wstringstream ssPID;
         if (_cheat->isProcessRunning())
         {
@@ -158,17 +158,17 @@ void SimpleRendererv2::RenderFrame()
             ssPID << L"PID Process: N/A";
         }
 
-        // Использование цвета в зависимости от состояния
+        // РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ С†РІРµС‚Р° РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЃРѕСЃС‚РѕСЏРЅРёСЏ
         Gdiplus::SolidBrush* pidBrush = _cheat->isProcessRunning() ? _rState.processRunningBrush : _rState.processInfoBrush;
 
         _graphics->DrawString(ssPID.str().c_str(), -1, _rState.processInformationFont,
             Gdiplus::PointF(25.0f, static_cast<Gdiplus::REAL>(_windowRect.bottom - 45)),
             pidBrush);
 
-        // Обновляем окно
+        // РћР±РЅРѕРІР»СЏРµРј РѕРєРЅРѕ
         RedrawWindow(_wnd, nullptr, nullptr, RDW_INVALIDATE);
 
-        // Ограничение FPS (60 кадров в секунду)
+        // РћРіСЂР°РЅРёС‡РµРЅРёРµ FPS (60 РєР°РґСЂРѕРІ РІ СЃРµРєСѓРЅРґСѓ)
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
     }
 }

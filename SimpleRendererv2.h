@@ -6,19 +6,19 @@
 
 struct RENDER_STATEv2
 {
-    Gdiplus::Font* optionFont;                  // Шрифт надписей в трейнере
-    Gdiplus::Font* processInformationFont;      // Шрифт информации о процессе
-    Gdiplus::SolidBrush* optionBrush;           // Цвет опций неактивных
-    Gdiplus::SolidBrush* enabledOptionBrush;    // Цвет активированных опций
-    Gdiplus::SolidBrush* processInfoBrush;      // Цвет информации о процессе
-    Gdiplus::SolidBrush* processRunningBrush;   // Цвет когда процесс активен
+    Gdiplus::Font* optionFont;                  // РЁСЂРёС„С‚ РЅР°РґРїРёСЃРµР№ РІ С‚СЂРµР№РЅРµСЂРµ
+    Gdiplus::Font* processInformationFont;      // РЁСЂРёС„С‚ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїСЂРѕС†РµСЃСЃРµ
+    Gdiplus::SolidBrush* optionBrush;           // Р¦РІРµС‚ РѕРїС†РёР№ РЅРµР°РєС‚РёРІРЅС‹С…
+    Gdiplus::SolidBrush* enabledOptionBrush;    // Р¦РІРµС‚ Р°РєС‚РёРІРёСЂРѕРІР°РЅРЅС‹С… РѕРїС†РёР№
+    Gdiplus::SolidBrush* processInfoBrush;      // Р¦РІРµС‚ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїСЂРѕС†РµСЃСЃРµ
+    Gdiplus::SolidBrush* processRunningBrush;   // Р¦РІРµС‚ РєРѕРіРґР° РїСЂРѕС†РµСЃСЃ Р°РєС‚РёРІРµРЅ
 };
 
 class SimpleRendererv2 : public BaseRender
 {
 private:
-    Gdiplus::Graphics* _graphics = nullptr;     // GDI+ Graphics для рисования
-    Gdiplus::Bitmap* _bitmap = nullptr;         // Рендеринг в буфер
+    Gdiplus::Graphics* _graphics = nullptr;     // GDI+ Graphics РґР»СЏ СЂРёСЃРѕРІР°РЅРёСЏ
+    Gdiplus::Bitmap* _bitmap = nullptr;         // Р РµРЅРґРµСЂРёРЅРі РІ Р±СѓС„РµСЂ
     RECT _windowRect;
 
     RENDER_STATEv2 _rState;
