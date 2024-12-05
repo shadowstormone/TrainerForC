@@ -1,5 +1,4 @@
 #pragma once
-#include "SimpleRenderer.h"
 #include <gtest/gtest.h>
 
 struct VKeys {
