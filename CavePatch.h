@@ -9,8 +9,6 @@ class CavePatch : public Patch
     int caveSize = 0;
     int patchOffset = 0;
 
-    static PBYTE CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize);
-
 public:
     CavePatch(CheatOption* parentInstance, LPCWSTR signature, PBYTE pBytes, int pSize) :
         Patch(parentInstance, signature, pSize)
@@ -23,6 +21,8 @@ public:
     {
         delete[] patchBytes;
     }
+
+    static PBYTE CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize);
 
     bool Hack(HANDLE hProcess) override;
     bool Restore(HANDLE hProcess) override;

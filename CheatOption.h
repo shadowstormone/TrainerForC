@@ -2,26 +2,25 @@
 #include <Windows.h>
 #include <vector>
 #include <string>
-#include <playsoundapi.h>
+#include "Cheat.h"
 
-//extern class Patch;
-class Patch;  // Предварительное объявление класса Patch
+class Patch;  // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ РєР»Р°СЃСЃР° Patch
+class Cheat;  // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РѕР±СЉСЏРІР»РµРЅРёРµ РєР»Р°СЃСЃР° Cheat
 
 class CheatOption
 {
-	//Свойства чита
+	//РЎРІРѕР№СЃС‚РІР° С‡РёС‚Р°
 	LPCWSTR m_moduleName = NULL;
 	LPCWSTR m_description = NULL;
 	std::vector<int> m_keys;
 
-	// Функции чита
+	// Р¤СѓРЅРєС†РёРё С‡РёС‚Р°
 	bool m_enabled = false;
 	std::vector<Patch*> patches;
 
 	bool Enable(int pid);
 	bool Disable(int pid);
 	bool KeyPressed();
-
 public:
 	CheatOption(LPCWSTR moduleName, LPCWSTR description, const std::vector<int>& keys) 
 	{
@@ -31,23 +30,35 @@ public:
 		patches.clear();
 	}
 
+	CheatOption(LPCWSTR moduleName, LPCWSTR description)
+	{
+		m_moduleName = moduleName;
+		m_description = description;
+		patches.clear();
+	}
+
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
-
+	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value);
 	void Process(int processId);
 
-	bool IsEnabled() 
+	bool IsEnabled() const
 	{
 		return m_enabled;
 	}
 
-	LPCWSTR GetDescription() 
+	LPCWSTR GetDescription() const
 	{
 		return m_description;
 	}
 
-	LPCWSTR GetModuleName() 
+	LPCWSTR GetModuleName() const
 	{
 		return m_moduleName;
+	}
+
+	void SetModuleName(LPCWSTR moduleName)
+	{
+		m_moduleName = moduleName;
 	}
 };

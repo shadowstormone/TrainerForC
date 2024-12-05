@@ -18,6 +18,18 @@
     <Filter Include="ResourceExtern">
       <UniqueIdentifier>{c69663be-056c-41a5-b6e0-9c46a023cc7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Google Test">
+      <UniqueIdentifier>{145eac6d-1c0d-49da-a48c-a122ffd659df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\RendererV2">
+      <UniqueIdentifier>{cc9d1b17-c8fb-4920-a15c-3c215fc32c0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\Rendererv2">
+      <UniqueIdentifier>{1d296029-30f2-44ad-a529-24f7ae75b589}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGuiRenderer">
+      <UniqueIdentifier>{60e62dc6-2216-443b-98dc-250b081ce5e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -46,6 +58,21 @@
     </ClCompile>
     <ClCompile Include="Memory_Functions.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Errors_test.cpp">
+      <Filter>Google Test</Filter>
+    </ClCompile>
+    <ClCompile Include="WriteAdressNum.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleRendererv2.cpp">
+      <Filter>Исходные файлы\Rendererv2</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>ImGuiRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing.cpp">
+      <Filter>ImGuiRenderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,8 +112,17 @@
     <ClInclude Include="StarFieldEffect.h">
       <Filter>Файлы заголовков\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="CommonFunctions.h">
+    <ClInclude Include="WriteAdressNum.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleRendererv2.h">
+      <Filter>Файлы заголовков\RendererV2</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>ImGuiRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing.h">
+      <Filter>ImGuiRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -110,5 +146,15 @@
     <Image Include="ResourceExtern\NewWhiteLogo.ico">
       <Filter>ResourceExtern</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="ResourceExtern\FRIZQT.ttf">
+      <Filter>ResourceExtern</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="ResourceExtern\gmock.dll">
+      <Filter>ResourceExtern</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

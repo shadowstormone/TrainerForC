@@ -40,7 +40,7 @@ int GetProcessIdByProcessName(LPCWSTR processName)
 DWORD_PTR GetProcessBaseAddress(HANDLE hProcess)
 {
 	DWORD_PTR baseAddress = 0;
-	HMODULE* moduleArray = NULL;
+	HMODULE*  moduleArray = NULL;
 	LPBYTE	  moduleArrayBytes = NULL;
 	DWORD	  bytesRequired = 0;
 
@@ -153,6 +153,11 @@ int WriteMem(HANDLE hProcess, LPVOID address, LPVOID source, SIZE_T writeAmount)
 	return 0;*/
 }
 
+int WriteMem(HANDLE hProcess, uintptr_t address, int value)
+{
+	return WriteMem(hProcess, reinterpret_cast<LPVOID>(address), &value, sizeof(value));
+}
+
 LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount)
 {
 	if (!hProcess)
@@ -174,6 +179,25 @@ LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount)
 	return reinterpret_cast<LPVOID>(buf);
 }
 
+uintptr_t ReadMem(HANDLE hProcess, uintptr_t address)
+{
+	if (!hProcess)
+	{
+		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
+		return 0;
+	}
+
+	LPVOID result = ReadMem(hProcess, reinterpret_cast<LPVOID>(address), sizeof(uintptr_t));
+	if (result == nullptr)
+	{
+		ShowErrorMessage(NULL, L"Read memory failed.\r\nError code: ");
+		return 0;
+	}
+	uintptr_t value = *reinterpret_cast<uintptr_t*>(result);
+	delete[] reinterpret_cast<unsigned char*>(result);
+	return value;
+}
+
 LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
 {
 	if (!hProcess)
@@ -181,8 +205,6 @@ LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
 		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
 		return NULL;
 	}
-
-	int bytesWrite = 0;
 
 	LPVOID ptr = VirtualAllocEx(hProcess, startAddress, allocationAmount, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
@@ -200,8 +222,6 @@ int FreeMem(HANDLE hProcess, LPVOID address, SIZE_T amount)
 		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
 		return -1;
 	}
-
-	int bytesWrite = 0;
 
 	bool result = VirtualFreeEx(hProcess, address, amount, MEM_DECOMMIT);
 
@@ -239,7 +259,6 @@ LPVOID ScanSignature(HANDLE hProcess, ULONG_PTR startAddress, SIZE_T scanSize, P
 			void* baseAddress = mbi.BaseAddress;
 			ReadProcessMemory(hProcess, baseAddress, buffer, mbi.RegionSize, &bytesRead);
 
-
 			if (bytesRead == 0)
 			{
 				break;
@@ -255,7 +274,6 @@ LPVOID ScanSignature(HANDLE hProcess, ULONG_PTR startAddress, SIZE_T scanSize, P
 			}
 			delete[] buffer;
 		}
-		//offset += mbi.RegionSize;
 		offset += static_cast<DWORD>(mbi.RegionSize);
 
 	}
@@ -278,12 +296,63 @@ bool CheckSignature(PBYTE source, PBYTE pattern, std::wstring& mask)
 	return true;
 }
 
-void ShowErrorMessage(HWND hWnd, LPCWSTR errorMassage)
+//void ShowErrorMessage(HWND hWnd, LPCWSTR errorMassage)
+//{
+//	int err = GetLastError();
+//	std::wstring errStr(errorMassage);
+//	errStr += L" " + err;
+//	MessageBox(NULL, errStr.c_str(), L"ERROR", MB_OK | MB_ICONERROR);
+//}
+
+void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage, DWORD errCode)
 {
-	int err = GetLastError();
-	std::wstring errStr(errorMassage);
-	errStr += L" " + err;
-	MessageBox(NULL, errStr.c_str(), L"ERROR", MB_OK | MB_ICONERROR);
+	// Буфер для сообщения об ошибке
+	LPWSTR errBuffer = nullptr;
+
+	// Форматируем сообщение об ошибке
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errBuffer, 0, NULL);
+
+	// Создаем итоговое сообщение
+	std::wstringstream ss;
+	ss << errorMessage << L" " << errCode << L": " << (errBuffer ? errBuffer : L"Unknown error");
+
+	// Показ сообщения в MessageBox
+	MessageBox(hWnd, ss.str().c_str(), L"ERROR", MB_OK | MB_ICONERROR);
+
+	// Освобождаем буфер с сообщением об ошибке
+	if (errBuffer)
+	{
+		LocalFree(errBuffer);
+	}
+}
+
+void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage)
+{
+	// Получаем последний код ошибки
+	DWORD errCode = GetLastError();
+
+	// Буфер для сообщения об ошибке
+	LPWSTR errBuffer = nullptr;
+
+	// Форматируем сообщение об ошибке
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errBuffer, 0, NULL);
+
+	// Создаем итоговое сообщение
+	std::wstringstream ss;
+	ss << errorMessage << L" " << errCode << L": " << (errBuffer ? errBuffer : L"Unknown error");
+
+	// Показ сообщения в MessageBox
+	MessageBox(hWnd, ss.str().c_str(), L"ERROR", MB_OK | MB_ICONERROR);
+
+	// Освобождаем буфер с сообщением об ошибке
+	if (errBuffer)
+	{
+		LocalFree(errBuffer);
+	}
 }
 
 bool isTargetX64Process(HANDLE hProcess)

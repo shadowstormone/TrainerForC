@@ -1,4 +1,5 @@
 #include "SimpleRenderer.h"
+#include "resource.h"
 
 LRESULT(*SimpleRenderer::baseProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -13,7 +14,7 @@ LRESULT SimpleRenderer::ThisWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     return baseProc(hWnd, uMsg, wParam, lParam);
 }
 
-LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT SimpleRenderer::DynamicWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
 {
     PAINTSTRUCT ps;
     HDC hdc;
@@ -43,8 +44,8 @@ void SimpleRenderer::RenderFrame()
     int deltaY = 25;
 
     //Enable StarEffect
-    starField->UpdateStars();
-    starField->DrowToDest(_memDC, 0, 0);
+    /*starField->UpdateStars();
+    starField->DrowToDest(_memDC, 0, 0);*/
     //Enable StarEffect
 
     for (auto& pair : _cheat->GetCheatOptionState())
@@ -57,13 +58,13 @@ void SimpleRenderer::RenderFrame()
         {
             SetTextColor(_memDC, _rState.optionColor);
         }
-        //TextOut(_memDC, 25, deltaY, pair.first, wcslen(pair.first));
-        TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // ����� �������������� size_t � int
+
+        TextOut(_memDC, 25, deltaY, pair.first, static_cast<int>(wcslen(pair.first))); // Явное преобразование size_t в int
         deltaY += 25;
     }
 
     std::wstring processName = _cheat->GetProcessName();
-    size_t dotPos = processName.find_last_of(L'.'); // ������� .exe �� ����� ��������
+    size_t dotPos = processName.find_last_of(L'.'); // Убираем .exe из имени процесса
     if (dotPos != std::wstring::npos)
     {
         processName = processName.substr(0, dotPos);
@@ -84,17 +85,30 @@ void SimpleRenderer::RenderFrame()
         ss << L"is not running.";
     }
 
-    //TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), ss.str().length());
-    TextOut(_memDC, 25, _windowRect.bottom - 45, ss.str().c_str(), static_cast<int>(ss.str().length())); // ����� �������������� size_t � int
-    
+    // Отображаем строку состояния процесса
+    TextOut(_memDC, 25, _windowRect.bottom - 70, ss.str().c_str(), static_cast<int>(ss.str().length()));
+
+    // Подготовка строки для вывода PID процесса или "N/A"
+    std::wstringstream ssPID;
+    if (_cheat->isProcessRunning())
+    {
+        ssPID << L"PID: " << _cheat->GetProcessID(); // Если процесс запущен, показываем его PID
+    }
+    else
+    {
+        ssPID << L"PID: N/A"; // Если процесс не запущен, выводим "N/A"
+    }
+
+    // Отображаем строку с PID под строкой состояния процесса
+    TextOut(_memDC, 25, _windowRect.bottom - 45, ssPID.str().c_str(), static_cast<int>(ssPID.str().length()));
+
     SelectObject(_memDC, oldFont);
     RedrawWindow(_wnd, NULL, NULL, RDW_INVALIDATE);
 }
 
-HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontHeight, bool isItalic = false, bool isUnderline = false, bool isStrikesOut = false)
+HFONT SimpleRenderer::SimpleCreateFont(LPCWSTR fontFamily, int fontSize, int fontWidth, bool isItalic = false, bool isUnderline = false, bool isStrikesOut = false)
 {
-
-    return CreateFont(fontHeight, 0, 0, 0, 0, isItalic, isUnderline, isStrikesOut, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+    return CreateFont(fontSize, 0, 0, 0, fontWidth, isItalic, isUnderline, isStrikesOut, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, fontFamily);
 }
 
@@ -135,8 +149,8 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     //Constructor
     SetBkMode(_memDC, TRANSPARENT);
-    _rState.optionFont = SimpleCreateFont(L"EchoesSans-LightItalic", 20);
-    _rState.processInformationFont = SimpleCreateFont(L"Tahoma", 18);
+    _rState.optionFont = SimpleCreateFont(L"ResourceExtern\\FRIZQT.ttf", 20, FW_REGULAR);
+    _rState.processInformationFont = SimpleCreateFont(L"ResourceExtern\\FRIZQT.ttf", 17, FW_REGULAR);
     _rState.optionColor = RGB(255, 255, 255);
     _rState.enabledOptionColor = RGB(0, 220, 0);
     _rState.processInfoColor = RGB(146, 146, 146);
@@ -144,19 +158,24 @@ SimpleRenderer::SimpleRenderer(Cheat* cheat, LPCWSTR title, int width, int heigh
 
     _isRunning = true;
     _renderThread = std::thread(&SimpleRenderer::SimpleThreadFunc, this);
-    starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);
+    /* Star Effects */
+    /*starField = new StarFieldEffect(_memDC, 25, 2, 1, _windowRect.right, _windowRect.bottom);*/
+    /* Star Effects */
     BaseRender::Start();
 }
 
 void SimpleRenderer::Stop()
 {
+    _isRunning = false;
+    if (_renderThread.joinable())
+    {
+        _renderThread.join();
+    }
     SimpleRenderer::~SimpleRenderer();
 }
 
 SimpleRenderer::~SimpleRenderer()
 {
-    _isRunning = false;
-    _renderThread.join();
     SelectObject(_memDC, _defMemBmp);
     DeleteObject(_memBitmap);
     DeleteDC(_memDC);

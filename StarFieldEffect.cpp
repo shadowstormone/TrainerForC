@@ -21,7 +21,6 @@ void StarFieldEffect::PlotPixel(COLORREF color, int x, int y)
 {
 	int offset = y * _width + x;
 	*(_bits + offset) = color;
-
 }
 
 HBITMAP StarFieldEffect::CreateImageForCanvas(HDC hdc)
@@ -34,7 +33,6 @@ HBITMAP StarFieldEffect::CreateImageForCanvas(HDC hdc)
 	bi.bmiHeader.biHeight = -_height;
 	bi.bmiHeader.biPlanes = 1;
 	bi.bmiHeader.biBitCount = 32;
-
 
 	return CreateDIBSection(hdc, &bi,DIB_RGB_COLORS, reinterpret_cast<LPVOID*>(&_bits), NULL, 0);
 }

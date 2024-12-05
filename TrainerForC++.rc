@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Русский (Россия) resources
+// Р СѓСЃСЃРєРёР№ (Р РѕСЃСЃРёСЏ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -90,7 +90,7 @@ BEGIN
         BLOCK "001904b0"
         BEGIN
             VALUE "CompanyName", "ShadowStormOne"
-            VALUE "FileDescription", "Трейнер для игры."
+            VALUE "FileDescription", "CheatEngine Test Trainer"
             VALUE "FileVersion", "1.1.0.0"
             VALUE "InternalName", "TrainerC++.exe"
             VALUE "LegalCopyright", "Copyright (C) 2022"
@@ -104,7 +104,7 @@ BEGIN
     END
 END
 
-#endif    // Русский (Россия) resources
+#endif    // Р СѓСЃСЃРєРёР№ (Р РѕСЃСЃРёСЏ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

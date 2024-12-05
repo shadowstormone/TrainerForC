@@ -1,5 +1,4 @@
 #include "BaseRenderer.h"
-#include "main.h"
 #include "resource.h"
 
 LRESULT BaseRender::BaseWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -26,41 +25,41 @@ void BaseRender::CreateBaseWindow(LPCWSTR title, int width, int height)
 	WNDCLASSEX wcx = { 0 };
 	HWND mainWnd = NULL;
 
-	wcx.cbSize = sizeof wcx;										// Размер этой структуры, в байтах.
-	wcx.hInstance = hInstance;										// Дескриптор экземпляра, который содержит оконную процедуру для класса.
-	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);						// Дескриптор курсора класса.
-	wcx.style = CS_HREDRAW | CS_VREDRAW;							// Устанавливает стиль(и) класса.
-	wcx.hbrBackground = NULL;									    // Дескриптор кисти фона класса.
-	wcx.hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Дескриптор значка класса.
-	wcx.lpfnWndProc = BaseWindowProc;								// Указатель на оконную процедуру.
-	wcx.lpszClassName = L"Trainer By ShadowStorm";					// Символьная строка, она задает имя класса окна
-	wcx.hIconSm = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Дескриптор маленького значка, который связан с классом окна.
+	wcx.cbSize = sizeof wcx;										// Р Р°Р·РјРµСЂ СЌС‚РѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹, РІ Р±Р°Р№С‚Р°С….
+	wcx.hInstance = hInstance;										// Р”РµСЃРєСЂРёРїС‚РѕСЂ СЌРєР·РµРјРїР»В¤СЂР°, РєРѕС‚РѕСЂС‹Р№ СЃРѕРґРµСЂР¶РёС‚ РѕРєРѕРЅРЅСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ РґР»СЏ РєР»Р°СЃСЃР°.
+	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);						// Р”РµСЃРєСЂРёРїС‚РѕСЂ РєСѓСЂСЃРѕСЂР° РєР»Р°СЃСЃР°.
+	wcx.style = CS_HREDRAW | CS_VREDRAW;							// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ СЃС‚РёР»СЊ(Рё) РєР»Р°СЃСЃР°.
+	wcx.hbrBackground = NULL;									    // Р”РµСЃРєСЂРёРїС‚РѕСЂ РєРёСЃС‚Рё С„РѕРЅР° РєР»Р°СЃСЃР°.
+	wcx.hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Р”РµСЃРєСЂРёРїС‚РѕСЂ Р·РЅР°С‡РєР° РєР»Р°СЃСЃР°.
+	wcx.lpfnWndProc = BaseWindowProc;								// РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РѕРєРѕРЅРЅСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ.
+	wcx.lpszClassName = L"Trainer By ShadowStorm";					// РЎРёРјРІРѕР»СЊРЅР°В¤ СЃС‚СЂРѕРєР°, РѕРЅР° Р·Р°РґР°РµС‚ РёРјВ¤ РєР»Р°СЃСЃР° РѕРєРЅР°
+	wcx.hIconSm = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_ICON2));	// Р”РµСЃРєСЂРёРїС‚РѕСЂ РјР°Р»РµРЅСЊРєРѕРіРѕ Р·РЅР°С‡РєР°, РєРѕС‚РѕСЂС‹Р№ СЃРІСЏР·Р°РЅ СЃ РєР»Р°СЃСЃРѕРј РѕРєРЅР°.
 
 	RegisterClassEx(&wcx);
 
-	// Параметры для CreateWindowEx объясняются:
-	// WS_EX_APPWINDOW: необязательный стиль расширенного окна.
-	// wcx.lpszClassName: имя приложения.
-	// title: текст, который отображается в строке заголовка
+	// РџР°СЂР°РјРµС‚СЂС‹ РґР»СЏ CreateWindowEx РѕР±СЉСЏСЃРЅСЏСЋС‚СЃСЏ:
+	// WS_EX_APPWINDOW: РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅС‹Р№ СЃС‚РёР»СЊ СЂР°СЃС€РёСЂРµРЅРЅРѕРіРѕ РѕРєРЅР°.
+	// wcx.lpszClassName: РёРјСЏ РїСЂРёР»РѕР¶РµРЅРёСЏ.
+	// title: С‚РµРєСЃС‚, РєРѕС‚РѕСЂС‹Р№ РѕС‚РѕР±СЂР°Р¶Р°РµС‚СЃСЏ РІ СЃС‚СЂРѕРєРµ Р·Р°РіРѕР»РѕРІРєР°
 	// WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION & 
 	// ~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE &
-	// ~WS_EX_STATICEDGE, : тип создаваемого окна
-	// (GetSystemMetrics(SM_CXSCREEN) - width) / 2, (GetSystemMetrics(SM_CXSCREEN) - height): начальное положение (x, y)
-	// width, height: начальный размер (ширина, длина)
-	// NULL: родитель этого окна
-	// NULL: у этого приложения нет строки меню
-	// hInstance: первый параметр из WinMain
-	// NULL: не используется в данном приложении
+	// ~WS_EX_STATICEDGE, : С‚РёРї СЃРѕР·РґР°РІР°РµРјРѕРіРѕ РѕРєРЅР°
+	// (GetSystemMetrics(SM_CXSCREEN) - width) / 2, (GetSystemMetrics(SM_CXSCREEN) - height): РЅР°С‡Р°Р»СЊРЅРѕРµ РїРѕР»РѕР¶РµРЅРёРµ (x, y)
+	// width, height: РЅР°С‡Р°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ (С€РёСЂРёРЅР°, РґР»РёРЅР°)
+	// NULL: СЂРѕРґРёС‚РµР»СЊ СЌС‚РѕРіРѕ РѕРєРЅР°
+	// NULL: Сѓ СЌС‚РѕРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ РЅРµС‚ СЃС‚СЂРѕРєРё РјРµРЅСЋ
+	// hInstance: РїРµСЂРІС‹Р№ РїР°СЂР°РјРµС‚СЂ РёР· WinMain
+	// NULL: РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІ РґР°РЅРЅРѕРј РїСЂРёР»РѕР¶РµРЅРёРё
 	_wnd = CreateWindowExW(
 		WS_EX_APPWINDOW,
 		wcx.lpszClassName,
 		title,
 		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX & ~WS_CAPTION &
 		~WS_THICKFRAME & ~WS_EX_DLGMODALFRAME & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE,
-		(GetSystemMetrics(SM_CXSCREEN) - width) / 2,	// Ширина
-		(GetSystemMetrics(SM_CXSCREEN) - height) / 5,	// Длина
-		width,											// Начальный размер (ширина)
-		height,											// Начальный размер (длина)
+		(GetSystemMetrics(SM_CXSCREEN) - width) / 2,	// РЁРёСЂРёРЅР°
+		(GetSystemMetrics(SM_CXSCREEN) - height) / 5,	// Р”Р»РёРЅР°
+		width,											// РќР°С‡Р°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ (С€РёСЂРёРЅР°)
+		height,											// РќР°С‡Р°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ (РґР»РёРЅР°)
 		NULL,
 		NULL,
 		hInstance,
