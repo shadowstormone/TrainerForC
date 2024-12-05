@@ -163,7 +163,11 @@ void UI::Render()
         const float fScale = 1.9f;
         ImFontConfig cfg;
         cfg.SizePixels = 13 * fScale;
+    #ifdef _DEBUG
         io.Fonts->AddFontFromFileTTF("ResourceExtern\\FRIZQT.ttf", 13 * fScale, &cfg);  // Загружаем свой шрифт
+    #else
+        io.Fonts->AddFontFromFileTTF("FRIZQT.ttf", 13 * fScale, &cfg);  // Загружаем свой шрифт
+    #endif // _DEBUG
     }
 
     ImGui::GetIO().IniFilename = nullptr;

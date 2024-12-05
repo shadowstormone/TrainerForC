@@ -70,7 +70,7 @@ void Drawing::Draw()
                 WStringToUtf8(processName).c_str(), isRunning ? "is running" : "is not running");
 
             // PID Информация
-            ImGui::TextColored(ImVec4(0.05f, 0.7f, 0.8f, 1.0f), "PID Process: %d", isRunning ? _cheat->GetProcessID() : 0);
+            ImGui::TextColored(ImVec4(0.05f, 0.7f, 0.8f, 1.0f), "PID Process: %s", isRunning ? std::to_string(_cheat->GetProcessID()).c_str() : "N/A");
         }
         ImGui::End();
     }
