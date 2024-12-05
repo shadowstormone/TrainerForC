@@ -134,6 +134,7 @@ Contributors(This may not be a complete list):
  - Darkratos: Bug reporting and feature suggesting.
 */
 
+#pragma warning(disable : 4828)
 #ifndef NMD_ASSEMBLY_H
 #define NMD_ASSEMBLY_H
 

@@ -120,6 +120,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,6 +142,7 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +159,7 @@
     <ClCompile Include="CavePatch.cpp" />
     <ClCompile Include="Cheat.cpp" />
     <ClCompile Include="CheatOption.cpp" />
+    <ClCompile Include="Drawing.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory_Functions.cpp" />
     <ClCompile Include="NopPatch.cpp" />
@@ -164,6 +167,7 @@
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="SimpleRendererv2.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
+    <ClCompile Include="UI.cpp" />
     <ClCompile Include="WriteAdressNum.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +175,7 @@
     <ClInclude Include="CavePatch.h" />
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
+    <ClInclude Include="Drawing.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Memory_Functions.h" />
     <ClInclude Include="nmd_assembly.h" />
@@ -180,6 +185,7 @@
     <ClInclude Include="SimpleRenderer.h" />
     <ClInclude Include="SimpleRendererv2.h" />
     <ClInclude Include="StarFieldEffect.h" />
+    <ClInclude Include="UI.h" />
     <ClInclude Include="WriteAdressNum.h" />
   </ItemGroup>
   <ItemGroup>

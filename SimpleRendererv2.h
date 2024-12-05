@@ -6,7 +6,14 @@
 #include <thread>
 #include <mutex>
 #include <string>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <locale>
+#include <codecvt>
+#include <chrono>
+#include <filesystem>
 
+namespace fs = std::filesystem;
 #pragma comment(lib, "gdiplus.lib")
 
 struct RenderState
@@ -17,6 +24,7 @@ struct RenderState
     std::unique_ptr<Gdiplus::SolidBrush> enabledOptionBrush;
     std::unique_ptr<Gdiplus::SolidBrush> processInfoBrush;
     std::unique_ptr<Gdiplus::SolidBrush> processRunningBrush;
+    std::unique_ptr<Gdiplus::SolidBrush> pidInfoColorBrush;
 
     void Initialize();
     void Cleanup();
@@ -43,7 +51,9 @@ private:
     void RenderOptions();
     void RenderProcessInfo();
     void InitializeGDIPlus();
-    void CleanupGDIPlus();
+    void CleanupGDIPlus() const;
+    std::string WStringToUtf8(const std::wstring& wstr);
+    void InitializeLogger(LPCWSTR title);
 
 public:
     ULONG_PTR gdiplusToken;

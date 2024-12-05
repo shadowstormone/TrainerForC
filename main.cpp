@@ -1,6 +1,5 @@
 #include "main.h"
-//#include "Cheat.h"
-#include "SimpleRendererv2.h"
+#include "UI.h"
 
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
 HWND mainWnd;
@@ -40,15 +39,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	ProcessAttackGame->AddCheatOption(addr1);
 
 	ProcessAttackGame->Start();
+
+	Drawing::Initialize(ProcessAttackGame);
+	UI::Render();
 	//ProcessAttackGame->OpenConsole();
-	BaseRender* renderer = new SimpleRendererV2(ProcessAttackGame, WindowTitle, W_WIDTH, W_HEIGHT);
-	renderer->Start();
 	ProcessAttackGame->Stop();
 
 	delete GoodModeOption;
 	delete ProcessAttackGame;
 	delete addr1;
-	delete renderer;
 
 	return 0;
 }
@@ -68,8 +67,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	cheat->AddCheatOption(option1);
 	cheat->AddCheatOption(option2);
 
-	cheat->OpenConsole();
+	ProcessAttackGame->OpenConsole();
+	//BaseRender* renderer = new SimpleRendererV2(ProcessAttackGame, WindowTitle, W_WIDTH, W_HEIGHT);
+	//renderer->Start();
 
+	delete renderer;
 	delete option1;
 	delete option2;
 */
