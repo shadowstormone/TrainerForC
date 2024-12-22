@@ -1,4 +1,5 @@
 #include "UI.h"
+#include <shlobj.h>
 
 ID3D11Device* UI::pd3dDevice = nullptr;
 ID3D11DeviceContext* UI::pd3dDeviceContext = nullptr;
@@ -157,18 +158,34 @@ void UI::Render()
     info.cbSize = sizeof(MONITORINFO);
     GetMonitorInfo(monitor, &info);
     const int monitor_height = info.rcMonitor.bottom - info.rcMonitor.top;
+    const int monitor_width = GetSystemMetrics(SM_CXSCREEN);
 
+#ifdef _DEBUG
+    // Показ сообщения с разрешением экрана
+    char message[128];
+    sprintf_s(message, "Screen Resolution:\nWidth: %d\nHeight: %d", monitor_width, monitor_height);
+    MessageBoxA(nullptr, message, "Screen Resolution Info", MB_OK | MB_ICONINFORMATION);
+#endif // _DEBUG
+
+    // Устанавливаем масштаб в зависимости от высоты экрана
+    float fScale;
     if (monitor_height > 1080)
     {
-        const float fScale = 1.9f;
-        ImFontConfig cfg;
-        cfg.SizePixels = 13 * fScale;
-    #ifdef _DEBUG
-        io.Fonts->AddFontFromFileTTF("ResourceExtern\\FRIZQT.ttf", 13 * fScale, &cfg);  // Загружаем свой шрифт
-    #else
-        io.Fonts->AddFontFromFileTTF("FRIZQT.ttf", 13 * fScale, &cfg);  // Загружаем свой шрифт
-    #endif // _DEBUG
+        fScale = 1.9f; // Большой масштаб для разрешений выше 1080
     }
+    else
+    {
+        fScale = 1.3f; // Меньший масштаб для разрешений 1080 и ниже
+    }
+
+    ImFontConfig cfg;
+    cfg.SizePixels = 13 * fScale; // Применяем масштаб к размеру шрифта
+
+    // Путь к шрифту
+    std::string fontPath = "C:\\Users\\Admin\\AppData\\Local\\Microsoft\\Windows\\Fonts\\FRIZQT.ttf";
+
+    // Загружаем шрифт
+    ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13 * fScale, &cfg);
 
     ImGui::GetIO().IniFilename = nullptr;
 

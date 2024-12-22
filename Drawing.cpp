@@ -54,6 +54,39 @@ void Drawing::Draw()
 
             ImGui::Separator();
 
+            // Пользовательский ввод значения
+            ImGui::Text("Set a value:"); // Отображение текста
+            ImGui::SameLine();          // Размещаем следующий элемент на одной строке
+
+            // Убираем кнопки `+` и `-`, разрешаем ввод только цифр
+            ImGui::SetNextItemWidth(200); // Устанавливаем ширину поля ввода
+            char inputBuffer[16];         // Буфер для пользовательского ввода (до 15 символов + терминатор)
+            sprintf_s(inputBuffer, "%d", g_userValue); // Конвертируем текущее значение в строку
+
+            if (ImGui::InputText("##ValueInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_CharsDecimal))
+            {
+                // Конвертируем строку обратно в число после успешного ввода
+                g_userValue = atoi(inputBuffer);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Vrite"))
+            {
+                g_isValueSet = true; // Устанавливаем флаг
+            }
+
+            if (g_isValueSet)
+            {
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Value set: %d", g_userValue);
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Value not set.");
+            }
+
+            ImGui::Separator();
+
             // Переместить курсор в нижнюю часть окна
             ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 60); // 53 - расстояние от низа окна(Чем больше цифра тем выше от низа)
 

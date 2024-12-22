@@ -76,6 +76,19 @@ CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<ui
     return this;
 }
 
+CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value)
+{
+    LPCWSTR processName = cheatProcess->GetProcessName();
+    patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
+    return this;
+}
+
+CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value)
+{
+    LPCWSTR processName = cheatProcess->GetProcessName();
+    patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
+    return this;
+}
 
 void CheatOption::Process(int processId)
 {

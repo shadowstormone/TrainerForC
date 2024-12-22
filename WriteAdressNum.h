@@ -3,11 +3,16 @@
 #include <vector>
 #include "Memory_Functions.h"
 #include "Patch.h"
+#include <optional>
 
 class WriteAddressPatch : public Patch
 {
 public:
-	WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value) : 
+	WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value) :
+		Patch(parentInstance, processName, offsets, value), hProcess(nullptr), finalAddress(0) {}
+	WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, float value) :
+		Patch(parentInstance, processName, offsets, value), hProcess(nullptr), finalAddress(0) {}
+	WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, double value) :
 		Patch(parentInstance, processName, offsets, value), hProcess(nullptr), finalAddress(0) {}
 
 	virtual bool Hack(HANDLE hProcess) override

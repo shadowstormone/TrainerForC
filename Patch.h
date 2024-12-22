@@ -21,7 +21,9 @@ protected:
 	// Дополнительные атрибуты для конструктора с processName, offset и value
 	std::wstring processName;
 	std::vector<uintptr_t> offsets;
-	int value;
+	int value = 0;
+	float fvalue = 0;
+	double dvalue = 0;
 
 	void convertPattern(LPCWSTR sign)
 	{
@@ -72,6 +74,22 @@ public:
 		this->processName = processName;
 		this->offsets = offsets;
 		this->value = value;
+	}
+
+	Patch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, float value)
+	{
+		parent = parentInstance;
+		this->processName = processName;
+		this->offsets = offsets;
+		this->fvalue = value;
+	}
+
+	Patch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, double value)
+	{
+		parent = parentInstance;
+		this->processName = processName;
+		this->offsets = offsets;
+		this->dvalue = value;
 	}
 
 	virtual bool Hack(HANDLE hProcess) = 0;
