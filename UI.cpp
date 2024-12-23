@@ -1,6 +1,8 @@
 #include "UI.h"
 #include "ImGuiThemes.h"
 #include <shlobj.h>
+#include <KnownFolders.h>
+#include <filesystem>
 #include "resource.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -185,6 +187,28 @@ LRESULT WINAPI UI::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
+std::string UI::GetFontPath()
+{
+    PWSTR path = nullptr;
+    std::string fontPath;
+
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path)))
+    {
+        // Конвертируем WCHAR* в string
+        int size = WideCharToMultiByte(CP_UTF8, 0, path, -1, nullptr, 0, nullptr, nullptr);
+        std::string localAppData(size, 0);
+        WideCharToMultiByte(CP_UTF8, 0, path, -1, &localAppData[0], size, nullptr, nullptr);
+
+        // Удаляем завершающий нуль
+        localAppData.pop_back();
+
+        fontPath = localAppData + "\\Microsoft\\Windows\\Fonts\\FRIZQT.ttf";
+        CoTaskMemFree(path);
+    }
+
+    return fontPath;
+}
+
 void UI::Render()
 {
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -246,11 +270,19 @@ void UI::Render()
     ImFontConfig cfg;
     cfg.SizePixels = 13 * fScale; // Применяем масштаб к размеру шрифта
 
-    // Путь к шрифту
-    std::string fontPath = "C:\\Users\\Admin\\AppData\\Local\\Microsoft\\Windows\\Fonts\\FRIZQT.ttf";
-
-    // Загружаем шрифт
-    ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13 * fScale, &cfg);
+    std::string fontPath = GetFontPath();   // Путь к шрифту
+    if (std::filesystem::exists(fontPath))  // Перед использованием шрифта проверяем его существование
+    {
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13 * fScale, &cfg);   // Загружаем шрифт
+        if (!font)
+        {
+            MessageBoxA(nullptr, "Failed to load font.", "Font Load Error", MB_OK | MB_ICONERROR);
+        }
+    }
+    else
+    {
+        MessageBoxA(nullptr, "Font file not found.", "Font Load Error", MB_OK | MB_ICONERROR);
+    }
 
     ImGui::GetIO().IniFilename = nullptr;
 
@@ -260,8 +292,6 @@ void UI::Render()
     // Загрузка текстур
     static ID3D11ShaderResourceView* successIcon = LoadTextureFromResource(pd3dDevice, pd3dDeviceContext, GetModuleHandle(nullptr), IDB_PNG1, "PNG");
     static ID3D11ShaderResourceView* errorIcon = LoadTextureFromResource(pd3dDevice, pd3dDeviceContext, GetModuleHandle(nullptr), IDB_PNG2, "PNG");
-
-
     if (!successIcon || !errorIcon)
     {
         MessageBoxA(nullptr, "Failed to load one or more textures.", "Texture Load Error", MB_OK | MB_ICONERROR);

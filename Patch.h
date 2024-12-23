@@ -66,9 +66,7 @@ public:
 	}
 
 	Patch(CheatOption* parentInstance, LPCWSTR signature, SIZE_T pSize) : 
-		Patch(parentInstance, signature, 0 ,pSize)
-	{
-	}
+		Patch(parentInstance, signature, 0 ,pSize) {}
 
 	Patch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
 	{

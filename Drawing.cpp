@@ -1,5 +1,6 @@
 #include "Drawing.h"
 #include "WriteAdressNum.h"
+#include "resource.h"
 
 LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
 ImVec2 Drawing::vWindowSize = { WIDTH, HEIGHT };
@@ -45,35 +46,6 @@ void Drawing::Initialize(Cheat* cheat, const std::unordered_map<std::string, Fun
     OffsetFunctions = offsets;
 }
 
-void Drawing::HandlePopups()
-{
-    if (popupType == "Error" && ImGui::BeginPopup("ErrorPopup"))
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "❌ Error"); // Иконка ошибки
-        ImGui::Separator();
-        ImGui::Text("%s", popupMessage.c_str()); // Сообщение ошибки
-        if (ImGui::Button("OK"))
-        {
-            ImGui::CloseCurrentPopup();
-            popupType = ""; // Сброс типа Popup
-        }
-        ImGui::EndPopup();
-    }
-
-    if (popupType == "Success" && ImGui::BeginPopup("SuccessPopup"))
-    {
-        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "✅ Success"); // Иконка успеха
-        ImGui::Separator();
-        ImGui::Text("%s", popupMessage.c_str()); // Сообщение успеха
-        if (ImGui::Button("OK"))
-        {
-            ImGui::CloseCurrentPopup();
-            popupType = ""; // Сброс типа Popup
-        }
-        ImGui::EndPopup();
-    }
-}
-
 void Drawing::Active()
 {
     bDraw = true;
@@ -86,9 +58,9 @@ bool Drawing::isActive()
 
 void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
 {
-    static int inputWidth = 158; // Длина поля ввода, можно менять
-    static int minValue = 1;     // Минимальное значение, запрещаем ввод 0
-    const float labelWidth = 150.0f; // Фиксированная ширина для текста
+    static int inputWidth = 158;        // Длина поля ввода, можно менять
+    static int minValue = 1;            // Минимальное значение, запрещаем ввод 0
+    const float labelWidth = 150.0f;    // Фиксированная ширина для текста
 
     if (isActive() && _cheat)
     {
@@ -136,9 +108,11 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
                 {
                     if (!_cheat->isProcessRunning() == true)
                     {
+#ifdef _DEBUG
                         popupType = "Error";
                         popupMessage = "Prosess game is not running!";
                         ImGui::OpenPopup("ErrorPopup");
+#endif // _DEBUG
                     }
                     else
                     {
@@ -157,15 +131,20 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
 
                             if (writer.WriteValueMemory(procName, functionOffset.offsets, g_userValue))
                             {
+                                std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
+#ifdef _DEBUG
                                 popupType = "Success";
                                 popupMessage = "Successfully write value " + std::to_string(g_userValue) + " to memory!";
                                 ImGui::OpenPopup("SuccessPopup");
+#endif // _DEBUG
                             }
                             else
                             {
+#ifdef _DEBUG
                                 popupType = "Error";
                                 popupMessage = "Failed to write value to memory!";
                                 ImGui::OpenPopup("ErrorPopup");
+#endif // _DEBUG
                             }
                         }
                     }
