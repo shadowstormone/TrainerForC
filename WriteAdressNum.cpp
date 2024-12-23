@@ -1,4 +1,12 @@
 #include "WriteAdressNum.h"
+#include "CheatOption.h"
+
+WriteAddressPatch::WriteAddressPatch()
+{
+    processId = 0;
+    hProcess = nullptr;
+    baseAddressProcess = 0;
+}
 
 bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
 {
@@ -16,9 +24,9 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
 
     uintptr_t currentAddress = baseAddressProcess;
 
-    for (size_t i = 0; i < offsets.size(); ++i)
+    for(size_t i = 0; i < offsets.size(); ++i)
     {
-        if (i < offsets.size() - 1)
+        if(i < offsets.size() - 1)
         {
             currentAddress += offsets[i];
             //std::cout << "Address after offset " << i << ": 0x" << std::hex << currentAddress << std::endl;
@@ -42,7 +50,7 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
     //std::printf("Final address: 0x%I64X", currentAddress);
 
     int result = WriteMem(hProcess, currentAddress, value);
-    if (result != 0)
+    if(result != 0)
     {
         ShowErrorMessage(NULL, L"Failed to write memory. \r\nError code: ");
         CloseHandle(hProcess);

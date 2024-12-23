@@ -40,6 +40,8 @@ public:
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value);
+	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value);
+	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value);
 	void Process(int processId);
 
 	bool IsEnabled() const

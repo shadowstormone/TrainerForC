@@ -4,6 +4,12 @@
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
 HWND mainWnd;
 
+std::unordered_map<std::string, FunctionOffset> offsets = {
+	{"Set HP", {"Set HP", {0x00256650, 0x370, 0xAC, 0x4B0}}},
+	{"Set Mana", {"Set Mana", {0x00256650, 0x380, 0xBC, 0x5B0}}},
+	{"Set XP", {"Set XP", {0x00256650, 0x390, 0xCC, 0x6B0}}}
+};
+
 struct NameFunc
 {
 	static constexpr LPCWSTR
@@ -31,16 +37,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной инструкции в памяти
 
 	std::vector<int> VriteKey = { VKeys::KEY_NUMPAD2 };
-	std::vector<uintptr_t> offsets = { 0x00256650, 0x370, 0xAC, 0x4B0 };
+	std::vector<uintptr_t> offset = { 0x00256650, 0x370, 0xAC, 0x4B0 };
 	CheatOption* addr1 = new CheatOption(NULL, NameFunc::Name2, VriteKey);
-	addr1->AddWriteValuePatch(ProcessAttackGame, offsets, 9999);
+	addr1->AddWriteValuePatch(ProcessAttackGame, offset, 9999);
 
 	ProcessAttackGame->AddCheatOption(GoodModeOption);
 	ProcessAttackGame->AddCheatOption(addr1);
 
 	ProcessAttackGame->Start();
 
-	Drawing::Initialize(ProcessAttackGame);
+	//Drawing::Initialize(ProcessAttackGame);
+	Drawing::Initialize(ProcessAttackGame, offsets);
 	UI::Render();
 	//ProcessAttackGame->OpenConsole();
 	ProcessAttackGame->Stop();
