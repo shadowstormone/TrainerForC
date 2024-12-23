@@ -1,11 +1,75 @@
 #include "UI.h"
+#include "ImGuiThemes.h"
 #include <shlobj.h>
+#include "resource.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 ID3D11Device* UI::pd3dDevice = nullptr;
 ID3D11DeviceContext* UI::pd3dDeviceContext = nullptr;
 IDXGISwapChain* UI::pSwapChain = nullptr;
 ID3D11RenderTargetView* UI::pMainRenderTargetView = nullptr;
 HMODULE UI::hCurrentModule = nullptr;
+
+ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, ID3D11DeviceContext* context, HMODULE hModule, int resourceId, const char* resourceType)
+{
+    // Преобразуем ANSI строку `resourceType` в Unicode
+    wchar_t wResourceType[64];
+    MultiByteToWideChar(CP_UTF8, 0, resourceType, -1, wResourceType, sizeof(wResourceType) / sizeof(wResourceType[0]));
+
+    // Найти ресурс
+    HRSRC hResource = FindResource(hModule, MAKEINTRESOURCE(resourceId), wResourceType);
+    if (!hResource)
+        return nullptr;
+
+    // Загрузить ресурс
+    HGLOBAL hLoadedResource = LoadResource(hModule, hResource);
+    if (!hLoadedResource)
+        return nullptr;
+
+    // Заблокировать ресурс для доступа к данным
+    void* pResourceData = LockResource(hLoadedResource);
+    DWORD resourceSize = SizeofResource(hModule, hResource);
+    if (!pResourceData || resourceSize == 0)
+        return nullptr;
+
+    // Загрузить изображение из памяти с помощью stb_image
+    int width, height, channels;
+    unsigned char* imageData = stbi_load_from_memory((unsigned char*)pResourceData, resourceSize, &width, &height, &channels, 4);
+    if (!imageData)
+        return nullptr;
+
+    // Создать текстуру DirectX
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = imageData;
+    initData.SysMemPitch = width * 4;
+
+    ID3D11Texture2D* texture = nullptr;
+    ID3D11ShaderResourceView* textureView = nullptr;
+    if (SUCCEEDED(device->CreateTexture2D(&desc, &initData, &texture)))
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = desc.Format;
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        device->CreateShaderResourceView(texture, &srvDesc, &textureView);
+        texture->Release();
+    }
+
+    stbi_image_free(imageData);
+    return textureView;
+}
 
 bool UI::CreateDeviceD3D(HWND hWnd)
 {
@@ -144,7 +208,8 @@ void UI::Render()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
+    SetModernDarkStyle();
 
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -192,6 +257,16 @@ void UI::Render()
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(pd3dDevice, pd3dDeviceContext);
 
+    // Загрузка текстур
+    static ID3D11ShaderResourceView* successIcon = LoadTextureFromResource(pd3dDevice, pd3dDeviceContext, GetModuleHandle(nullptr), IDB_PNG1, "PNG");
+    static ID3D11ShaderResourceView* errorIcon = LoadTextureFromResource(pd3dDevice, pd3dDeviceContext, GetModuleHandle(nullptr), IDB_PNG2, "PNG");
+
+
+    if (!successIcon || !errorIcon)
+    {
+        MessageBoxA(nullptr, "Failed to load one or more textures.", "Texture Load Error", MB_OK | MB_ICONERROR);
+    }
+
     const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool bDone = false;
 
@@ -216,7 +291,7 @@ void UI::Render()
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
         {
-            Drawing::Draw();
+            Drawing::Draw(successIcon, errorIcon);
         }
         ImGui::EndFrame();
 

@@ -176,6 +176,7 @@
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
     <ClInclude Include="Drawing.h" />
+    <ClInclude Include="ImGuiThemes.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Memory_Functions.h" />
     <ClInclude Include="nmd_assembly.h" />
@@ -196,9 +197,11 @@
     <ResourceCompile Include="TrainerForC++.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="ResourceExtern\false.png" />
     <Image Include="ResourceExtern\newLogo.ico" />
     <Image Include="ResourceExtern\NewWhiteLogo.ico" />
     <Image Include="ResourceExtern\TrainerIcon.ico" />
+    <Image Include="ResourceExtern\true.png" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="ResourceExtern\FRIZQT.ttf">

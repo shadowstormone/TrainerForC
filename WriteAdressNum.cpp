@@ -1,6 +1,13 @@
 #include "WriteAdressNum.h"
 #include "CheatOption.h"
 
+WriteAddressPatch::WriteAddressPatch()
+{
+    processId = 0;
+    hProcess = nullptr;
+    baseAddressProcess = 0;
+}
+
 bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintptr_t> offsets, int value)
 {
 	processId = GetProcessIdByProcessName(processName);

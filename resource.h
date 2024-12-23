@@ -7,12 +7,14 @@
 #define IDR_WAVE2                       108
 #define IDI_ICON2                       110
 #define IDI_ICON3                       112
+#define IDB_PNG1                        135
+#define IDB_PNG2                        136
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        137
 #define _APS_NEXT_COMMAND_VALUE         40003
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101

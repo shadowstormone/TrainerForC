@@ -127,6 +127,9 @@
     <ClInclude Include="UI.h">
       <Filter>Файлы заголовков\ImGuiRenderer</Filter>
     </ClInclude>
+    <ClInclude Include="ImGuiThemes.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav">
@@ -147,6 +150,12 @@
       <Filter>ResourceExtern</Filter>
     </Image>
     <Image Include="ResourceExtern\NewWhiteLogo.ico">
+      <Filter>ResourceExtern</Filter>
+    </Image>
+    <Image Include="ResourceExtern\false.png">
+      <Filter>ResourceExtern</Filter>
+    </Image>
+    <Image Include="ResourceExtern\true.png">
       <Filter>ResourceExtern</Filter>
     </Image>
   </ItemGroup>

@@ -56,6 +56,8 @@ protected:
 	}
 
 public:
+	Patch(){}
+
 	Patch(CheatOption* parentInstance, LPCWSTR signature, int patchOffset, SIZE_T pSize)
 	{
 		parent = parentInstance;

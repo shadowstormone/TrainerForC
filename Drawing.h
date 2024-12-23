@@ -1,6 +1,9 @@
 #pragma once
 #include <Windows.h>
 #include <tchar.h>
+#include <unordered_map>
+#include <vector>
+#include <string>
 #include "d3d9.h"
 #include "d3d11.h"
 #include <imgui.h>
@@ -8,8 +11,17 @@
 #include <imgui_impl_win32.h>
 #include "Cheat.h"
 
-constexpr auto WIDTH = 400;
-constexpr auto HEIGHT = 444;
+constexpr auto WIDTH = 500;
+constexpr auto HEIGHT = 555;
+
+// Переменные для управления уведомлениями
+static std::string popupMessage = "";
+static std::string popupType = ""; // "Error" или "Success"
+
+struct FunctionOffset {
+    std::string buttonName;                 // Название кнопки
+    std::vector<uintptr_t> offsets;         // Оффсеты
+};
 
 class Drawing
 {
@@ -20,11 +32,19 @@ private:
     static bool bDraw;
     static Cheat* _cheat;
 
+    static std::vector<uintptr_t> Offsets;
+    static int g_userValue; // Текущее значение для записи
+    static std::unordered_map<std::string, FunctionOffset> OffsetFunctions; // Ассоциация кнопок и офсетов
+
     static std::string WStringToUtf8(const std::wstring& wstr);
 
 public:
     static void Initialize(Cheat* cheat);
+    static void Initialize(Cheat* cheat, const std::vector<uintptr_t>& offsets);
+    static void Initialize(Cheat* cheat, const std::unordered_map<std::string, FunctionOffset>& offsets);
+    static void HandlePopups();
     static void Active();
     static bool isActive();
-    static void Draw();
+    static void Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
+    static void HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
 };

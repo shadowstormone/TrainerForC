@@ -8,6 +8,7 @@
 class WriteAddressPatch : public Patch
 {
 public:
+	WriteAddressPatch();
 	WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, int value) :
 		Patch(parentInstance, processName, offsets, value), hProcess(nullptr), finalAddress(0) {}
 	WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, std::vector<uintptr_t> offsets, float value) :

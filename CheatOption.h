@@ -4,9 +4,6 @@
 #include <string>
 #include "Cheat.h"
 
-// Глобальные переменные для хранения пользовательского ввода
-static int g_userValue = 0; // Значение, которое пользователь введет
-static bool g_isValueSet = false; // Флаг для проверки, задано ли значение
 class Patch;  // Предварительное объявление класса Patch
 class Cheat;  // Предварительное объявление класса Cheat
 

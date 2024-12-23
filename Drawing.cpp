@@ -1,11 +1,15 @@
 #include "Drawing.h"
-#include <iostream>
+#include "WriteAdressNum.h"
 
 LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
 ImVec2 Drawing::vWindowSize = { WIDTH, HEIGHT };
 ImGuiWindowFlags Drawing::WindowFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 bool Drawing::bDraw = true;
 Cheat* Drawing::_cheat = nullptr;
+
+std::unordered_map<std::string, FunctionOffset> Drawing::OffsetFunctions = {};
+std::vector<uintptr_t> Drawing::Offsets = {};
+int Drawing::g_userValue = 0;
 
 std::string Drawing::WStringToUtf8(const std::wstring& wstr)
 {
@@ -29,6 +33,47 @@ void Drawing::Initialize(Cheat* cheat)
     _cheat = cheat;
 }
 
+void Drawing::Initialize(Cheat* cheat, const std::vector<uintptr_t>& offsets)
+{
+    _cheat = cheat;
+    Offsets = offsets;
+}
+
+void Drawing::Initialize(Cheat* cheat, const std::unordered_map<std::string, FunctionOffset>& offsets)
+{
+    _cheat = cheat;
+    OffsetFunctions = offsets;
+}
+
+void Drawing::HandlePopups()
+{
+    if (popupType == "Error" && ImGui::BeginPopup("ErrorPopup"))
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "❌ Error"); // Иконка ошибки
+        ImGui::Separator();
+        ImGui::Text("%s", popupMessage.c_str()); // Сообщение ошибки
+        if (ImGui::Button("OK"))
+        {
+            ImGui::CloseCurrentPopup();
+            popupType = ""; // Сброс типа Popup
+        }
+        ImGui::EndPopup();
+    }
+
+    if (popupType == "Success" && ImGui::BeginPopup("SuccessPopup"))
+    {
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "✅ Success"); // Иконка успеха
+        ImGui::Separator();
+        ImGui::Text("%s", popupMessage.c_str()); // Сообщение успеха
+        if (ImGui::Button("OK"))
+        {
+            ImGui::CloseCurrentPopup();
+            popupType = ""; // Сброс типа Popup
+        }
+        ImGui::EndPopup();
+    }
+}
+
 void Drawing::Active()
 {
     bDraw = true;
@@ -39,8 +84,12 @@ bool Drawing::isActive()
     return bDraw == true;
 }
 
-void Drawing::Draw()
+void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
 {
+    static int inputWidth = 158; // Длина поля ввода, можно менять
+    static int minValue = 1;     // Минимальное значение, запрещаем ввод 0
+    const float labelWidth = 150.0f; // Фиксированная ширина для текста
+
     if (isActive() && _cheat)
     {
         ImGui::SetNextWindowSize(vWindowSize, ImGuiCond_Once);
@@ -54,41 +103,79 @@ void Drawing::Draw()
 
             ImGui::Separator();
 
-            // Пользовательский ввод значения
-            ImGui::Text("Set a value:"); // Отображение текста
-            ImGui::SameLine();          // Размещаем следующий элемент на одной строке
-
-            // Убираем кнопки `+` и `-`, разрешаем ввод только цифр
-            ImGui::SetNextItemWidth(200); // Устанавливаем ширину поля ввода
-            char inputBuffer[16];         // Буфер для пользовательского ввода (до 15 символов + терминатор)
-            sprintf_s(inputBuffer, "%d", g_userValue); // Конвертируем текущее значение в строку
-
-            if (ImGui::InputText("##ValueInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_CharsDecimal))
+            // Пользовательский ввод и кнопки для ассоциации офсетов
+            for (const auto& [buttonName, functionOffset] : OffsetFunctions)
             {
-                // Конвертируем строку обратно в число после успешного ввода
-                g_userValue = atoi(inputBuffer);
-            }
+                // Установка фиксированной ширины для названия
+                ImGui::SetNextItemWidth(labelWidth);
+                ImGui::Text("%s", buttonName.c_str());
+                ImGui::SameLine(labelWidth + 10.0f); // Отступ между текстом и полем ввода
 
-            ImGui::SameLine();
+                // Поле ввода значения
+                char inputBuffer[16];
+                sprintf_s(inputBuffer, "%d", g_userValue);
 
-            if (ImGui::Button("Vrite"))
-            {
-                g_isValueSet = true; // Устанавливаем флаг
-            }
+                ImGui::SetNextItemWidth(static_cast<float>(inputWidth));
+                if (ImGui::InputText(("##ValueInput_" + buttonName).c_str(), inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_CharsDecimal))
+                {
+                    int newValue = atoi(inputBuffer);
+                    if (newValue <= 0) // Проверяем на ввод 0 или отрицательных значений
+                    {
+                        g_userValue = minValue; // Устанавливаем минимальное значение
+                    }
+                    else
+                    {
+                        g_userValue = newValue;
+                    }
+                }
 
-            if (g_isValueSet)
-            {
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Value set: %d", g_userValue);
-            }
-            else
-            {
-                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Value not set.");
-            }
+                ImGui::SameLine();
 
+                // Кнопка записи
+                if (ImGui::Button(("Write##" + buttonName).c_str()))
+                {
+                    if (!_cheat->isProcessRunning() == true)
+                    {
+                        popupType = "Error";
+                        popupMessage = "Prosess game is not running!";
+                        ImGui::OpenPopup("ErrorPopup");
+                    }
+                    else
+                    {
+                        if (g_userValue <= 0) // Проверка перед записью
+                        {
+#ifdef _DEBUG
+                            popupType = "Error";
+                            popupMessage = "Cannot write value 0 to memory!";
+                            ImGui::OpenPopup("ErrorPopup");
+#endif // _DEBUG
+                        }
+                        else
+                        {
+                            WriteAddressPatch writer;
+                            LPCWSTR procName = _cheat->GetProcessName();
+
+                            if (writer.WriteValueMemory(procName, functionOffset.offsets, g_userValue))
+                            {
+                                popupType = "Success";
+                                popupMessage = "Successfully write value " + std::to_string(g_userValue) + " to memory!";
+                                ImGui::OpenPopup("SuccessPopup");
+                            }
+                            else
+                            {
+                                popupType = "Error";
+                                popupMessage = "Failed to write value to memory!";
+                                ImGui::OpenPopup("ErrorPopup");
+                            }
+                        }
+                    }
+                }
+            }
+            
             ImGui::Separator();
 
             // Переместить курсор в нижнюю часть окна
-            ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 60); // 53 - расстояние от низа окна(Чем больше цифра тем выше от низа)
+            ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 65); // 53 - расстояние от низа окна(Чем больше цифра тем выше от низа)
 
             // Информация о процессе
             std::wstring processName = _cheat->GetProcessName();
@@ -105,6 +192,64 @@ void Drawing::Draw()
             // PID Информация
             ImGui::TextColored(ImVec4(0.05f, 0.7f, 0.8f, 1.0f), "PID Process: %s", isRunning ? std::to_string(_cheat->GetProcessID()).c_str() : "N/A");
         }
+
+        // Вызов централизованной обработки Popup
+        HandlePopupsWithIcons(successIcon, errorIcon);
+
         ImGui::End();
+    }
+}
+
+void Drawing::HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
+{
+    // Высота строки текста
+    float textHeight = ImGui::GetTextLineHeightWithSpacing();
+
+    if (popupType == "Error" && ImGui::BeginPopup("ErrorPopup"))
+    {
+        if (errorIcon)
+        {
+            float iconSize = 22.0f; // Размер иконки
+            float iconYOffset = (textHeight - iconSize) * 0.10f; // Смещение для центровки
+
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + iconYOffset); // Смещаем иконку по Y
+            ImGui::Image((void*)errorIcon, ImVec2(iconSize, iconSize));
+            ImGui::SameLine();
+        }
+
+        // Рисуем текст рядом с иконкой
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Error");
+        ImGui::Separator();
+        ImGui::Text("%s", popupMessage.c_str());
+        if (ImGui::Button("OK"))
+        {
+            ImGui::CloseCurrentPopup();
+            popupType = ""; // Сброс типа Popup
+        }
+        ImGui::EndPopup();
+    }
+
+    if (popupType == "Success" && ImGui::BeginPopup("SuccessPopup"))
+    {
+        if (successIcon)
+        {
+            float iconSize = 22.0f; // Размер иконки
+            float iconYOffset = (textHeight - iconSize) * 0.10f; // Смещение для центровки
+
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + iconYOffset); // Смещаем иконку по Y
+            ImGui::Image((void*)successIcon, ImVec2(iconSize, iconSize));
+            ImGui::SameLine();
+        }
+
+        // Рисуем текст рядом с иконкой
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Success");
+        ImGui::Separator();
+        ImGui::Text("%s", popupMessage.c_str());
+        if (ImGui::Button("OK"))
+        {
+            ImGui::CloseCurrentPopup();
+            popupType = ""; // Сброс типа Popup
+        }
+        ImGui::EndPopup();
     }
 }
