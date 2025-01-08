@@ -30,18 +30,20 @@ private:
     static ImVec2 vWindowSize;
     static ImGuiWindowFlags WindowFlags;
     static bool bDraw;
-    static Cheat* _cheat;
+    static Cheat* _cheatProcGame;
 
     static std::vector<uintptr_t> Offsets;
-    static int g_userValue; // Текущее значение для записи
     static std::unordered_map<std::string, FunctionOffset> OffsetFunctions; // Ассоциация кнопок и офсетов
+    static int intUserInput;
+    static float floatUserInput;
+    static double doubleUserInput;
 
     static std::string WStringToUtf8(const std::wstring& wstr);
 
 public:
-    static void Initialize(Cheat* cheat);
-    static void Initialize(Cheat* cheat, const std::vector<uintptr_t>& offsets);
-    static void Initialize(Cheat* cheat, const std::unordered_map<std::string, FunctionOffset>& offsets);
+    static void Initialize(Cheat* ClassCheatProcGame);
+    static void Initialize(Cheat* ClassCheatProcGame, const std::vector<uintptr_t>& offsets);
+    static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets);
     static void Active();
     static bool isActive();
     static void Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);

@@ -1,9 +1,10 @@
+#define NOMINMAX
+#include "resource.h"
 #include "UI.h"
 #include "ImGuiThemes.h"
 #include <shlobj.h>
 #include <KnownFolders.h>
 #include <filesystem>
-#include "resource.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -14,7 +15,14 @@ IDXGISwapChain* UI::pSwapChain = nullptr;
 ID3D11RenderTargetView* UI::pMainRenderTargetView = nullptr;
 HMODULE UI::hCurrentModule = nullptr;
 
-ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, ID3D11DeviceContext* context, HMODULE hModule, int resourceId, const char* resourceType)
+namespace {
+    constexpr float FADE_DURATION = 1.5f; // Длительность анимации в секундах
+    float currentAlpha = 0.0f;
+    bool isFirstFrame = true;
+    std::chrono::steady_clock::time_point startTime;
+}
+
+static ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, ID3D11DeviceContext* context, HMODULE hModule, int resourceId, const char* resourceType)
 {
     // Преобразуем ANSI строку `resourceType` в Unicode
     wchar_t wResourceType[64];
@@ -94,7 +102,7 @@ bool UI::CreateDeviceD3D(HWND hWnd)
     const UINT createDeviceFlags = 0;
 
     D3D_FEATURE_LEVEL featureLevel;
-    const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
+    const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0 };
     if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &pSwapChain, &pd3dDevice, &featureLevel, &pd3dDeviceContext) != S_OK)
         return false;
 
@@ -258,7 +266,11 @@ void UI::Render()
 
     // Устанавливаем масштаб в зависимости от высоты экрана
     float fScale;
-    if (monitor_height > 1080)
+    if (monitor_height > 1440)
+    {
+        fScale = 2.2f;  // Большой масштаб для разрешений выше 2К монитора
+    }
+    else if (monitor_height > 1080)
     {
         fScale = 1.9f; // Большой масштаб для разрешений выше 1080
     }
@@ -267,13 +279,24 @@ void UI::Render()
         fScale = 1.3f; // Меньший масштаб для разрешений 1080 и ниже
     }
 
+    // Добавляем диапазон символов кириллицы
+    static const ImWchar ranges[] = {
+        0x0020, 0x00FF, // Basic Latin + Latin Supplement
+        0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
+        0x2DE0, 0x2DFF, // Cyrillic Extended-A
+        0xA640, 0xA69F, // Cyrillic Extended-B
+        0 };
+
     ImFontConfig cfg;
     cfg.SizePixels = 13 * fScale; // Применяем масштаб к размеру шрифта
+    cfg.PixelSnapH = true;
+    cfg.OversampleH = 1;
+    cfg.OversampleV = 1;
 
     std::string fontPath = GetFontPath();   // Путь к шрифту
     if (std::filesystem::exists(fontPath))  // Перед использованием шрифта проверяем его существование
     {
-        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13 * fScale, &cfg);   // Загружаем шрифт
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13 * fScale, &cfg, ranges);   // Загружаем шрифт
         if (!font)
         {
             MessageBoxA(nullptr, "Failed to load font.", "Font Load Error", MB_OK | MB_ICONERROR);
@@ -317,10 +340,24 @@ void UI::Render()
         if (bDone)
             break;
 
+        // Управление анимацией появления
+        if (isFirstFrame)
+        {
+            startTime = std::chrono::steady_clock::now();
+            currentAlpha = 0.0f;
+            isFirstFrame = false;
+        }
+
+        // Обновление прозрачности
+        auto currentTime = std::chrono::steady_clock::now();
+        float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
+        currentAlpha = std::min(elapsedTime / FADE_DURATION, 1.0f);
+
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
         {
+            ImGui::GetStyle().Alpha = currentAlpha;
             Drawing::Draw(successIcon, errorIcon);
         }
         ImGui::EndFrame();

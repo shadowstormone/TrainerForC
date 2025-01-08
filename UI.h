@@ -14,7 +14,6 @@ private:
 	static void CreateRenderTarget();
 	static void CleanupRenderTarget();
 	static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 	static std::string GetFontPath();
 public:
 	static ID3D11Device* pd3dDevice;
