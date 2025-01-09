@@ -2,8 +2,6 @@
 #include "Drawing.h"
 #include "WriteAdressNum.h"
 #include "resource.h"
-#include <iostream>
-#include <algorithm>
 
 LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
 ImVec2 Drawing::vWindowSize = { WIDTH, HEIGHT };
