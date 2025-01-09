@@ -51,6 +51,7 @@ public:
     static void Initialize(Cheat* ClassCheatProcGame);
     static void Initialize(Cheat* ClassCheatProcGame, const std::vector<uintptr_t>& offsets);
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets);
+    static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets, const std::vector<CheatOption*>& cheatOptions);
     static void Active();
     static bool isActive();
     static void Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);

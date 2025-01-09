@@ -150,3 +150,37 @@ void CheatOption::Process(int processId)
         keyWasPressed = false; // Сбрасываем флаг, если клавиша отпущена
     }
 }
+
+bool CheatOption::pEnable(int pid)
+{
+    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    if (hProc)
+    {
+        for (Patch* p : patches)
+        {
+            p->Hack(hProc);
+        }
+        CloseHandle(hProc);
+        std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
+        return true;
+    }
+    return false;
+}
+
+bool CheatOption::pDisable(int pid)
+{
+    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    if (hProc)
+    {
+        for (Patch* p : patches)
+        {
+            p->Restore(hProc);
+        }
+        CloseHandle(hProc);
+        std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
+        return true;
+    }
+    return false;
+}

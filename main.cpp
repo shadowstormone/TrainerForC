@@ -19,6 +19,8 @@ struct NameFunc
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
+	std::vector<CheatOption*> VecCheatOptions;
+
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -44,11 +46,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	ProcessAttackGame->AddCheatOption(GoodModeOption);
 	ProcessAttackGame->AddCheatOption(addr1);
 
+	// Добавляем экземпляры в вектор
+	VecCheatOptions.push_back(GoodModeOption);
+	VecCheatOptions.push_back(addr1);
+
 	ProcessAttackGame->Start();
 
 	//Drawing::Initialize(ProcessAttackGame);
 	//Drawing::Initialize(ProcessAttackGame, offsets);
-	Drawing::Initialize(ProcessAttackGame, offsets, GoodModeOption);
+	Drawing::Initialize(ProcessAttackGame, offsets, VecCheatOptions);
 	UI::Render();
 	//ProcessAttackGame->OpenConsole();
 	ProcessAttackGame->Stop();

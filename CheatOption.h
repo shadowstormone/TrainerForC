@@ -63,4 +63,7 @@ public:
 	{
 		m_moduleName = moduleName;
 	}
+
+	bool pEnable(int pid);
+	bool pDisable(int pid);
 };

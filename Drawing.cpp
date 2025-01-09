@@ -3,6 +3,7 @@
 #include "WriteAdressNum.h"
 #include "resource.h"
 #include <iostream>
+#include <algorithm>
 
 LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
 ImVec2 Drawing::vWindowSize = { WIDTH, HEIGHT };
@@ -20,7 +21,9 @@ double Drawing::doubleUserInput = 0.0;
 
 Console console;
 bool showConsole = false;
-bool isKeyHeld = false;
+bool isKeyHold = false;
+std::vector<CheatOption*> existingVector;
+std::vector<CheatOption*>& cheatOptionsFn = existingVector;
 
 std::string Drawing::WStringToUtf8(const std::wstring& wstr)
 {
@@ -54,6 +57,13 @@ void Drawing::Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std
 {
     _cheatProcGame = ClassCheatProcGame;
     OffsetFunctions = offsets;
+}
+
+void Drawing::Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets, const std::vector<CheatOption*>& cheatOptions)
+{
+    _cheatProcGame = ClassCheatProcGame;
+    OffsetFunctions = offsets;
+    cheatOptionsFn = cheatOptions;
 }
 
 void Drawing::Active()
@@ -152,15 +162,15 @@ static void ProcessInput()
     // Проверяем состояние клавиши VK_OEM_3
     if (GetAsyncKeyState(VK_OEM_3) & 0x8000) // Клавиша нажата
     {
-        if (!isKeyHeld) // Если это первое нажатие
+        if (!isKeyHold) // Если это первое нажатие
         {
-            isKeyHeld = true; // Устанавливаем флаг
+            isKeyHold = true; // Устанавливаем флаг
             showConsole = !showConsole; // Переключаем состояние консоли
         }
     }
     else
     {
-        isKeyHeld = false; // Сбрасываем флаг при отпускании
+        isKeyHold = false; // Сбрасываем флаг при отпускании
     }
 }
 
@@ -208,34 +218,38 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
                 {
                     std::string optionName = WStringToUtf8(pair.first);
                     bool currentState = toggleStatesFunction[toggleId];
+                    std::vector<CheatOption*> foundOptions;
+                    
+                    auto it = cheatOptionsFn.begin();
+                    CheatOption* n1fn = it[0];
+                    CheatOption* n2fn = it[1];
 
                     if (currentState && !previousState)
                     {
-                        switch (hash(optionName.c_str())) // Предполагается наличие функции hash для строк
+                        switch (hash(optionName.c_str()))
                         {
                         case hash("[Numpad 1] - Cheat Test"):
                             console.addLog("Переключатель Опция1 активирован");
+                            n1fn->pEnable(_cheatProcGame->GetProcessID());
                             break;
 
                         case hash("[Numpad 2] - Set 9999 HP"):
                             console.addLog("Переключатель Опция2 активирован");
-                            // Код для Опции2
+                            n2fn->pEnable(_cheatProcGame->GetProcessID());
                             break;
                         }
                     }
                     else if (!currentState && previousState)
                     {
-                        switch (hash(optionName.c_str())) // Предполагается наличие функции hash для строк
+                        switch (hash(optionName.c_str()))
                         {
                         case hash("[Numpad 1] - Cheat Test"):
                             console.addLog("Опция1 выключена");
-                            showConsole = false;
-                            // Код для Опции1
+                            n1fn->pDisable(_cheatProcGame->GetProcessID());
                             break;
 
                         case hash("[Numpad 2] - Set 9999 HP"):
                             console.addLog("Опция2 выключена");
-                            // Код для Опции2
                             break;
                         }
                     }
