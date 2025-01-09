@@ -357,6 +357,10 @@ void UI::Render()
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
         {
+            if (showConsole)
+            {
+                console.draw("Console", &showConsole);
+            }
             ImGui::GetStyle().Alpha = currentAlpha;
             Drawing::Draw(successIcon, errorIcon);
         }

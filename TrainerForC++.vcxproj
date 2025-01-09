@@ -177,6 +177,7 @@
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
     <ClInclude Include="Drawing.h" />
+    <ClInclude Include="ImGuiConsole.h" />
     <ClInclude Include="ImGuiThemes.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Memory_Functions.h" />

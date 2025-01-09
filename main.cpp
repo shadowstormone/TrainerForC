@@ -47,7 +47,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	ProcessAttackGame->Start();
 
 	//Drawing::Initialize(ProcessAttackGame);
-	Drawing::Initialize(ProcessAttackGame, offsets);
+	//Drawing::Initialize(ProcessAttackGame, offsets);
+	Drawing::Initialize(ProcessAttackGame, offsets, GoodModeOption);
 	UI::Render();
 	//ProcessAttackGame->OpenConsole();
 	ProcessAttackGame->Stop();

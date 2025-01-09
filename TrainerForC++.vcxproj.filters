@@ -130,6 +130,9 @@
     <ClInclude Include="ImGuiThemes.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="ImGuiConsole.h">
+      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav">

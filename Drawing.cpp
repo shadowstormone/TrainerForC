@@ -2,6 +2,7 @@
 #include "Drawing.h"
 #include "WriteAdressNum.h"
 #include "resource.h"
+#include <iostream>
 
 LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
 ImVec2 Drawing::vWindowSize = { WIDTH, HEIGHT };
@@ -11,9 +12,15 @@ Cheat* Drawing::_cheatProcGame = nullptr;
 
 std::unordered_map<std::string, FunctionOffset> Drawing::OffsetFunctions = {};
 std::vector<uintptr_t> Drawing::Offsets = {};
+std::unordered_map<std::string, bool> Drawing::toggleStatesFunction = {};
+
 int Drawing::intUserInput = 1;
 float Drawing::floatUserInput = 0.0f;
 double Drawing::doubleUserInput = 0.0;
+
+Console console;
+bool showConsole = false;
+bool isKeyHeld = false;
 
 std::string Drawing::WStringToUtf8(const std::wstring& wstr)
 {
@@ -59,11 +66,114 @@ bool Drawing::isActive()
     return bDraw == true;
 }
 
+template<typename T>
+inline T Clamp(T value, T min, T max)
+{
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
+// Функция рендера переключателя с анимацией
+static bool AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size = ImVec2(50, 25), float animationSpeed = 0.1f)
+{
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    float height = size.y;
+    float width = size.x;
+    float radius = height * 0.5f;
+
+    // Уникальные анимации для каждого переключателя
+    static std::map<std::string, float> animationProgressMap;
+    float& animationProgress = animationProgressMap[std::string(id)];
+
+    // Невидимая кнопка
+    ImGui::InvisibleButton(id, size);
+    bool clicked = ImGui::IsItemClicked();
+    if (clicked)
+    {
+        *v = !*v;
+    }
+
+    // Плавная анимация
+    float targetProgress = *v ? 1.0f : 0.0f;
+    animationProgress += (targetProgress - animationProgress) * (animationSpeed * ImGui::GetIO().DeltaTime * 60.0f);
+    animationProgress = Clamp(animationProgress, 0.0f, 1.0f);
+
+    // Easing
+    float easeFactor = animationProgress * animationProgress * (3.0f - 2.0f * animationProgress);
+
+    // Цвет
+    ImVec4 offColor = style.Colors[ImGuiCol_FrameBg];
+    ImVec4 onColor = style.Colors[ImGuiCol_CheckMark];
+    ImVec4 currentColor;
+    currentColor.x = offColor.x + (onColor.x - offColor.x) * easeFactor;
+    currentColor.y = offColor.y + (onColor.y - offColor.y) * easeFactor;
+    currentColor.z = offColor.z + (onColor.z - offColor.z) * easeFactor;
+    currentColor.w = 1.0f;
+
+    // Фон переключателя
+    draw_list->AddRectFilled(ImVec2(p.x, p.y), ImVec2(p.x + width, p.y + height), ImGui::ColorConvertFloat4ToU32(currentColor), radius);
+
+    // Ползунок
+    float circle_x = p.x + radius + easeFactor * (width - 2 * radius);
+    ImVec4 circleColor = style.Colors[ImGuiCol_Button];
+    ImVec4 shadowColor = style.Colors[ImGuiCol_Border];
+    shadowColor.w = 0.5f;
+
+    // Тень
+    draw_list->AddCircleFilled(ImVec2(circle_x + 1.0f, p.y + radius + 1.0f), radius - 2.0f, ImGui::ColorConvertFloat4ToU32(shadowColor));
+
+    // Ползунок
+    draw_list->AddCircleFilled(ImVec2(circle_x, p.y + radius), radius - 2.0f, ImGui::ColorConvertFloat4ToU32(circleColor));
+
+    // Наведение
+    if (ImGui::IsItemHovered())
+    {
+        draw_list->AddCircleFilled(ImVec2(circle_x, p.y + radius), radius - 2.0f, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]));
+    }
+
+    return clicked;
+}
+
+static constexpr unsigned int hash(const char* str)
+{
+    unsigned int hash = 5381;
+    while (*str)
+    {
+        hash = ((hash << 5) + hash) + (*str++);
+    }
+    return hash;
+}
+
+static void ProcessInput()
+{
+    // Проверяем состояние клавиши VK_OEM_3
+    if (GetAsyncKeyState(VK_OEM_3) & 0x8000) // Клавиша нажата
+    {
+        if (!isKeyHeld) // Если это первое нажатие
+        {
+            isKeyHeld = true; // Устанавливаем флаг
+            showConsole = !showConsole; // Переключаем состояние консоли
+        }
+    }
+    else
+    {
+        isKeyHeld = false; // Сбрасываем флаг при отпускании
+    }
+}
+
 void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
 {
     static int inputWidth = 158;        // Длина поля ввода, можно менять
     static int minValue = 1;            // Минимальное значение, запрещаем ввод 0
     const float labelWidth = 150.0f;    // Фиксированная ширина для текста
+    const float textWidth = 315.0f;     // Фиксированая ширена для названия функций из main в цикле for
+
+#ifdef _DEBUG
+    ProcessInput();
+#endif // _DEBUG
 
     if (isActive() && _cheatProcGame)
     {
@@ -73,7 +183,63 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
             // Рисуем функции из main
             for (const auto& pair : _cheatProcGame->GetCheatOptionState())
             {
+                // Отображение текста с цветом
                 ImGui::TextColored(pair.second ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%s", WStringToUtf8(pair.first).c_str());
+
+                // Позиционирование переключателя
+                ImGui::SetNextItemWidth(textWidth); // Устанавливаем ширину для переключателя
+
+                // Отображение переключателя на той же линии
+                ImGui::SameLine(textWidth + 10.0f); // Отступ между текстом и переключателем
+
+                // Используем уникальный идентификатор для каждого переключателя
+                std::string toggleId = "##toggle_" + WStringToUtf8(pair.first);
+
+                // Проверка на существование состояния в карте
+                if (toggleStatesFunction.find(toggleId) == toggleStatesFunction.end())
+                {
+                    toggleStatesFunction[toggleId] = pair.second; // Инициализируем состояние переключателя
+                }
+
+                // Сохраняем предыдущее состояние переключателя
+                bool previousState = toggleStatesFunction[toggleId];
+
+                if (AnimatedToggleSwitch(toggleId.c_str(), &toggleStatesFunction[toggleId]))
+                {
+                    std::string optionName = WStringToUtf8(pair.first);
+                    bool currentState = toggleStatesFunction[toggleId];
+
+                    if (currentState && !previousState)
+                    {
+                        switch (hash(optionName.c_str())) // Предполагается наличие функции hash для строк
+                        {
+                        case hash("[Numpad 1] - Cheat Test"):
+                            console.addLog("Переключатель Опция1 активирован");
+                            break;
+
+                        case hash("[Numpad 2] - Set 9999 HP"):
+                            console.addLog("Переключатель Опция2 активирован");
+                            // Код для Опции2
+                            break;
+                        }
+                    }
+                    else if (!currentState && previousState)
+                    {
+                        switch (hash(optionName.c_str())) // Предполагается наличие функции hash для строк
+                        {
+                        case hash("[Numpad 1] - Cheat Test"):
+                            console.addLog("Опция1 выключена");
+                            showConsole = false;
+                            // Код для Опции1
+                            break;
+
+                        case hash("[Numpad 2] - Set 9999 HP"):
+                            console.addLog("Опция2 выключена");
+                            // Код для Опции2
+                            break;
+                        }
+                    }
+                }
             }
 
             ImGui::Separator();
