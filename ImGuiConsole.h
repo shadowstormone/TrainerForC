@@ -17,7 +17,8 @@ public:
     {
         inputBuf[0] = 0;
         scrollToBottom = true;
-        items.push_back("Добро пожаловать в консоль разработчика");
+        items.push_back("[INFO] Добро пожаловать в консоль разработчика");
+        items.push_back("Версия: 1.0 (Debug)");
     }
 
     void addLog(const char* fmt, ...)
@@ -93,8 +94,19 @@ public:
                     }
                     else
                     {
-                        addLog("Process not found");
+                        addLog("Процесс не запущен!");
                     }
+                }
+                else if (command == "!help" || command == "!Help")
+                {
+                    addLog("Доступные команды:");
+                    addLog(" - !Help: Показать список команд.");
+                    addLog(" - !clear: Отчистить консоль.");
+                    addLog(" - !GetPID: Получить ID процесса.");
+                }
+                else if (command == "!clear"  || command == "!Сlear")
+                {
+                    items.clear();
                 }
                 else
                 {
