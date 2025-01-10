@@ -131,7 +131,7 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiConsole.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

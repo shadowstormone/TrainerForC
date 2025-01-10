@@ -27,6 +27,7 @@ class Cheat
 	void ProcessorOptions();
 public:
 	void OpenConsole();
+	void ImGuiOpenConsole();
 
 	Cheat(LPCWSTR processName) : _processName(processName) 
 	{

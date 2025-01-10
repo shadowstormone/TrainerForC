@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+extern Cheat* procGameCheat;
+
 class Console
 {
 private:
@@ -78,8 +80,27 @@ public:
         {
             if (inputBuf[0] != 0)
             {
+                std::string command(inputBuf);
                 addLog("> %s", inputBuf);
-                // Здесь можно добавить обработку команд
+
+                // Обработка команд
+                if (command == "!GetPID")
+                {
+                    DWORD pid = procGameCheat->GetProcessID();
+                    if (pid != 0)
+                    {
+                        addLog("Process ID: %d", pid);
+                    }
+                    else
+                    {
+                        addLog("Process not found");
+                    }
+                }
+                else
+                {
+                    addLog("Команда не существует или не найдена!");
+                }
+
                 inputBuf[0] = 0;
                 reclaimFocus = true;
             }

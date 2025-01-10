@@ -1,5 +1,6 @@
 #include "WriteAdressNum.h"
 #include "CheatOption.h"
+#include <iostream>
 
 WriteAddressPatch::WriteAddressPatch()
 {
@@ -20,8 +21,6 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
         return false;
     }
 
-    //std::cout << "Base address: 0x" << std::hex << baseAddressProcess << std::endl;
-
     uintptr_t currentAddress = baseAddressProcess;
 
     for(size_t i = 0; i < offsets.size(); ++i)
@@ -29,7 +28,6 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
         if(i < offsets.size() - 1)
         {
             currentAddress += offsets[i];
-            //std::cout << "Address after offset " << i << ": 0x" << std::hex << currentAddress << std::endl;
 
             currentAddress = ReadMem(hProcess, currentAddress);
             if (currentAddress == 0)
@@ -38,7 +36,6 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
                 CloseHandle(hProcess);
                 return false;
             }
-            //std::cout << "Value read: 0x" << std::hex << currentAddress << std::endl;
         }
         else
         {
@@ -46,8 +43,9 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
         }
     }
 
-    //std::cout << "Final address: 0x" << std::hex << currentAddress << std::endl;
-    //std::printf("Final address: 0x%I64X", currentAddress);
+#ifdef _DEBUG
+    std::printf("Final address: 0x%I64X", currentAddress);
+#endif // _DEBUG
 
     int result = WriteMem(hProcess, currentAddress, value);
     if(result != 0)

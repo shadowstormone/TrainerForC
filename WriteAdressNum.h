@@ -1,9 +1,9 @@
 #pragma once
 #include <Windows.h>
 #include <vector>
+#include <optional>
 #include "Memory_Functions.h"
 #include "Patch.h"
-#include <optional>
 
 class WriteAddressPatch : public Patch
 {

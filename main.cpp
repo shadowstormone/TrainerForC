@@ -24,12 +24,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// Проверяем аргументы командной строки на наличие флагов тестов
-	if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0)
+#ifdef _DEBUG
+	if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0) // Проверяем аргументы командной строки на наличие флагов тестов
 	{
 		RunTests();
 		return 0;
 	}
+#endif // _DEBUG
 
 	Cheat* ProcessAttackGame = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
 
@@ -50,13 +51,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	VecCheatOptions.push_back(GoodModeOption);
 	VecCheatOptions.push_back(addr1);
 
-	ProcessAttackGame->Start();
+#ifdef _DEBUG
+	ProcessAttackGame->ImGuiOpenConsole();
+#endif // _DEBUG
 
-	//Drawing::Initialize(ProcessAttackGame);
-	//Drawing::Initialize(ProcessAttackGame, offsets);
+	ProcessAttackGame->Start();
 	Drawing::Initialize(ProcessAttackGame, offsets, VecCheatOptions);
 	UI::Render();
-	//ProcessAttackGame->OpenConsole();
 	ProcessAttackGame->Stop();
 
 	delete GoodModeOption;

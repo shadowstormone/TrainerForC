@@ -22,6 +22,7 @@ bool showConsole = false;
 bool isKeyHold = false;
 std::vector<CheatOption*> existingVector;
 std::vector<CheatOption*>& cheatOptionsFn = existingVector;
+Cheat* procGameCheat = nullptr;
 
 std::string Drawing::WStringToUtf8(const std::wstring& wstr)
 {
@@ -62,6 +63,7 @@ void Drawing::Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std
     _cheatProcGame = ClassCheatProcGame;
     OffsetFunctions = offsets;
     cheatOptionsFn = cheatOptions;
+    procGameCheat = ClassCheatProcGame;
 }
 
 void Drawing::Active()
@@ -200,6 +202,13 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
                 // Отображение переключателя на той же линии
                 ImGui::SameLine(textWidth + 10.0f); // Отступ между текстом и переключателем
 
+                // Проверяем, запущен ли процесс игры
+                bool isGameRunning = _cheatProcGame->GetProcessID() != 0; // или другая проверка
+
+                // Делаем элементы неактивными если игра не запущена
+                if (!isGameRunning)
+                    ImGui::BeginDisabled();
+
                 // Используем уникальный идентификатор для каждого переключателя
                 std::string toggleId = "##toggle_" + WStringToUtf8(pair.first);
 
@@ -217,7 +226,7 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
                     std::string optionName = WStringToUtf8(pair.first);
                     bool currentState = toggleStatesFunction[toggleId];
                     std::vector<CheatOption*> foundOptions;
-                    
+
                     auto it = cheatOptionsFn.begin();
                     CheatOption* n1fn = it[0];
                     CheatOption* n2fn = it[1];
@@ -252,6 +261,9 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
                         }
                     }
                 }
+
+                if (!isGameRunning)
+                    ImGui::EndDisabled();
             }
 
             ImGui::Separator();
