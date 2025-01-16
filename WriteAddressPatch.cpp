@@ -3,11 +3,7 @@
 #include <iostream>
 
 WriteAddressPatch::WriteAddressPatch()
-    : m_processId(0)
-    , m_hProcess(nullptr)
-    , m_baseAddress(0)
-    , m_finalAddress(0)
-    , m_isApplied(false)
+    : m_processId(0), m_hProcess(nullptr), m_baseAddress(0), m_finalAddress(0), m_isApplied(false)
 {
 }
 
@@ -29,17 +25,20 @@ DWORD_PTR WriteAddressPatch::DetermineBaseAddress(HANDLE hProcess) const
 
 uintptr_t WriteAddressPatch::CalculateFinalAddress(HANDLE hProcess, DWORD_PTR baseAddr, const std::vector<uintptr_t>& offsets)
 {
-    if (offsets.empty()) {
+    if (offsets.empty())
+    {
         return 0;
     }
 
     uintptr_t currentAddress = baseAddr;
 
-    for (size_t i = 0; i < offsets.size() - 1; ++i) {
+    for (size_t i = 0; i < offsets.size() - 1; ++i)
+    {
         currentAddress += offsets[i];
         currentAddress = ReadMem(hProcess, currentAddress);
 
-        if (currentAddress == 0) {
+        if (currentAddress == 0)
+        {
             ShowErrorMessage(NULL, L"Failed to read memory at offset");
             return 0;
         }
@@ -49,28 +48,27 @@ uintptr_t WriteAddressPatch::CalculateFinalAddress(HANDLE hProcess, DWORD_PTR ba
 }
 
 template<typename T>
-bool WriteAddressPatch::WriteValueMemory(
-    LPCWSTR processName,
-    const std::vector<uintptr_t>& offsets,
-    T value
-) {
-    if (!InitializeProcess(processName)) {
+bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, const std::vector<uintptr_t>& offsets, T value)
+{
+    if (!InitializeProcess(processName))
+    {
         return false;
     }
 
     m_baseAddress = DetermineBaseAddress(m_hProcess);
     m_finalAddress = CalculateFinalAddress(m_hProcess, m_baseAddress, offsets);
 
-    if (m_finalAddress == 0) {
+    if (m_finalAddress == 0)
+    {
         Cleanup();
         return false;
     }
 
 #ifdef _DEBUG
     std::printf("Final address: 0x%I64X\n", m_finalAddress);
-#endif
+#endif // _DEBUG
 
-    SIZE_T bytesWritten;
+    SIZE_T bytesWritten = 0;
     if (!WriteProcessMemory(m_hProcess, (LPVOID)m_finalAddress, &value, sizeof(T), &bytesWritten))
     {
         ShowErrorMessage(NULL, L"Failed to write memory!");
@@ -94,11 +92,13 @@ template bool WriteAddressPatch::WriteValueMemory<int>(LPCWSTR, const std::vecto
 template bool WriteAddressPatch::WriteValueMemory<float>(LPCWSTR, const std::vector<uintptr_t>&, float);
 template bool WriteAddressPatch::WriteValueMemory<double>(LPCWSTR, const std::vector<uintptr_t>&, double);
 
-bool WriteAddressPatch::InitializeProcess(LPCWSTR processName) {
+bool WriteAddressPatch::InitializeProcess(LPCWSTR processName)
+{
     m_processId = GetProcessIdByProcessName(processName);
     m_hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_processId);
 
-    if (!m_hProcess) {
+    if (!m_hProcess)
+    {
         ShowErrorMessage(NULL, L"Failed to open process");
         return false;
     }
@@ -106,29 +106,36 @@ bool WriteAddressPatch::InitializeProcess(LPCWSTR processName) {
     return true;
 }
 
-void WriteAddressPatch::Cleanup() {
-    if (m_hProcess) {
+void WriteAddressPatch::Cleanup()
+{
+    if (m_hProcess)
+    {
         CloseHandle(m_hProcess);
         m_hProcess = nullptr;
     }
 }
 
-bool WriteAddressPatch::Hack(HANDLE hProcess) {
-    if (!m_isApplied) {
+bool WriteAddressPatch::Hack(HANDLE hProcess)
+{
+    if (!m_isApplied)
+    {
         m_isApplied = true;
         return WriteValueMemory(processName.c_str(), offsets, value);
     }
     return false;
 }
 
-bool WriteAddressPatch::Restore(HANDLE hProcess) {
-    if (m_isApplied) {
+bool WriteAddressPatch::Restore(HANDLE hProcess)
+{
+    if (m_isApplied)
+    {
         m_isApplied = false;
         return true;
     }
     return false;
 }
 
-WriteAddressPatch::~WriteAddressPatch() {
+WriteAddressPatch::~WriteAddressPatch()
+{
     Cleanup();
 }
