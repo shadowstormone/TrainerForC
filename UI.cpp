@@ -220,9 +220,9 @@ std::string UI::GetFontPath()
 void UI::Render()
 {
     ImGui_ImplWin32_EnableDpiAwareness();
-    const WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Standalone"), nullptr };
+    const WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("Test Trainer"), nullptr };
     ::RegisterClassEx(&wc);
-    const HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("ImGui Standalone"), WS_OVERLAPPEDWINDOW, 100, 100, 50, 50, NULL, NULL, wc.hInstance, NULL);
+    const HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Test Trainer"), WS_OVERLAPPEDWINDOW, 100, 100, 50, 50, NULL, NULL, wc.hInstance, NULL);
 
     if (!CreateDeviceD3D(hwnd))
     {
@@ -304,7 +304,11 @@ void UI::Render()
     }
     else
     {
-        MessageBoxA(nullptr, "Font file not found.", "Font Load Error", MB_OK | MB_ICONERROR);
+        ImFont* font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", 13 * fScale, &cfg, ranges); // Загружаем дефолтный шрифт если нужный не найден
+        if (!font)
+        {
+            MessageBoxA(nullptr, "Font file not found.", "Font Load Error", MB_OK | MB_ICONERROR);
+        }
     }
 
     ImGui::GetIO().IniFilename = nullptr;
@@ -359,7 +363,7 @@ void UI::Render()
         {
             if (showConsole)
             {
-                console.draw("Console", &showConsole);
+                console.draw("Debug Console", &showConsole);
             }
             ImGui::GetStyle().Alpha = currentAlpha;
             Drawing::Draw(successIcon, errorIcon);
