@@ -5,9 +5,7 @@ LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
 HWND mainWnd;
 
 std::unordered_map<std::string, FunctionOffset> offsets = {
-	{"Set HP", {"Set HP", {0x00256650, 0x370, 0xAC, 0x4B0}}},
-	{"Set Mana", {"Set Mana", {0x00256650, 0x380, 0xBC, 0x5B0}}},
-	{"Set XP", {"Set XP", {0x00256650, 0x390, 0xCC, 0x6B0}}}
+	{"Set HP", {"Set HP", {0x00256650, 0x370, 0xAC, 0x4B0}}}
 };
 
 struct NameFunc

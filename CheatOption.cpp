@@ -7,7 +7,7 @@
 #include "NopPatch.h"
 #include "CavePatch.h"
 #include "resource.h"
-#include "WriteAdressNum.h"
+#include "WriteAddressPatch.h"
 
 #pragma comment(lib, "Winmm.lib")
 

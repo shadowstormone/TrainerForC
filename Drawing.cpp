@@ -1,6 +1,6 @@
 #include <climits> // Для INT_MAX
 #include "Drawing.h"
-#include "WriteAdressNum.h"
+#include "WriteAddressPatch.h"
 #include "resource.h"
 
 // ---------------- Static Member Initialization ----------------
@@ -478,43 +478,6 @@ void Drawing::HandleToggleInteraction(const std::string& toggleId, const std::st
     }
 }
 
-void Drawing::DisplayPopup(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
-{
-    if (popupType == "Error" && ImGui::BeginPopup("ErrorPopup"))
-    {
-        if (errorIcon)
-        {
-            ImGui::Image((void*)errorIcon, ImVec2(22.0f, 22.0f));
-            ImGui::SameLine();
-        }
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ошибка");
-        ImGui::Text("%s", popupMessage.c_str());
-        if (ImGui::Button("OK"))
-        {
-            ImGui::CloseCurrentPopup();
-            popupType = "";
-        }
-        ImGui::EndPopup();
-    }
-
-    if (popupType == "Success" && ImGui::BeginPopup("SuccessPopup"))
-    {
-        if (successIcon)
-        {
-            ImGui::Image((void*)successIcon, ImVec2(22.0f, 22.0f));
-            ImGui::SameLine();
-        }
-        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Успех");
-        ImGui::Text("%s", popupMessage.c_str());
-        if (ImGui::Button("OK"))
-        {
-            ImGui::CloseCurrentPopup();
-            popupType = "";
-        }
-        ImGui::EndPopup();
-    }
-}
-
 void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
 {
 #ifdef _DEBUG
@@ -534,7 +497,8 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
         ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 65); // 53 - расстояние от низа окна(Чем больше цифра тем выше от низа)
         RenderProcessInfo();
 
-        DisplayPopup(successIcon, errorIcon);
+        //DisplayPopup(successIcon, errorIcon);
+        HandlePopupsWithIcons(successIcon, errorIcon);
 
         ImGui::End();
     }

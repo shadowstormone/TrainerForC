@@ -169,7 +169,7 @@
     <ClCompile Include="SimpleRendererv2.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
     <ClCompile Include="UI.cpp" />
-    <ClCompile Include="WriteAdressNum.cpp" />
+    <ClCompile Include="WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseRenderer.h" />
@@ -189,7 +189,7 @@
     <ClInclude Include="SimpleRendererv2.h" />
     <ClInclude Include="StarFieldEffect.h" />
     <ClInclude Include="UI.h" />
-    <ClInclude Include="WriteAdressNum.h" />
+    <ClInclude Include="WriteAddressPatch.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />

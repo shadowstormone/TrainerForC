@@ -54,8 +54,6 @@ private:
     static void RenderInputFields();
     static void RenderProcessInfo();
     static void HandleToggleInteraction(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);
-    static void DisplayPopup(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
-
     static void HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
 public:
     // Initialization methods

@@ -65,7 +65,7 @@
     <ClCompile Include="Errors_test.cpp">
       <Filter>Google Test</Filter>
     </ClCompile>
-    <ClCompile Include="WriteAdressNum.cpp">
+    <ClCompile Include="WriteAddressPatch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="SimpleRendererv2.cpp">
@@ -115,7 +115,7 @@
     <ClInclude Include="StarFieldEffect.h">
       <Filter>Файлы заголовков\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="WriteAdressNum.h">
+    <ClInclude Include="WriteAddressPatch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="SimpleRendererv2.h">
