@@ -44,7 +44,7 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, std::vector<uintpt
     }
 
 #ifdef _DEBUG
-    std::printf("Final address: 0x%I64X", currentAddress);
+    std::printf("Final address: 0x%I64X\n", currentAddress);
 #endif // _DEBUG
 
     int result = WriteMem(hProcess, currentAddress, value);
