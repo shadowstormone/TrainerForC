@@ -44,6 +44,11 @@ public:
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value);
 	void Process(int processId);
 
+	bool IsEnabled(bool state)
+	{
+		return m_enabled = state;
+	}
+
 	bool IsEnabled() const
 	{
 		return m_enabled;
