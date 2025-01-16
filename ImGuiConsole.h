@@ -2,34 +2,68 @@
 #include "imgui.h"
 #include <vector>
 #include <string>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 extern Cheat* procGameCheat;
 
 class Console
 {
 private:
-    std::vector<std::string> items;
+    struct LogEntry
+    {
+        std::string timestamp;
+        std::string type;
+        std::string message;
+        bool isUserInput;
+
+        LogEntry() : timestamp(), type(), message(), isUserInput(false) {} // Инициализируем все поля
+    };
+
+    std::vector<LogEntry> items;
+    std::vector<std::string> availableCommands;
+    int historyPos;
     char inputBuf[256];
     bool scrollToBottom;
+
+    std::string GetCurrentTimestamp()
+    {
+        std::time_t now = std::time(nullptr);
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &now);
+        std::ostringstream oss;
+        oss << std::put_time(&timeinfo, "%H:%M:%S");
+        return oss.str();
+    }
 
 public:
     Console()
     {
         inputBuf[0] = 0;
         scrollToBottom = true;
-        items.push_back("[INFO] Добро пожаловать в консоль разработчика");
-        items.push_back("Версия: 1.0 (Debug)");
+
+        // Initialize available commands
+        availableCommands = {
+            "!help",
+            "!Help",
+            "!clear",
+            "!Clear",
+            "!GetPID"
+        };
+
+        addLog("INFO", "Добро пожаловать в консоль разработчика");
+        addLog("INFO", "Версия: 1.0 (Debug)");
     }
 
-    void addLog(const char* fmt, ...)
+    void addLog(const std::string& type, const std::string& message, bool isUserInput = false)
     {
-        char buf[1024];
-        va_list args;
-        va_start(args, fmt);
-        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
-        buf[IM_ARRAYSIZE(buf) - 1] = 0;
-        va_end(args);
-        items.push_back(buf);
+        LogEntry entry;
+        entry.timestamp = GetCurrentTimestamp();
+        entry.type = type;
+        entry.message = message;
+        entry.isUserInput = isUserInput;
+        items.push_back(entry);
         scrollToBottom = true;
     }
 
@@ -42,17 +76,14 @@ public:
             return;
         }
 
-        // Кнопка очистки
-        if (ImGui::Button("Clear"))
+        if (ImGui::Button("Clear")) items.clear();
         {
-            items.clear();
+            ImGui::SameLine();
         }
-        ImGui::SameLine();
         bool copy = ImGui::Button("Copy");
 
         ImGui::Separator();
 
-        // Область вывода сообщений
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() - 10), false, ImGuiWindowFlags_HorizontalScrollbar);
 
         if (copy)
@@ -60,57 +91,90 @@ public:
             ImGui::LogToClipboard();
         }
 
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
         for (const auto& item : items)
         {
-            ImGui::TextUnformatted(item.c_str());
+            if (item.isUserInput)
+            {
+                ImGui::TextUnformatted(item.message.c_str());
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "[%s]", item.timestamp.c_str());
+                ImGui::SameLine();
+
+                ImVec4 typeColor;
+                if (item.type == "INFO")
+                {
+                    typeColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+                }
+                else if (item.type == "ERROR")
+                {
+                    typeColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+                }
+                else if (item.type == "WARNING")
+                {
+                    typeColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+                }
+                else
+                {
+                    typeColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+                }
+
+                ImGui::TextColored(typeColor, "[%s]", item.type.c_str());
+                ImGui::SameLine();
+                ImGui::TextUnformatted(item.message.c_str());
+            }
         }
+        ImGui::PopStyleVar();
 
         if (scrollToBottom)
         {
             ImGui::SetScrollHereY(1.0f);
             scrollToBottom = false;
         }
-
         ImGui::EndChild();
-
         ImGui::Separator();
 
-        // Поле ввода
+        ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue;
+
+        // Поле для ввода
         bool reclaimFocus = false;
-        if (ImGui::InputText("Input", inputBuf, IM_ARRAYSIZE(inputBuf), ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText("##Input", inputBuf, IM_ARRAYSIZE(inputBuf), inputFlags))
         {
             if (inputBuf[0] != 0)
             {
                 std::string command(inputBuf);
-                addLog("> %s", inputBuf);
+                addLog("USER", "> " + command, true);
+                historyPos = -1;
 
-                // Обработка команд
+                // Command processing
                 if (command == "!GetPID")
                 {
-                    DWORD pid = procGameCheat->GetProcessID();
+                    DWORD pid = ::procGameCheat->GetProcessID();
                     if (pid != 0)
                     {
-                        addLog("Process ID: %d", pid);
+                        addLog("INFO", "Process ID: " + std::to_string(pid));
                     }
                     else
                     {
-                        addLog("Процесс не запущен!");
+                        addLog("ERROR", "Процесс не запущен!");
                     }
                 }
                 else if (command == "!help" || command == "!Help")
                 {
-                    addLog("Доступные команды:");
-                    addLog(" - !Help: Показать список команд.");
-                    addLog(" - !clear: Отчистить консоль.");
-                    addLog(" - !GetPID: Получить ID процесса.");
+                    addLog("INFO", "Доступные команды:");
+                    addLog("INFO", " - !Help: Показать список команд.");
+                    addLog("INFO", " - !clear: Отчистить консоль.");
+                    addLog("INFO", " - !GetPID: Получить ID процесса.");
                 }
-                else if (command == "!clear"  || command == "!Сlear")
+                else if (command == "!clear" || command == "!Clear")
                 {
                     items.clear();
                 }
                 else
                 {
-                    addLog("Команда не существует или не найдена!");
+                    addLog("WARNING", "Команда не существует или не найдена!");
                 }
 
                 inputBuf[0] = 0;
