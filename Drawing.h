@@ -41,19 +41,33 @@ private:
     //static bool toggleState;
     static std::vector<uintptr_t> Offsets;
     static std::unordered_map<std::string, FunctionOffset> OffsetFunctions; // Ассоциация кнопок и офсетов
-    static int intUserInput;
-    static float floatUserInput;
-    static double doubleUserInput;
+    static std::map<std::string, int> inputValues;
+    static std::map<std::string, bool> inputFieldFocused;  // Для отслеживания фокуса каждого поля
+    //static int intUserInput;
+    //static float floatUserInput;
+    //static double doubleUserInput;
 
     static std::string WStringToUtf8(const std::wstring& wstr);
 
+    // Refactored private methods
+    static void RenderToggles();
+    static void RenderInputFields();
+    static void RenderProcessInfo();
+    static void HandleToggleInteraction(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);
+    static void DisplayPopup(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
+
+    static void HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
 public:
+    // Initialization methods
     static void Initialize(Cheat* ClassCheatProcGame);
     static void Initialize(Cheat* ClassCheatProcGame, const std::vector<uintptr_t>& offsets);
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets);
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets, const std::vector<CheatOption*>& cheatOptions);
+
+    // State management
     static void Active();
     static bool isActive();
+
+    // Main drawing method
     static void Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
-    static void HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
 };
