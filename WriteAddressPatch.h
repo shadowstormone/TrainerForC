@@ -44,7 +44,7 @@ public:
     bool WriteValueMemory(LPCWSTR processName, const std::vector<uintptr_t>& offsets, T value);
 private:
     // Приватные переменные-члены
-    HANDLE m_hProcess = 0;
+    HANDLE m_hProcess = nullptr;
     DWORD m_processId = 0;
     DWORD_PTR m_baseAddress = NULL;
     uintptr_t m_finalAddress;
