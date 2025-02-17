@@ -29,6 +29,31 @@ void Cheat::OpenConsole()
 	freopen_s(&pCout, "CONOUT$", "w", stdout);
 }
 
+void Cheat::ImGuiOpenConsole()
+{
+	// Создаем консоль
+	if (AllocConsole())
+	{
+		// Перенаправляем стандартные потоки
+		FILE* fDummy;
+		freopen_s(&fDummy, "CONIN$", "r", stdin);
+		freopen_s(&fDummy, "CONOUT$", "w", stdout);
+		freopen_s(&fDummy, "CONOUT$", "w", stderr);
+
+		// Устанавливаем стандартный режим работы
+		HANDLE hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		HANDLE hConIn = GetStdHandle(STD_INPUT_HANDLE);
+		SetConsoleMode(hConOut, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+		SetConsoleMode(hConIn, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+
+		// Устанавливаем заголовок консоли
+		SetConsoleTitle(L"Debug Console");
+
+		// Устанавливаем буферизацию для stdout
+		std::ios::sync_with_stdio(true);
+	}
+}
+
 int Cheat::AddCheatOption(CheatOption* option)
 {
 	options.push_back(option);

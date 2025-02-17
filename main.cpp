@@ -4,6 +4,10 @@
 LPCWSTR WindowTitle = L"Test Trainer (+1)"; // Определение здесь
 HWND mainWnd;
 
+std::unordered_map<std::string, FunctionOffset> offsets = {
+	{"Set HP", {"Set HP", {0x00256650, 0x370, 0xAC, 0x4B0}}}
+};
+
 struct NameFunc
 {
 	static constexpr LPCWSTR
@@ -13,15 +17,18 @@ struct NameFunc
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
+	std::vector<CheatOption*> VecCheatOptions;
+
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// Проверяем аргументы командной строки на наличие флагов тестов
-	if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0)
+#ifdef _DEBUG
+	if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0) // Проверяем аргументы командной строки на наличие флагов тестов
 	{
 		RunTests();
 		return 0;
 	}
+#endif // _DEBUG
 
 	Cheat* ProcessAttackGame = new Cheat(L"Tutorial-i386.exe"); //Процесс атакуемой игры
 
@@ -31,18 +38,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	GoodModeOption->AddCavePatch(L"0x29, 0x83, 0xB0, 0x04, 0x00, 0x00", HackPatchBytes, 17); //Байты оригинальной инструкции в памяти
 
 	std::vector<int> VriteKey = { VKeys::KEY_NUMPAD2 };
-	std::vector<uintptr_t> offsets = { 0x00256650, 0x370, 0xAC, 0x4B0 };
+	std::vector<uintptr_t> offset = { 0x00256650, 0x370, 0xAC, 0x4B0 };
 	CheatOption* addr1 = new CheatOption(NULL, NameFunc::Name2, VriteKey);
-	addr1->AddWriteValuePatch(ProcessAttackGame, offsets, 9999);
+	addr1->AddWriteValuePatch(ProcessAttackGame, offset, 9999);
 
 	ProcessAttackGame->AddCheatOption(GoodModeOption);
 	ProcessAttackGame->AddCheatOption(addr1);
 
-	ProcessAttackGame->Start();
+	// Добавляем экземпляры в вектор
+	VecCheatOptions.push_back(GoodModeOption);
+	VecCheatOptions.push_back(addr1);
 
-	Drawing::Initialize(ProcessAttackGame);
+#ifdef _DEBUG
+	ProcessAttackGame->ImGuiOpenConsole();
+#endif // _DEBUG
+
+	ProcessAttackGame->Start();
+	Drawing::Initialize(ProcessAttackGame, offsets, VecCheatOptions);
 	UI::Render();
-	//ProcessAttackGame->OpenConsole();
 	ProcessAttackGame->Stop();
 
 	delete GoodModeOption;

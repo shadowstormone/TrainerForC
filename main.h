@@ -1,6 +1,6 @@
 #pragma once
-#include "SimpleRenderer.h"
 #include <gtest/gtest.h>
+#include <Windows.h>
 
 struct VKeys {
     // Основные буквы
