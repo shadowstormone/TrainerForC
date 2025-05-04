@@ -77,6 +77,15 @@
     <ClCompile Include="Drawing.cpp">
       <Filter>Исходные файлы\ImGuiRenderer</Filter>
     </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.h">
+      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="UIControls.cpp">
+      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cheat.h">
@@ -132,6 +141,9 @@
     </ClInclude>
     <ClInclude Include="ImGuiConsole.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="UIControls.h">
+      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

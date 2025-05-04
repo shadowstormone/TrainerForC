@@ -47,8 +47,6 @@ private:
     //static float floatUserInput;
     //static double doubleUserInput;
 
-    static std::string WStringToUtf8(const std::wstring& wstr);
-
     // Refactored private methods
     static void RenderToggles();
     static void RenderInputFields();

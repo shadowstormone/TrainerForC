@@ -161,6 +161,9 @@
     <ClCompile Include="Cheat.cpp" />
     <ClCompile Include="CheatOption.cpp" />
     <ClCompile Include="Drawing.cpp" />
+    <ClCompile Include="UIControls.cpp" />
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="Utils.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory_Functions.cpp" />
     <ClCompile Include="NopPatch.cpp" />
@@ -189,6 +192,7 @@
     <ClInclude Include="SimpleRendererv2.h" />
     <ClInclude Include="StarFieldEffect.h" />
     <ClInclude Include="UI.h" />
+    <ClInclude Include="UIControls.h" />
     <ClInclude Include="WriteAddressPatch.h" />
   </ItemGroup>
   <ItemGroup>
