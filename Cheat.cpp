@@ -22,6 +22,19 @@ void Cheat::ProcessorOptions()
 	processorThread.detach();
 }
 
+void Cheat::StopCheat()
+{
+	isRunning = false;
+}
+
+void Cheat::DisbleAllFunctionMem()
+{
+	for (CheatOption* option : options)
+	{
+		option->Disable(processId);
+	}
+}
+
 void Cheat::OpenConsole()
 {
 	AllocConsole();

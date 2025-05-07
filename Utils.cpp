@@ -1,5 +1,7 @@
-#include "Utils.h"
+#include <thread>
+#include <chrono>
 #include <Windows.h>
+#include "Utils.h"
 
 std::string Utils::WStringToUtf8(const std::wstring& wstr)
 {
@@ -16,4 +18,15 @@ std::string Utils::WStringToUtf8(const std::wstring& wstr)
 
     utf8str.pop_back();
     return utf8str;
+}
+
+// std::function<void()> onFinish лямбда-обработчик завершения
+void Utils::DelayedToggleOff(std::unordered_map<std::string, bool>& toggleStates, const std::string& toggleId, int delayMs, std::function<void()> onFinish)
+{
+    std::thread([&toggleStates, toggleId, delayMs, onFinish]()
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+            toggleStates[toggleId] = false;
+            if (onFinish) onFinish();
+        }).detach();
 }

@@ -19,9 +19,10 @@ class CheatOption
 	std::vector<Patch*> patches;
 
 	bool Enable(int pid);
-	bool Disable(int pid);
+	//bool Disable(int pid);
 	bool KeyPressed();
 public:
+	bool Disable(int pid);
 	CheatOption(LPCWSTR moduleName, LPCWSTR description, const std::vector<int>& keys) 
 	{
 		m_moduleName = moduleName;

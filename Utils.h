@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <unordered_map>
+#include <functional>
 
 namespace Utils
 {
@@ -22,6 +24,10 @@ namespace Utils
         }
         return hash;
     }
+
     // Конвертация wstring в UTF-8 строку
     std::string WStringToUtf8(const std::wstring& wstr);
+
+    //void TemporaryToggleOff(std::unordered_map<std::string, bool>& toggleMap, const std::string& toggleId,int delayMs = 250, std::function<void()> onFinish);
+    void DelayedToggleOff(std::unordered_map<std::string, bool>& toggleStates, const std::string& toggleId, int delayMs, std::function<void()> onFinish);
 }

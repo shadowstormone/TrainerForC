@@ -341,20 +341,33 @@ void Drawing::HandleToggleInteraction(const std::string& toggleId, const std::st
     auto it = cheatOptionsFn.begin();
     CheatOption* n1fn = it[0];
     CheatOption* n2fn = it[1];
+    CheatOption* n3fn = it[2];
 
     if (currentState && !previousState)
     {
         switch (Utils::hash(optionName.c_str()))
         {
         case Utils::hash("[Numpad 1] - Cheat Test"):
-            console.addLog("INFO", "Переключатель Опция1 активирован");
+            console.addLog("INFO", "Переключатель Опция 1 активирован");
             n1fn->pEnable(_cheatProcGame->GetProcessID());
             n1fn->IsEnabled(true);
             break;
 
         case Utils::hash("[Numpad 2] - Set 9999 HP"):
-            console.addLog("INFO", "Переключатель Опция2 активирован");
+            console.addLog("INFO", "Переключатель Опция 2 активирован");
             n2fn->pEnable(_cheatProcGame->GetProcessID());
+            Utils::DelayedToggleOff(toggleStatesFunction, toggleId, 250, []()
+                {
+#ifdef _DEBUG
+                    console.addLog("INFO", "Опция 2 была временной и выключена автоматически");
+#endif // _DEBUG
+                });
+            break;
+
+        case Utils::hash("[Numpad 3] - Cheat Test 3"):
+            console.addLog("INFO", "Переключатель Опция 3 активирован");
+            n3fn->pEnable(_cheatProcGame->GetProcessID());
+            n3fn->IsEnabled(true);
             break;
         }
     }
@@ -363,13 +376,15 @@ void Drawing::HandleToggleInteraction(const std::string& toggleId, const std::st
         switch (Utils::hash(optionName.c_str()))
         {
         case Utils::hash("[Numpad 1] - Cheat Test"):
-            console.addLog("INFO", "Опция1 выключена");
+            console.addLog("INFO", "Опция 1 выключена");
             n1fn->pDisable(_cheatProcGame->GetProcessID());
             n1fn->IsEnabled(false);
             break;
 
-        case Utils::hash("[Numpad 2] - Set 9999 HP"):
-            console.addLog("INFO", "Опция2 выключена");
+        case Utils::hash("[Numpad 3] - Cheat Test 3"):
+            console.addLog("INFO", "Опция 3 выключена");
+            n3fn->pDisable(_cheatProcGame->GetProcessID());
+            n3fn->IsEnabled(false);
             break;
         }
     }
@@ -390,6 +405,7 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
         ImGui::Separator();
         RenderInputFields();
         ImGui::Separator();
+
         // Переместить курсор в нижнюю часть окна
         ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 65); // 53 - расстояние от низа окна(Чем больше цифра тем выше от низа)
         RenderProcessInfo();

@@ -28,6 +28,8 @@ class Cheat
 public:
 	void OpenConsole();
 	void ImGuiOpenConsole();
+	void StopCheat();
+	void DisbleAllFunctionMem();
 
 	Cheat(LPCWSTR processName) : _processName(processName) 
 	{

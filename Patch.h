@@ -6,7 +6,7 @@
 #include "Memory_Functions.h"
 
 class CheatOption;	// Предварительное объявление класса CheatOption
-class Patch			// Предварительное объявление класса Patch
+class Patch		// Предварительное объявление класса Patch
 {
 protected:
 	PBYTE pattern = NULL;
