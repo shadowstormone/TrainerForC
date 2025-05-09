@@ -6,10 +6,10 @@
 #include "VKeys.h"
 #include "Utils.h"
 
-// Центральное место для определения всех опций читов
+// Р¦РµРЅС‚СЂР°Р»СЊРЅРѕРµ РјРµСЃС‚Рѕ РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ РІСЃРµС… РѕРїС†РёР№ С‡РёС‚РѕРІ
 namespace CheatOptionDefinitions
 {
-    // Перечисление идентификаторов опций (для безопасных с точки зрения типа ссылок на опции)
+    // РџРµСЂРµС‡РёСЃР»РµРЅРёРµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРІ РѕРїС†РёР№ (РґР»СЏ Р±РµР·РѕРїР°СЃРЅС‹С… СЃ С‚РѕС‡РєРё Р·СЂРµРЅРёСЏ С‚РёРїР° СЃСЃС‹Р»РѕРє РЅР° РѕРїС†РёРё)
     enum class OptionID
     {
         CHEAT_TEST_1,
@@ -18,20 +18,20 @@ namespace CheatOptionDefinitions
         FIRST_FUNCTION_NOP
     };
 
-    // Структура определения опций
+    // РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїСЂРµРґРµР»РµРЅРёСЏ РѕРїС†РёР№
     struct OptionDefinition
     {
-        OptionID id;                   // Уникальный идентификатор
-        std::wstring name;             // Отображаемое имя
-        std::vector<int> keys;         // Привязка клавиш
-        bool autoDisable;              // Должна ли опция автоматически отключаться
-        int autoDisableDelay;          // Задержка в мс для автоматического отключения (если применимо)
+        OptionID id;                   // РЈРЅРёРєР°Р»СЊРЅС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ
+        std::wstring name;             // РћС‚РѕР±СЂР°Р¶Р°РµРјРѕРµ РёРјСЏ
+        std::vector<int> keys;         // РџСЂРёРІСЏР·РєР° РєР»Р°РІРёС€
+        bool autoDisable;              // Р”РѕР»Р¶РЅР° Р»Рё РѕРїС†РёСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РѕС‚РєР»СЋС‡Р°С‚СЊСЃСЏ
+        int autoDisableDelay;          // Р—Р°РґРµСЂР¶РєР° РІ РјСЃ РґР»СЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРіРѕ РѕС‚РєР»СЋС‡РµРЅРёСЏ (РµСЃР»Рё РїСЂРёРјРµРЅРёРјРѕ)
 
         OptionDefinition(OptionID id, const std::wstring& name, const std::vector<int>& keys, bool autoDisable = false, int autoDisableDelay = 0)
             : id(id), name(name), keys(keys), autoDisable(autoDisable), autoDisableDelay(autoDisableDelay){}
     };
 
-    // Определение всех опций
+    // РћРїСЂРµРґРµР»РµРЅРёРµ РІСЃРµС… РѕРїС†РёР№
     const std::vector<OptionDefinition> AllOptions = {
         {OptionID::CHEAT_TEST_1, L"[Numpad 1] - Cheat Test", {VKeys::KEY_NUMPAD1}, false},
         {OptionID::SET_HP_9999, L"[Numpad 2] - Set 9999 HP", {VKeys::KEY_NUMPAD2}, true, 450},
@@ -39,7 +39,7 @@ namespace CheatOptionDefinitions
         {OptionID::FIRST_FUNCTION_NOP, L"[Numpad 4] - First Function(Nop)", {VKeys::KEY_NUMPAD4}, false}
     };
 
-    // Вспомогательная функция для получения опции по идентификатору (by ID)
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РѕРїС†РёРё РїРѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂСѓ (by ID)
     inline const OptionDefinition& GetOptionById(OptionID id)
     {
         for (const auto& option : AllOptions)
@@ -47,11 +47,11 @@ namespace CheatOptionDefinitions
             if (option.id == id) return option;
         }
 
-        // При правильном использовании этого не должно произойти
+        // РџСЂРё РїСЂР°РІРёР»СЊРЅРѕРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРё СЌС‚РѕРіРѕ РЅРµ РґРѕР»Р¶РЅРѕ РїСЂРѕРёР·РѕР№С‚Рё
         throw std::runtime_error("Option ID not found");
     }
 
-    // Вспомогательная функция для получения опции по имени (by name)
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РѕРїС†РёРё РїРѕ РёРјРµРЅРё (by name)
     inline OptionID GetOptionIdByName(const std::string& name)
     {
         for (const auto& option : AllOptions)
@@ -60,7 +60,7 @@ namespace CheatOptionDefinitions
             if (optionName == name) return option.id;
         }
 
-        // При правильном использовании этого не должно произойти
+        // РџСЂРё РїСЂР°РІРёР»СЊРЅРѕРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРё СЌС‚РѕРіРѕ РЅРµ РґРѕР»Р¶РЅРѕ РїСЂРѕРёР·РѕР№С‚Рё
         throw std::runtime_error("Option name not found");
     }
 }
