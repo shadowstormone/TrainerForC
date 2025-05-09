@@ -145,6 +145,15 @@
     <ClInclude Include="UIControls.h">
       <Filter>Файлы заголовков\ImGuiRenderer</Filter>
     </ClInclude>
+    <ClInclude Include="VKeys.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="CheatOptionDefinitions.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="CheatOptionManager.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav">

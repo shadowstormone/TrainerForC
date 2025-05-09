@@ -179,6 +179,8 @@
     <ClInclude Include="CavePatch.h" />
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
+    <ClInclude Include="CheatOptionDefinitions.h" />
+    <ClInclude Include="CheatOptionManager.h" />
     <ClInclude Include="Drawing.h" />
     <ClInclude Include="ImGuiConsole.h" />
     <ClInclude Include="ImGuiThemes.h" />
@@ -193,6 +195,7 @@
     <ClInclude Include="StarFieldEffect.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UIControls.h" />
+    <ClInclude Include="VKeys.h" />
     <ClInclude Include="WriteAddressPatch.h" />
   </ItemGroup>
   <ItemGroup>
