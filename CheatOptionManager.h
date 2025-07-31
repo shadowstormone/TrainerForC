@@ -15,12 +15,11 @@ private:
     std::vector<CheatOption*> _orderedOptions;  // Упорядоченный вектор опций (в порядке соответствующем AllOptions)
     std::unordered_map<CheatOptionDefinitions::OptionID, CheatOption*> _optionsMap; // Для быстрого поиска по ID
     std::unordered_map<std::string, std::function<void(bool, DWORD)>> _toggleHandlers;
-    Console* _console;
     bool _initialized;
 
 public:
-    CheatOptionManager(Cheat* cheatProcess, Console* console)
-        : _cheatProcess(cheatProcess), _console(console), _initialized(false)
+    CheatOptionManager(Cheat* cheatProcess)
+        : _cheatProcess(cheatProcess), _initialized(false)
     {
         // Предварительно выделяем место для всех опций в правильном порядке
         _orderedOptions.resize(CheatOptionDefinitions::AllOptions.size(), nullptr);
@@ -41,7 +40,8 @@ public:
         {
             if (_orderedOptions[i] == nullptr)
             {
-                _console->addLog("ERROR", "Опция не зарегистрирована для индекса " + std::to_string(i));
+                //_console->addLog("ERROR", "Опция не зарегистрирована для индекса " + std::to_string(i));
+                gConsole->addLog("ERROR", "Опция не зарегистрирована для индекса " + std::to_string(i));
             }
         }
     }
@@ -62,7 +62,7 @@ public:
 
         if (index == -1)
         {
-            _console->addLog("ERROR", "Опция с ID " + std::to_string(static_cast<int>(id)) + " не найдена в AllOptions");
+            gConsole->addLog("ERROR", "Опция с ID " + std::to_string(static_cast<int>(id)) + " не найдена в AllOptions");
             return;
         }
 
@@ -77,7 +77,7 @@ public:
                 // Common logging
                 if (enabled)
                 {
-                    _console->addLog("INFO", "Переключатель " + Utils::WStringToUtf8(definition.name) + " активирован");
+                    gConsole->addLog("INFO", "Переключатель " + Utils::WStringToUtf8(definition.name) + " активирован");
                     option->pEnable(processId);
                     option->IsEnabled(true);
 
@@ -103,13 +103,13 @@ public:
                                 }
 
                                 // Логируем действие
-                                _console->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " была временной и выключена автоматически");
+                                gConsole->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " была временной и выключена автоматически");
                             });
                     }
                 }
                 else
                 {
-                    _console->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " выключена");
+                    gConsole->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " выключена");
                     option->pDisable(processId);
                     option->IsEnabled(false);
                 }

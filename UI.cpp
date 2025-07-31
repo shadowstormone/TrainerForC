@@ -2,6 +2,7 @@
 #include "resource.h"
 #include "UI.h"
 #include "ImGuiThemes.h"
+#include "ImGuiConsole.h"
 #include <shlobj.h>
 #include <KnownFolders.h>
 #include <filesystem>
@@ -31,24 +32,32 @@ static ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, I
     // Найти ресурс
     HRSRC hResource = FindResource(hModule, MAKEINTRESOURCE(resourceId), wResourceType);
     if (!hResource)
+    {
         return nullptr;
+    }
 
     // Загрузить ресурс
     HGLOBAL hLoadedResource = LoadResource(hModule, hResource);
     if (!hLoadedResource)
+    {
         return nullptr;
+    }
 
     // Заблокировать ресурс для доступа к данным
     void* pResourceData = LockResource(hLoadedResource);
     DWORD resourceSize = SizeofResource(hModule, hResource);
     if (!pResourceData || resourceSize == 0)
+    {
         return nullptr;
+    }
 
     // Загрузить изображение из памяти с помощью stb_image
     int width, height, channels;
     unsigned char* imageData = stbi_load_from_memory((unsigned char*)pResourceData, resourceSize, &width, &height, &channels, 4);
     if (!imageData)
+    {
         return nullptr;
+    }
 
     // Создать текстуру DirectX
     D3D11_TEXTURE2D_DESC desc = {};
@@ -104,7 +113,9 @@ bool UI::CreateDeviceD3D(HWND hWnd)
     D3D_FEATURE_LEVEL featureLevel;
     const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0 };
     if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &pSwapChain, &pd3dDevice, &featureLevel, &pd3dDeviceContext) != S_OK)
+    {
         return false;
+    }
 
     CreateRenderTarget();
     return true;
@@ -159,7 +170,9 @@ void UI::CleanupDeviceD3D()
 LRESULT WINAPI UI::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+    {
         return true;
+    }
 
     switch (msg)
     {
@@ -174,7 +187,9 @@ LRESULT WINAPI UI::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_SYSCOMMAND:
         if ((wParam & 0xfff0) == SC_KEYMENU)
+        {
             return 0;
+        }
         break;
 
     case WM_DESTROY:
@@ -215,6 +230,28 @@ std::string UI::GetFontPath()
     }
 
     return fontPath;
+}
+
+std::pair<int, int> UI::GetScreenCenter()
+{
+    // Получаем дескриптор главного экрана
+    HMONITOR hMonitor = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
+
+    MONITORINFO mi = {};
+    mi.cbSize = sizeof(mi);
+
+    if (GetMonitorInfo(hMonitor, &mi))
+    {
+        int screenWidth = mi.rcMonitor.right - mi.rcMonitor.left;
+        int screenHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+
+        int centerX = mi.rcMonitor.left + screenWidth / 2;
+        int centerY = mi.rcMonitor.top + screenHeight / 2;
+
+        return { centerX, centerY };
+    }
+
+    return { 0, 0 }; // Если не удалось — возвращаем (0,0)
 }
 
 void UI::Render()
@@ -335,14 +372,20 @@ void UI::Render()
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
             if (msg.message == WM_QUIT)
+            {
                 bDone = true;
+            }
         }
 
         if (GetAsyncKeyState(VK_END) & 1)
+        {
             bDone = true;
+        }
 
         if (bDone)
+        {
             break;
+        }
 
         // Управление анимацией появления
         if (isFirstFrame)
@@ -363,7 +406,7 @@ void UI::Render()
         {
             if (showConsole)
             {
-                console.draw("Debug Console", &showConsole);
+                gConsole->draw("Debug Console", &showConsole);
             }
             ImGui::GetStyle().Alpha = currentAlpha;
             Drawing::Draw(successIcon, errorIcon);
@@ -386,7 +429,9 @@ void UI::Render()
 
         #ifndef _WINDLL
         if (!Drawing::isActive())
+        {
             break;
+        }
         #endif
     }
 

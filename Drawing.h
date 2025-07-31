@@ -13,14 +13,12 @@
 #include "Cheat.h"
 #include "ImGuiConsole.h"
 
-
 constexpr auto WIDTH = 500;
 constexpr auto HEIGHT = 555;
 
 // Переменные для управления уведомлениями
 static std::string popupMessage = "";
 static std::string popupType = ""; // "Error" или "Success"
-extern Console console;
 extern bool showConsole;
 
 struct FunctionOffset {
@@ -59,14 +57,14 @@ public:
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets);
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets, const std::vector<CheatOption*>& cheatOptions);
 
-
     static std::unordered_map<std::string, bool>& GetToggleStates()
     {
         return toggleStatesFunction;
     }
 
     // Установите обратный вызов обработчика переключения
-    static void SetToggleHandler(std::function<void(const std::string&, const std::string&, bool, bool)> handler) {
+    static void SetToggleHandler(std::function<void(const std::string&, const std::string&, bool, bool)> handler)
+    {
         _toggleHandler = handler;
     }
 

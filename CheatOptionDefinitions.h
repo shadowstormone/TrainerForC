@@ -44,7 +44,10 @@ namespace CheatOptionDefinitions
     {
         for (const auto& option : AllOptions)
         {
-            if (option.id == id) return option;
+            if (option.id == id)
+            {
+                return option;
+            }
         }
 
         // При правильном использовании этого не должно произойти
@@ -57,7 +60,10 @@ namespace CheatOptionDefinitions
         for (const auto& option : AllOptions)
         {
             std::string optionName = Utils::WStringToUtf8(option.name);
-            if (optionName == name) return option.id;
+            if (optionName == name)
+            {
+                return option.id;
+            }
         }
 
         // При правильном использовании этого не должно произойти

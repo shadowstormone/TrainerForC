@@ -6,7 +6,7 @@
 #include "UIControls.h"
 
 // ---------------- Static Member Initialization ----------------
-LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
+LPCSTR Drawing::lpWindowName = "Test Trainer (+10)";
 ImVec2 Drawing::vWindowSize = { WIDTH, HEIGHT };
 ImGuiWindowFlags Drawing::WindowFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs;
 bool Drawing::bDraw = true;
@@ -19,7 +19,6 @@ std::map<std::string, int> Drawing::inputValues = {};
 std::map<std::string, bool> Drawing::inputFieldFocused = {};
 
 // ---------------- Global Variables ----------------
-Console console;
 bool showConsole = false;
 bool isKeyHold = false;
 std::vector<CheatOption*> existingVector;
@@ -27,7 +26,7 @@ std::vector<CheatOption*>& cheatOptionsFn = existingVector;
 Cheat* procGameCheat = nullptr;
 std::function<void(const std::string&, const std::string&, bool, bool)> Drawing::_toggleHandler = nullptr;
 
-static void ProcessInput()
+static void ImGuiDebugConsoleActivation()
 {
     // Проверяем состояние клавиши VK_OEM_3
     if (GetAsyncKeyState(VK_OEM_3) & 0x8000) // Клавиша нажата
@@ -229,7 +228,7 @@ void Drawing::RenderInputFields()
             IM_ARRAYSIZE(inputBuffer),
             ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_AutoSelectAll))
         {
-            if (strlen(inputBuffer) == 0)
+            if (inputBuffer == NULL || strlen(inputBuffer) == 0)
             {
                 // Оставляем поле пустым при редактировании
                 inputValues[buttonName] = 1;
@@ -301,7 +300,7 @@ void Drawing::RenderInputFields()
                     std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
 #ifdef _DEBUG
                     popupType = "Success";
-                    popupMessage = "Successfully write value " + std::to_string(inputValues[buttonName]) + " to memory!";
+                    popupMessage = "Значение " + std::to_string(inputValues[buttonName]) + " успешно записанно в память!";
                     ImGui::OpenPopup("SuccessPopup");
 #endif // _DEBUG
                 }
@@ -309,7 +308,7 @@ void Drawing::RenderInputFields()
                 {
 #ifdef _DEBUG
                     popupType = "Error";
-                    popupMessage = "Failed to write value to memory!";
+                    popupMessage = "Ошибка записи значения в память!";
                     ImGui::OpenPopup("ErrorPopup");
 #endif // _DEBUG
                 }
@@ -347,7 +346,7 @@ void Drawing::HandleToggleInteraction(const std::string& toggleId, const std::st
 void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
 {
 #ifdef _DEBUG
-    ProcessInput();
+    ImGuiDebugConsoleActivation();
 #endif // _DEBUG
 
     if (isActive() && _cheatProcGame)

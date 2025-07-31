@@ -21,6 +21,15 @@ std::string Utils::WStringToUtf8(const std::wstring& wstr)
     return utf8str;
 }
 
+std::string Utils::WStringToUtf8(LPCWSTR wstr)
+{
+    if (!wstr) return "(null)";
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nullptr, 0, nullptr, nullptr);
+    std::string str(size_needed - 1, 0); // -1 чтобы убрать завершающий нуль
+    WideCharToMultiByte(CP_UTF8, 0, wstr, -1, &str[0], size_needed, nullptr, nullptr);
+    return str;
+}
+
 // std::function<void()> onFinish лямбда-обработчик завершения
 void Utils::DelayedToggleOff(std::unordered_map<std::string, bool>& toggleStates, const std::string& toggleId, int delayMs, std::function<void()> onFinish)
 {
