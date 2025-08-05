@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <functional>
 #include <wtypes.h>
+#include <imgui_impl_win32.h>
 
 namespace Utils
 {
@@ -29,6 +30,8 @@ namespace Utils
     // Конвертация wstring в UTF-8 строку
     std::string WStringToUtf8(const std::wstring& wstr);
     std::string WStringToUtf8(LPCWSTR wstr);
+    void* LoadResourceToMemory(UINT resourceID, DWORD& sizeOut);
+    ImFont* LoadFontFromResource(ImGuiIO& io, UINT resourceID, float fontSize, const ImFontConfig* fontConfig = nullptr, const ImWchar* glyphRanges = nullptr);
 
     //void TemporaryToggleOff(std::unordered_map<std::string, bool>& toggleMap, const std::string& toggleId,int delayMs = 250, std::function<void()> onFinish);
     void DelayedToggleOff(std::unordered_map<std::string, bool>& toggleStates, const std::string& toggleId, int delayMs, std::function<void()> onFinish);
