@@ -115,6 +115,14 @@ IDB_PNG1                PNG                     "ResourceExtern\\true.png"
 
 IDB_PNG2                PNG                     "ResourceExtern\\false.png"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RCDATA
+//
+
+IDR_RCDATA1             RCDATA                  "ResourceExtern\\FRIZQT.ttf"
+
 #endif    // Русский (Россия) resources
 /////////////////////////////////////////////////////////////////////////////
 
