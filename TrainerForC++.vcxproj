@@ -160,7 +160,9 @@
     <ClCompile Include="CavePatch.cpp" />
     <ClCompile Include="Cheat.cpp" />
     <ClCompile Include="CheatOption.cpp" />
+    <ClCompile Include="CheatOptionFactory.cpp" />
     <ClCompile Include="Drawing.cpp" />
+    <ClCompile Include="UI.cpp" />
     <ClCompile Include="UIControls.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="Utils.h" />
@@ -171,7 +173,6 @@
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="SimpleRendererv2.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
-    <ClCompile Include="UI.cpp" />
     <ClCompile Include="WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -180,8 +181,10 @@
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
     <ClInclude Include="CheatOptionDefinitions.h" />
+    <ClInclude Include="CheatOptionFactory.h" />
     <ClInclude Include="CheatOptionManager.h" />
     <ClInclude Include="Drawing.h" />
+    <ClInclude Include="EnumClassHash.h" />
     <ClInclude Include="ImGuiConsole.h" />
     <ClInclude Include="ImGuiThemes.h" />
     <ClInclude Include="main.h" />
@@ -189,6 +192,7 @@
     <ClInclude Include="nmd_assembly.h" />
     <ClInclude Include="NopPatch.h" />
     <ClInclude Include="Patch.h" />
+    <ClInclude Include="PatchLibrary.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleRenderer.h" />
     <ClInclude Include="SimpleRendererv2.h" />

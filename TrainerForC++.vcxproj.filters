@@ -71,12 +71,6 @@
     <ClCompile Include="SimpleRendererv2.cpp">
       <Filter>Исходные файлы\Rendererv2</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
-      <Filter>Исходные файлы\ImGuiRenderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Drawing.cpp">
-      <Filter>Исходные файлы\ImGuiRenderer</Filter>
-    </ClCompile>
     <ClCompile Include="Utils.cpp">
       <Filter>Исходные файлы\ImGuiRenderer</Filter>
     </ClCompile>
@@ -84,6 +78,15 @@
       <Filter>Файлы заголовков\ImGuiRenderer</Filter>
     </ClCompile>
     <ClCompile Include="UIControls.cpp">
+      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="CheatOptionFactory.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawing.cpp">
+      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
       <Filter>Исходные файлы\ImGuiRenderer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -130,12 +133,6 @@
     <ClInclude Include="SimpleRendererv2.h">
       <Filter>Файлы заголовков\RendererV2</Filter>
     </ClInclude>
-    <ClInclude Include="Drawing.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
-    </ClInclude>
-    <ClInclude Include="UI.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
-    </ClInclude>
     <ClInclude Include="ImGuiThemes.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -153,6 +150,21 @@
     </ClInclude>
     <ClInclude Include="CheatOptionManager.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="CheatOptionFactory.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="EnumClassHash.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="PatchLibrary.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawing.h">
+      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
