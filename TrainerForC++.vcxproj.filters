@@ -194,6 +194,9 @@
     <Image Include="ResourceExtern\true.png">
       <Filter>ResourceExtern</Filter>
     </Image>
+    <Image Include="ResourceExtern\newLogo16x16.ico">
+      <Filter>ResourceExtern</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="ResourceExtern\FRIZQT.ttf">

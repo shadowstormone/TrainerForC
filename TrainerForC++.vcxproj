@@ -212,6 +212,7 @@
   <ItemGroup>
     <Image Include="ResourceExtern\false.png" />
     <Image Include="ResourceExtern\newLogo.ico" />
+    <Image Include="ResourceExtern\newLogo16x16.ico" />
     <Image Include="ResourceExtern\NewWhiteLogo.ico" />
     <Image Include="ResourceExtern\TrainerIcon.ico" />
     <Image Include="ResourceExtern\true.png" />
