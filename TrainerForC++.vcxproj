@@ -121,6 +121,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,7 +160,12 @@
     <ClCompile Include="CavePatch.cpp" />
     <ClCompile Include="Cheat.cpp" />
     <ClCompile Include="CheatOption.cpp" />
+    <ClCompile Include="CheatOptionFactory.cpp" />
     <ClCompile Include="Drawing.cpp" />
+    <ClCompile Include="UI.cpp" />
+    <ClCompile Include="UIControls.cpp" />
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="Utils.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory_Functions.cpp" />
     <ClCompile Include="NopPatch.cpp" />
@@ -167,26 +173,34 @@
     <ClCompile Include="SimpleRenderer.cpp" />
     <ClCompile Include="SimpleRendererv2.cpp" />
     <ClCompile Include="StarFieldEffect.cpp" />
-    <ClCompile Include="UI.cpp" />
-    <ClCompile Include="WriteAdressNum.cpp" />
+    <ClCompile Include="WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseRenderer.h" />
     <ClInclude Include="CavePatch.h" />
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatOption.h" />
+    <ClInclude Include="CheatOptionDefinitions.h" />
+    <ClInclude Include="CheatOptionFactory.h" />
+    <ClInclude Include="CheatOptionManager.h" />
     <ClInclude Include="Drawing.h" />
+    <ClInclude Include="EnumClassHash.h" />
+    <ClInclude Include="ImGuiConsole.h" />
+    <ClInclude Include="ImGuiThemes.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Memory_Functions.h" />
     <ClInclude Include="nmd_assembly.h" />
     <ClInclude Include="NopPatch.h" />
     <ClInclude Include="Patch.h" />
+    <ClInclude Include="PatchLibrary.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleRenderer.h" />
     <ClInclude Include="SimpleRendererv2.h" />
     <ClInclude Include="StarFieldEffect.h" />
     <ClInclude Include="UI.h" />
-    <ClInclude Include="WriteAdressNum.h" />
+    <ClInclude Include="UIControls.h" />
+    <ClInclude Include="VKeys.h" />
+    <ClInclude Include="WriteAddressPatch.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />
@@ -196,9 +210,12 @@
     <ResourceCompile Include="TrainerForC++.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="ResourceExtern\false.png" />
     <Image Include="ResourceExtern\newLogo.ico" />
+    <Image Include="ResourceExtern\newLogo16x16.ico" />
     <Image Include="ResourceExtern\NewWhiteLogo.ico" />
     <Image Include="ResourceExtern\TrainerIcon.ico" />
+    <Image Include="ResourceExtern\true.png" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="ResourceExtern\FRIZQT.ttf">

@@ -19,9 +19,10 @@ class CheatOption
 	std::vector<Patch*> patches;
 
 	bool Enable(int pid);
-	bool Disable(int pid);
+	//bool Disable(int pid);
 	bool KeyPressed();
 public:
+	bool Disable(int pid);
 	CheatOption(LPCWSTR moduleName, LPCWSTR description, const std::vector<int>& keys) 
 	{
 		m_moduleName = moduleName;
@@ -40,7 +41,14 @@ public:
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value);
+	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value);
+	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value);
 	void Process(int processId);
+
+	bool IsEnabled(bool state)
+	{
+		return m_enabled = state;
+	}
 
 	bool IsEnabled() const
 	{
@@ -61,4 +69,7 @@ public:
 	{
 		m_moduleName = moduleName;
 	}
+
+	bool pEnable(int pid);
+	bool pDisable(int pid);
 };

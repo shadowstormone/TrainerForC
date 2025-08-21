@@ -142,7 +142,7 @@ TEST_F(CavePatchTest, CalculateJumpBytesInvalidAddressWithErrorHandling)
     DWORD errorCode = GetLastError();   // Сохраняем код ошибки до вызова функций, которые могут его изменить
     testing::internal::CaptureStderr(); // Перехват вывода ошибок
     ShowErrorMessage(NULL, L"Invalid address range.\r\nError code: ", errorCode);
-    ASSERT_THROW({patch->CalculateJumpBytes(reinterpret_cast<LPVOID>(0xFFFFFFFF), reinterpret_cast<LPVOID>(0x1), outSize);}, std::overflow_error);
+    ASSERT_THROW({patch->CalculateJumpBytes(reinterpret_cast<LPVOID>(static_cast<uintptr_t>(0xFFFFFFFF)), reinterpret_cast<LPVOID>(0x1), outSize);}, std::overflow_error);
     std::string capturedOutput = testing::internal::GetCapturedStderr();
     std::wstring woutput = StringToWString(capturedOutput);
     ASSERT_NE(woutput.find(L"Error code: 487"), std::wstring::npos);  // ERROR_INVALID_ADDRESS = 487
