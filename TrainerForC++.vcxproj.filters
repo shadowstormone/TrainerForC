@@ -78,7 +78,7 @@
     <ClCompile Include="ui/D3DContext.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="ui/Drawing.cpp">
+    <ClCompile Include="ui/MainView.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="ui/UIControls.cpp">
@@ -149,7 +149,7 @@
     <ClInclude Include="ui/D3DContext.h">
       <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="ui/Drawing.h">
+    <ClInclude Include="ui/MainView.h">
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="ui/UIControls.h">

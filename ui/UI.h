@@ -1,5 +1,5 @@
 #pragma once
-#include "ui/Drawing.h"
+#include "ui/MainView.h"
 #include "core/Cheat.h"
 
 #pragma comment(lib, "d3d11.lib")
@@ -24,13 +24,13 @@ public:
     static constexpr int HEIGHT = 555;
 
     // Main methods
-    static void Render();
+    static void Render(MainView& view);
     static std::string getFontPath();
     static std::pair<int, int> getScreenCenter();
 
 private:
     // Private helper methods
-    static void RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager& textureManager);
+    static void RenderLoop(Window& window, D3DContext& d3d, MainView& view, ImGuiIO& io, TextureManager& textureManager);
 
     // Prevent instantiation
     UI() = delete;

@@ -476,7 +476,7 @@ std::pair<int, int> UI::getScreenCenter()
  * @brief Основная функция рендеринга интерфейса
  * @details Инициализирует окно, DirectX 11, ImGui и запускает основной цикл рендеринга
  */
-void UI::Render()
+void UI::Render(MainView& view)
 {
     try
     {
@@ -515,10 +515,10 @@ void UI::Render()
         }
 
         // Кнопки заголовка управляют этим окном
-        Drawing::SetWindowHandle(window.Handle());
+        view.SetWindowHandle(window.Handle());
 
         // Перетаскивание за полосу заголовка; над кнопками — обычные клики
-        window.SetCaptionHitTest([](POINT pt) { return Drawing::IsCaptionPoint(pt); });
+        window.SetCaptionHitTest([&view](POINT pt) { return view.IsCaptionPoint(pt); });
 
         if (!d3d.Create(window.Handle()))
         {
@@ -613,7 +613,7 @@ void UI::Render()
             MessageBoxA(nullptr, "Failed to load one or more textures.", "Texture Load Error", MB_OK | MB_ICONERROR);
         }
 
-		RenderLoop(window, d3d, io, textureManager); // Запуск основного цикла рендеринга
+		RenderLoop(window, d3d, view, io, textureManager); // Запуск основного цикла рендеринга
 
         // Очистка ресурсов ImGui; окно и D3D освободят себя сами (RAII).
         ImGui_ImplDX11_Shutdown();
@@ -635,7 +635,7 @@ void UI::Render()
  * @param io Объект ImGuiIO для управления вводом/выводом
  * @param textureManager Менеджер текстур
  */
-void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager& textureManager)
+void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ImGuiIO& io, TextureManager& textureManager)
 {
     const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool done = false;
@@ -674,7 +674,7 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager
         }
 
         ImGui::GetStyle().Alpha = fadeAnimation.getAlpha();
-        Drawing::Draw(textureManager.getSuccessIcon(), textureManager.getErrorIcon());
+        view.Draw(textureManager.getSuccessIcon(), textureManager.getErrorIcon());
 
         ImGui::EndFrame();
         ImGui::Render();
@@ -694,7 +694,7 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager
         framesRendered++;
 
 #ifndef _WINDLL
-        if (!Drawing::isActive())
+        if (!view.isActive())
         {
             break;
         }

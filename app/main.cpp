@@ -37,16 +37,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     ProcessAttackGame->ImGuiOpenConsole();
 #endif // _DEBUG
 
-    // Устанавливаем обработчик для Drawing
-    Drawing::SetToggleHandler([&optionManager](const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState)
+    // Содержимое главного окна — обычный объект, а не набор статиков
+    MainView view;
+
+    // Связываем переключатели UI с менеджером опций
+    view.SetToggleHandler([&optionManager](const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState)
         {
             optionManager.HandleToggle(toggleId, optionName, currentState, previousState);
         });
 
     // Запуск программы
     ProcessAttackGame->Start();
-    Drawing::Initialize(ProcessAttackGame.get(), offsets, optionManager.GetAllOptions());
-	UI::Render();
+    view.Initialize(ProcessAttackGame.get(), offsets, optionManager.GetAllOptions());
+	UI::Render(view);
     ProcessAttackGame->Stop();
 
     ProcessAttackGame->DisableAllFunctionMem();

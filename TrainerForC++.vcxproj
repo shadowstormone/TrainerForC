@@ -169,7 +169,7 @@
     <ClCompile Include="cheats/CheatRegistry.cpp" />
     <ClCompile Include="cheats/CheatFactory.cpp" />
     <ClCompile Include="cheats/registry/GameCheats.cpp" />
-    <ClCompile Include="ui/Drawing.cpp" />
+    <ClCompile Include="ui/MainView.cpp" />
     <ClCompile Include="ui/UI.cpp" />
     <ClCompile Include="ui/Window.cpp" />
     <ClCompile Include="ui/D3DContext.cpp" />
@@ -192,7 +192,7 @@
     <ClInclude Include="cheats/CheatDefinition.h" />
     <ClInclude Include="cheats/CheatRegistry.h" />
     <ClInclude Include="cheats/CheatFactory.h" />
-    <ClInclude Include="ui/Drawing.h" />
+    <ClInclude Include="ui/MainView.h" />
     <ClInclude Include="ui/ImGuiConsole.h" />
     <ClInclude Include="ui/ImGuiThemes.h" />
     <ClInclude Include="app/main.h" />
