@@ -7,8 +7,10 @@
 #define NOMINMAX
 #include "resource.h"
 #include "ui/UI.h"
+#include "ui/D3DContext.h"
 #include "ui/ImGuiThemes.h"
 #include "ui/ImGuiConsole.h"
+#include "ui/Window.h"
 #include <imgui_internal.h>
 #include <shlobj.h>
 #include <KnownFolders.h>
@@ -16,14 +18,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
- /// @brief Статические члены класса UI для работы с DirectX 11
-ID3D11Device* UI::pd3dDevice = nullptr;
-ID3D11DeviceContext* UI::pd3dDeviceContext = nullptr;
-IDXGISwapChain* UI::pSwapChain = nullptr;
-ID3D11RenderTargetView* UI::pMainRenderTargetView = nullptr;
-HMODULE UI::hCurrentModule = nullptr;
-HWND hwnd;
 
 /**
  * @brief Загружает текстуру из ресурсов приложения
@@ -436,150 +430,12 @@ private:
     }
 };
 
-/**
- * @brief Создает устройство DirectX 11 и цепочку обмена
- * @param hWnd Дескриптор окна
- * @return true в случае успеха, false при ошибке
- */
-bool UI::CreateDeviceD3D(HWND hWnd)
-{
-    DXGI_SWAP_CHAIN_DESC sd = {};
-    sd.BufferCount = UIConstants::BUFFER_COUNT;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = UIConstants::REFRESH_RATE;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hWnd;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-
-    const D3D_FEATURE_LEVEL featureLevelArray[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0 };
-    D3D_FEATURE_LEVEL featureLevel;
-
-    HRESULT hr = D3D11CreateDeviceAndSwapChain(
-        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0,
-        featureLevelArray, ARRAYSIZE(featureLevelArray), D3D11_SDK_VERSION,
-        &sd, &pSwapChain, &pd3dDevice, &featureLevel, &pd3dDeviceContext);
-
-    if (FAILED(hr))
-    {
-        return false;
-    }
-
-    CreateRenderTarget();
-    return true;
-}
-
-/**
- * @brief Создает цель рендеринга
- */
-void UI::CreateRenderTarget()
-{
-    ID3D11Texture2D* pBackBuffer = nullptr;
-    if (SUCCEEDED(pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))) && pBackBuffer)
-    {
-        pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &pMainRenderTargetView);
-        pBackBuffer->Release();
-    }
-}
-
-/**
- * @brief Очищает цель рендеринга
- */
-void UI::CleanupRenderTarget()
-{
-    if (pMainRenderTargetView)
-    {
-        pMainRenderTargetView->Release();
-        pMainRenderTargetView = nullptr;
-    }
-}
-
-/**
- * @brief Очищает ресурсы DirectX 11
- */
-void UI::CleanupDeviceD3D()
-{
-    CleanupRenderTarget();
-
-    if (pSwapChain)
-    {
-        pSwapChain->Release();
-        pSwapChain = nullptr;
-    }
-
-    if (pd3dDeviceContext)
-    {
-        pd3dDeviceContext->Release();
-        pd3dDeviceContext = nullptr;
-    }
-
-    if (pd3dDevice)
-    {
-        pd3dDevice->Release();
-        pd3dDevice = nullptr;
-    }
-}
-
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
 #endif
 
-/**
- * @brief Процедура обработки сообщений окна
- * @param hWnd Дескриптор окна
- * @param msg Сообщение
- * @param wParam Параметр сообщения
- * @param lParam Параметр сообщения
- * @return Результат обработки сообщения
- */
-LRESULT WINAPI UI::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-    {
-        return true;
-    }
-
-    switch (msg)
-    {
-    case WM_SIZE:
-        if (pd3dDevice && wParam != SIZE_MINIMIZED)
-        {
-            CleanupRenderTarget();
-            pSwapChain->ResizeBuffers(0, LOWORD(lParam), HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-            CreateRenderTarget();
-        }
-        return 0;
-
-    case WM_SYSCOMMAND:
-        if ((wParam & 0xfff0) == SC_KEYMENU)
-        {
-            return 0;
-        }
-        break;
-
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-
-    case WM_DPICHANGED:
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
-        {
-            const RECT* suggested_rect = reinterpret_cast<const RECT*>(lParam);
-            ::SetWindowPos(hWnd, nullptr,
-                suggested_rect->left, suggested_rect->top,
-                suggested_rect->right - suggested_rect->left,
-                suggested_rect->bottom - suggested_rect->top,
-                SWP_NOZORDER | SWP_NOACTIVATE);
-        }
-        break;
-    }
-
-    return ::DefWindowProc(hWnd, msg, wParam, lParam);
-}
+// Работа с DirectX 11 вынесена в класс D3DContext (ui/D3DContext.h),
+// а создание окна и диспетчеризация сообщений — в класс Window (ui/Window.h).
 
 /**
  * @brief Получает путь к шрифту в системной папке
@@ -633,53 +489,60 @@ void UI::Render()
         // Инициализация окна
         ImGui_ImplWin32_EnableDpiAwareness();
 
-        static WNDCLASSEX wc = {
-			sizeof(WNDCLASSEX),         // Размер структуры
-			CS_CLASSDC,                 // Стиль класса окна
-			WndProc,                    // Процедура обработки сообщений
-			0L,                         // Дополнительные параметры класса
-			0L,                         // Размер класса
-			GetModuleHandle(nullptr),   // Дескриптор модуля
-			nullptr,                    // Иконка класса (nullptr для системной иконки)
-			nullptr,                    // Курсор класса (nullptr для системного курсора)
-			nullptr,                    // Фон класса (nullptr для системного фона)
-			nullptr,                    // Меню класса (nullptr для отсутствия меню)
-			_T("Test Trainer"),         // Имя класса окна
-			nullptr                     // Стиль класса (nullptr для системного стиля)
-        };
-        
-        ::RegisterClassEx(&wc);
+        // Окно и контекст DirectX — обычные объекты: освободятся сами
+        // при выходе из функции, в том числе при исключении.
+        Window window;
+        D3DContext d3d;
 
-        hwnd = ::CreateWindow(
-			wc.lpszClassName,       // Имя класса окна
-			_T("Test Trainer"),     // Заголовок окна
-			WS_OVERLAPPEDWINDOW,    // Стиль окна
-			posX,                   // Позиция X окна
-			posY,                   // Позиция Y окна
-			50,                     // Ширина окна
-			50,                     // Высота окна
-			NULL,                   // Родительское окно
-			NULL,                   // Меню окна
-			wc.hInstance,           // Дескриптор экземпляра приложения
-			NULL                    // Дополнительные параметры
-        );
-
-        if (!hwnd)
+        if (!window.Create(L"Test Trainer", L"Test Trainer", posX, posY, 50, 50))
         {
             throw std::runtime_error("Failed to create window");
         }
 
-		MakeWindowTopMostTemporary(hwnd, 5000); // Устанавливаем окно поверх других на 5 секунд
+		MakeWindowTopMostTemporary(window.Handle(), 5000); // Устанавливаем окно поверх других на 5 секунд
 
-        if (!CreateDeviceD3D(hwnd))
+        if (!d3d.Create(window.Handle()))
         {
-            CleanupDeviceD3D();
-            ::UnregisterClass(wc.lpszClassName, wc.hInstance);
             throw std::runtime_error("Failed to create D3D device");
         }
 
-        ::ShowWindow(hwnd, SW_HIDE);
-        ::UpdateWindow(hwnd);
+        // Обработка сообщений окна: сначала ImGui, затем ресайз D3D и DPI.
+        window.SetMessageHandler(
+            [&d3d](HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT& result) -> bool
+            {
+                if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+                {
+                    result = 1;
+                    return true;
+                }
+
+                switch (msg)
+                {
+                case WM_SIZE:
+                    if (d3d.IsValid() && wParam != SIZE_MINIMIZED)
+                    {
+                        d3d.Resize(LOWORD(lParam), HIWORD(lParam));
+                    }
+                    result = 0;
+                    return true;
+
+                case WM_DPICHANGED:
+                    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
+                    {
+                        const RECT* suggested_rect = reinterpret_cast<const RECT*>(lParam);
+                        ::SetWindowPos(hWnd, nullptr,
+                            suggested_rect->left, suggested_rect->top,
+                            suggested_rect->right - suggested_rect->left,
+                            suggested_rect->bottom - suggested_rect->top,
+                            SWP_NOZORDER | SWP_NOACTIVATE);
+                    }
+                    break;
+                }
+
+                return false; // остальное — стандартная обработка в Window
+            });
+
+        window.Hide();
 
         // Инициализация ImGui
 		IMGUI_CHECKVERSION();       // Проверка версии ImGui
@@ -715,8 +578,8 @@ void UI::Render()
 #endif
         }
 
-		ImGui_ImplWin32_Init(hwnd); // Инициализация ImGui для Win32
-		ImGui_ImplDX11_Init(pd3dDevice, pd3dDeviceContext); // Инициализация ImGui для DirectX 11
+		ImGui_ImplWin32_Init(window.Handle()); // Инициализация ImGui для Win32
+		ImGui_ImplDX11_Init(d3d.Device(), d3d.Context()); // Инициализация ImGui для DirectX 11
 
         // ImGui 1.92: шрифт по умолчанию задаётся через io.FontDefault в SetupFont;
         // ручное обновление контекста шрифта больше не требуется.
@@ -727,22 +590,17 @@ void UI::Render()
 
         // Загрузка текстур
         TextureManager textureManager;
-        if (!textureManager.LoadTextures(pd3dDevice, pd3dDeviceContext, GetModuleHandle(nullptr)))
+        if (!textureManager.LoadTextures(d3d.Device(), d3d.Context(), GetModuleHandle(nullptr)))
         {
             MessageBoxA(nullptr, "Failed to load one or more textures.", "Texture Load Error", MB_OK | MB_ICONERROR);
         }
 
-		RenderLoop(io, textureManager); // Запуск основного цикла рендеринга
+		RenderLoop(window, d3d, io, textureManager); // Запуск основного цикла рендеринга
 
-        // Очистка ресурсов
+        // Очистка ресурсов ImGui; окно и D3D освободят себя сами (RAII).
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
-
-        CleanupDeviceD3D();
-        ::DestroyWindow(hwnd);
-        ::UnregisterClass(wc.lpszClassName, wc.hInstance);
-
     }
     catch (const std::exception& e)
     {
@@ -759,7 +617,7 @@ void UI::Render()
  * @param io Объект ImGuiIO для управления вводом/выводом
  * @param textureManager Менеджер текстур
  */
-void UI::RenderLoop(ImGuiIO& io, TextureManager& textureManager)
+void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager& textureManager)
 {
     const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool done = false;
@@ -772,15 +630,9 @@ void UI::RenderLoop(ImGuiIO& io, TextureManager& textureManager)
     while (!done)
     {
         // Обработка сообщений
-        MSG msg;
-        while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+        if (!window.PumpMessages())
         {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
-            if (msg.message == WM_QUIT)
-            {
-                done = true;
-            }
+            done = true;
         }
 
         // Проверка клавиши выхода
@@ -817,8 +669,7 @@ void UI::RenderLoop(ImGuiIO& io, TextureManager& textureManager)
             clear_color.z * clear_color.w, clear_color.w
         };
 
-        pd3dDeviceContext->OMSetRenderTargets(1, &pMainRenderTargetView, nullptr);
-        pd3dDeviceContext->ClearRenderTargetView(pMainRenderTargetView, clear_color_with_alpha);
+        d3d.BeginFrame(clear_color_with_alpha);
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -839,14 +690,14 @@ void UI::RenderLoop(ImGuiIO& io, TextureManager& textureManager)
 #endif // _DEBUG
         }
 
-        pSwapChain->Present(1, 0);
+        d3d.Present(1);
 
         // Увеличиваем счетчик кадров
         framesRendered++;
 
         if (framesRendered >= 3 && !autoClickPerformed)
         {
-            PerformAutoClick();
+            PerformAutoClick(window.Handle());
             autoClickPerformed = true;
         }
 
@@ -874,9 +725,9 @@ void UI::MakeWindowTopMostTemporary(HWND hWnd, int milliseconds)
         }).detach();
 }
 
-void UI::PerformAutoClick()
+void UI::PerformAutoClick(HWND hWnd)
 {
-    if (hwnd != nullptr)
+    if (hWnd != nullptr)
     {
         auto displayInfo = DisplayManager::getDisplayInfo();
         POINT originalPos;

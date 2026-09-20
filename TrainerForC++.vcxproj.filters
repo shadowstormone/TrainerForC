@@ -72,6 +72,12 @@
     <ClCompile Include="ui/UI.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="ui/Window.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui/D3DContext.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
     <ClCompile Include="ui/Drawing.cpp">
       <Filter>ui</Filter>
     </ClCompile>
@@ -132,6 +138,12 @@
       <Filter>cheats</Filter>
     </ClInclude>
     <ClInclude Include="ui/UI.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="ui/Window.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="ui/D3DContext.h">
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="ui/Drawing.h">
