@@ -69,6 +69,14 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (_captionHitTest && _captionHitTest(pt)) return HTCAPTION;
             return HTCLIENT;
         }
+
+        case WM_NCLBUTTONDOWN:
+        case WM_NCLBUTTONUP:
+        case WM_NCLBUTTONDBLCLK:
+            // Перетаскивание окна ведёт DefWindowProc (модальный цикл).
+            // Через обработчик ImGui эти сообщения пропускать нельзя —
+            // иначе окно перестаёт таскаться за полосу заголовка.
+            return ::DefWindowProcW(hWnd, msg, wParam, lParam);
         }
     }
 

@@ -1,5 +1,6 @@
 #include <thread>
 #include <atomic>
+#include <exception>
 #include <windows.h>
 #include <mmsystem.h>
 #include "core/Memory_Functions.h"
@@ -18,8 +19,24 @@ bool CheatOption::Enable(int pid)
     if (!mem.IsValid())
         return false;
 
+    // Патч может бросить исключение (сигнатура не найдена, инструкция не
+    // разобралась) или вернуть false. Раньше результат игнорировался, а
+    // исключение улетало прямо в кадр UI — отсюда и "опция активна, хотя
+    // ничего не применилось", и падения интерфейса.
+    bool applied = true;
     for (auto& p : patches)
-        p->Hack(mem.Handle());
+    {
+        try
+        {
+            if (!p->Hack(mem.Handle())) applied = false;
+        }
+        catch (const std::exception&)
+        {
+            applied = false;
+        }
+    }
+
+    if (!applied) return false;
 
     std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), nullptr, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
     return true;
@@ -31,11 +48,21 @@ bool CheatOption::Disable(int pid)
     if (!mem.IsValid())
         return false;
 
+    bool restored = true;
     for (auto& p : patches)
-        p->Restore(mem.Handle());
+    {
+        try
+        {
+            if (!p->Restore(mem.Handle())) restored = false;
+        }
+        catch (const std::exception&)
+        {
+            restored = false;
+        }
+    }
 
     std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), nullptr, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
-    return true;
+    return restored;
 }
 
 bool CheatOption::KeyPressed()
@@ -62,24 +89,24 @@ CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T p
     return this;
 }
 
-CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value)
+CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value, bool absolute)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();
-    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value));
+    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value, absolute));
     return this;
 }
 
-CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value)
+CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value, bool absolute)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();
-    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value));
+    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value, absolute));
     return this;
 }
 
-CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value)
+CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value, bool absolute)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();
-    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value));
+    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value, absolute));
     return this;
 }
 

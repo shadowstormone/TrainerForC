@@ -84,18 +84,56 @@ bool CavePatch::Hack(HANDLE hProcess)
     BYTE jmpSize = 0;
     const PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize);
 
+    // Считаем, сколько целых инструкций нужно "украсть" под прыжок.
+    // Если длино-дизассемблер не смог разобрать инструкцию, он возвращает 0:
+    // раньше originalSize не рос, offset не двигался и цикл крутился вечно,
+    // подвешивая интерфейс. Теперь такой случай — честная ошибка.
     size_t offset = 0;
-    do{
-        const size_t length = nmd_x86_ldisasm(originalBytes + offset, MAX_INSTRUCTION_LENGTH - offset, is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
-        originalSize += static_cast<BYTE>(length); // Явное преобразование size_t в BYTE
+    bool decoded = true;
+
+    while (originalSize < jmpSize)
+    {
+        if (offset >= MAX_INSTRUCTION_LENGTH)
+        {
+            decoded = false;
+            break;
+        }
+
+        const size_t length = nmd_x86_ldisasm(originalBytes + offset,
+                                              MAX_INSTRUCTION_LENGTH - offset,
+                                              is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
+        if (length == 0)
+        {
+            decoded = false;
+            break;
+        }
+
+        originalSize += static_cast<BYTE>(length);
         offset += length;
-    } while (originalSize < jmpSize);
+    }
+
+    // Общий откат: освобождаем кейв и буфер прыжка, чтобы не утекали.
+    const auto rollback = [&]()
+    {
+        delete[] jmpBytes;
+        if (allocatedAddress)
+        {
+            FreeMem(hProcess, allocatedAddress, CAVE_SIZE);
+            allocatedAddress = nullptr;
+        }
+        originalSize = 0;
+    };
+
+    if (!decoded)
+    {
+        rollback();
+        throw std::runtime_error("Failed to decode original instructions at patch address.");
+    }
 
     if (originalSize > patchSize)
     {
+        rollback();
         throw std::runtime_error("Original instructions too large to fit in the cave.");
-        delete[] jmpBytes;
-        return false;
     }
 
     if (jmpSize == originalSize)

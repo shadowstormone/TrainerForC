@@ -577,10 +577,12 @@ void UI::Render()
 		SetModernDarkStyle(); // Установка стиля интерфейса
 
 #ifdef _DEBUG
-        char message[128];
-        sprintf_s(message, "Screen Resolution:\nWidth: %d\nHeight: %d",
-            displayInfo.width, displayInfo.height);
-        MessageBoxA(nullptr, message, "Screen Resolution Info", MB_OK | MB_ICONINFORMATION);
+        if (gConsole)
+        {
+            char message[128];
+            sprintf_s(message, "Screen resolution: %dx%d", displayInfo.width, displayInfo.height);
+            gConsole->addLog("INFO", message);
+        }
 #endif // _DEBUG
 
         // Настройка шрифта

@@ -38,7 +38,7 @@ std::unique_ptr<CheatOption> CreateCheatFromDefinition(const CheatDefinition& de
             std::visit(
                 [&](auto&& v)
                 {
-                    option->AddWriteValuePatch(game, spec.offsets, v);
+                    option->AddWriteValuePatch(game, spec.offsets, v, spec.absoluteAddress);
                 },
                 spec.value);
             break;

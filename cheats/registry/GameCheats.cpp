@@ -12,10 +12,13 @@ REGISTER_CHEAT({
     { Cave(PatchLibrary::SIG_CHEAT_TEST_3, PatchLibrary::PATCH_CHEAT_TEST_3) },
 })
 
+// Тестовое значение из туториала Cheat Engine (Tutorial-x86_64.exe).
+// Адрес абсолютный и у динамического значения меняется от запуска к запуску —
+// годится для проверки записи, но не как готовый чит.
 REGISTER_CHEAT({
-    L"[Numpad 2] - Set 9999 HP",
+    L"[Numpad 2] - Set 9999 (CE tutorial)",
     { VKeys::KEY_NUMPAD2 },
-    { WriteValue({ 0x00240600, 0x4B4 }, 9999) },
+    { WriteValueAt(0x015F45D0, 9999) },
     true, 450
 })
 

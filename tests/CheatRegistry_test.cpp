@@ -22,7 +22,7 @@ TEST(CheatRegistry, CheatsHaveExpectedNamesAndKeys)
     ASSERT_EQ(all.size(), 4u);
 
     EXPECT_EQ(all[0].name, L"[Numpad 1] - Cheat Test 1");
-    EXPECT_EQ(all[1].name, L"[Numpad 2] - Set 9999 HP");
+    EXPECT_EQ(all[1].name, L"[Numpad 2] - Set 9999 (CE tutorial)");
     EXPECT_EQ(all[2].name, L"[Numpad 3] - Cheat Test 3");
     EXPECT_EQ(all[3].name, L"[Numpad 4] - First Function(Nop)");
 
@@ -51,7 +51,9 @@ TEST(CheatRegistry, WriteValueSpecKeepsOffsetsValueAndAutoDisable)
 
     const auto& spec = cheat.patches[0];
     EXPECT_EQ(spec.kind, PatchSpec::Kind::WriteValue);
-    EXPECT_EQ(spec.offsets, (std::vector<std::uintptr_t>{ 0x00240600, 0x4B4 }));
+    // Абсолютный адрес из Cheat Engine: база модуля к нему не прибавляется
+    EXPECT_TRUE(spec.absoluteAddress);
+    EXPECT_EQ(spec.offsets, (std::vector<std::uintptr_t>{ 0x015F45D0 }));
     ASSERT_TRUE(std::holds_alternative<int>(spec.value));
     EXPECT_EQ(std::get<int>(spec.value), 9999);
 

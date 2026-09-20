@@ -29,6 +29,11 @@ struct PatchSpec
     // WriteValue
     std::vector<std::uintptr_t> offsets;
     std::variant<int, float, double> value{};
+
+    // true  — offsets.back() это готовый абсолютный адрес (как показывает
+    //         Cheat Engine для динамического значения);
+    // false — цепочка "база модуля + оффсеты".
+    bool absoluteAddress = false;
 };
 
 // --- Хелперы: чтобы описание чита читалось одной строкой ---
@@ -83,6 +88,17 @@ inline PatchSpec WriteValue(std::vector<std::uintptr_t> offsets, double value)
     s.kind = PatchSpec::Kind::WriteValue;
     s.offsets = std::move(offsets);
     s.value = value;
+    return s;
+}
+
+// Запись по готовому абсолютному адресу — тому, что показывает Cheat Engine.
+// Внимание: у динамических значений такой адрес меняется от запуска к запуску,
+// поэтому это годится для проверки, но не для готового чита.
+template <typename T>
+inline PatchSpec WriteValueAt(std::uintptr_t address, T value)
+{
+    PatchSpec s = WriteValue(std::vector<std::uintptr_t>{ address }, value);
+    s.absoluteAddress = true;
     return s;
 }
 

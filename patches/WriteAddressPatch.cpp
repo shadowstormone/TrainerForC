@@ -57,8 +57,17 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, const std::vector<
         return false;
     }
 
-    m_baseAddress = DetermineBaseAddress(m_hProcess);
-    m_finalAddress = CalculateFinalAddress(m_hProcess, m_baseAddress, offsets);
+    if (m_absolute)
+    {
+        // Адрес уже абсолютный (как в Cheat Engine) — база не прибавляется.
+        m_baseAddress = 0;
+        m_finalAddress = offsets.empty() ? 0 : offsets.back();
+    }
+    else
+    {
+        m_baseAddress = DetermineBaseAddress(m_hProcess);
+        m_finalAddress = CalculateFinalAddress(m_hProcess, m_baseAddress, offsets);
+    }
 
     if (m_finalAddress == 0)
     {

@@ -21,7 +21,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 #endif // _DEBUG
 
     // Процесс атакуемой игры
-    auto ProcessAttackGame = std::make_unique<Cheat>(L"Tutorial-i386.exe");
+    auto ProcessAttackGame = std::make_unique<Cheat>(L"Tutorial-x86_64.exe");
 
     // Менеджер опций (он будет владеть опциями)
     CheatOptionManager optionManager(ProcessAttackGame.get());

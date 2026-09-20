@@ -12,18 +12,20 @@ public:
     WriteAddressPatch();
 
     // Конструкторы для различных типов значений, использующие списки инициализаторов членов
-    WriteAddressPatch( CheatOption* parentInstance, LPCWSTR processName, const std::vector<uintptr_t>& offsets, int value) 
-        : Patch(parentInstance, processName, offsets, value), m_hProcess(nullptr), m_finalAddress(0), m_isApplied(false)
+    // absolute == true: offsets.back() — готовый абсолютный адрес,
+    // база модуля к нему не прибавляется.
+    WriteAddressPatch( CheatOption* parentInstance, LPCWSTR processName, const std::vector<uintptr_t>& offsets, int value, bool absolute = false)
+        : Patch(parentInstance, processName, offsets, value), m_hProcess(nullptr), m_finalAddress(0), m_isApplied(false), m_absolute(absolute)
     {
     }
 
-    WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, const std::vector<uintptr_t>& offsets, float value) 
-        : Patch(parentInstance, processName, offsets, value), m_hProcess(nullptr), m_finalAddress(0), m_isApplied(false)
+    WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, const std::vector<uintptr_t>& offsets, float value, bool absolute = false)
+        : Patch(parentInstance, processName, offsets, value), m_hProcess(nullptr), m_finalAddress(0), m_isApplied(false), m_absolute(absolute)
     {
     }
 
-    WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, const std::vector<uintptr_t>& offsets, double value) 
-        : Patch(parentInstance, processName, offsets, value), m_hProcess(nullptr), m_finalAddress(0), m_isApplied(false)
+    WriteAddressPatch(CheatOption* parentInstance, LPCWSTR processName, const std::vector<uintptr_t>& offsets, double value, bool absolute = false)
+        : Patch(parentInstance, processName, offsets, value), m_hProcess(nullptr), m_finalAddress(0), m_isApplied(false), m_absolute(absolute)
     {
     }
 
@@ -49,6 +51,7 @@ private:
     DWORD_PTR m_baseAddress = NULL;
     uintptr_t m_finalAddress;
     bool m_isApplied;
+    bool m_absolute = false;
 
     // Приватные вспомагательные методы
     DWORD_PTR DetermineBaseAddress(HANDLE hProcess) const;

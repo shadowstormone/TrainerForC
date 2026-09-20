@@ -1,3 +1,4 @@
+#include <cfloat>
 #include <climits>  // Для INT_MAX
 #include "ui/Drawing.h"
 #include "patches/WriteAddressPatch.h"
@@ -31,7 +32,9 @@ namespace
 
     // Левая граница блока кнопок заголовка (в клиентских координатах).
     // Обновляется каждый кадр в RenderTitleBar и используется хиттестом.
-    float g_titleButtonsMinX = 0.0f;
+    // До первого кадра — "бесконечность", чтобы вся полоса считалась
+    // заголовком и окно таскалось сразу, а не со второго кадра.
+    float g_titleButtonsMinX = FLT_MAX;
 }
 
 void Drawing::SetWindowHandle(HWND hWnd)
@@ -488,9 +491,10 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
 
         RenderTitleBar();
 
-        // Содержимое — под полосой заголовка, с обычными отступами окна
+        // Содержимое — под полосой заголовка, с запасом по вертикали,
+        // чтобы первый переключатель не липнул к заголовку
         const ImGuiStyle& style = ImGui::GetStyle();
-        ImGui::SetCursorPos(ImVec2(style.WindowPadding.x, TITLE_BAR_HEIGHT + style.WindowPadding.y));
+        ImGui::SetCursorPos(ImVec2(style.WindowPadding.x, TITLE_BAR_HEIGHT + 14.0f));
 
         RenderToggles();
         ImGui::Separator();

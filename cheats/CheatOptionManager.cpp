@@ -51,8 +51,24 @@ void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition
         {
             if (enabled)
             {
-                gConsole->addLog("INFO", "Переключатель " + Utils::WStringToUtf8(definition.name) + " активирован");
-                option->Enable(processId);
+                const std::string name = Utils::WStringToUtf8(definition.name);
+
+                if (!option->Enable(processId))
+                {
+                    // Патч не применился: не оставляем опцию "включённой"
+                    // и возвращаем переключатель в UI обратно.
+                    option->IsEnabled(false);
+
+                    auto& toggleStates = Drawing::GetToggleStates();
+                    const std::string id = "##toggle_" + name;
+                    auto it = toggleStates.find(id);
+                    if (it != toggleStates.end()) it->second = false;
+
+                    gConsole->addLog("ERROR", "Не удалось применить " + name + " — опция выключена");
+                    return;
+                }
+
+                gConsole->addLog("INFO", "Переключатель " + name + " активирован");
                 option->IsEnabled(true);
 
                 if (definition.autoDisable)
