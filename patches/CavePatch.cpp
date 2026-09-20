@@ -1,6 +1,5 @@
 #include "patches/CavePatch.h"
 #include "cheats/CheatOption.h"
-#include "core/Memory_Functions.h"
 #include <stdexcept>
 #include <cstring>
 
@@ -46,21 +45,21 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
     return bytes;
 }
 
-bool CavePatch::Hack(HANDLE hProcess)
+bool CavePatch::Apply(MemoryAccess& mem)
 {
     originalSize = 0;
 
-    const bool is64BitProcess = isTargetX64Process(hProcess);
+    const bool is64BitProcess = mem.IsTargetX64();
     uintptr_t baseAddress;
     const uintptr_t scanSize = is64BitProcess ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
 
     if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
     {
-        baseAddress = GetModuleBaseAddress(hProcess, parent->GetModuleName());
+        baseAddress = mem.ModuleBase(parent->GetModuleName());
     }
     else
     {
-        baseAddress = GetProcessBaseAddress(hProcess);
+        baseAddress = mem.ProcessBase();
     }
 
     if (!baseAddress)
@@ -69,12 +68,12 @@ bool CavePatch::Hack(HANDLE hProcess)
         return false;
     }
 
-    patternAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern.data(), mask);
+    patternAddress = mem.ScanSignature(baseAddress, scanSize, pattern.data(), mask);
     patchAddress = static_cast<LPBYTE>(patternAddress) + patchOffset;
     originalAddress = reinterpret_cast<LPVOID>(patchAddress);
-    originalBytes = static_cast<PBYTE>(ReadMem(hProcess, originalAddress, MAX_INSTRUCTION_LENGTH));
+    originalBytes = static_cast<PBYTE>(mem.Read(originalAddress, MAX_INSTRUCTION_LENGTH));
 
-    allocatedAddress = VirtualAllocEx(hProcess, nullptr, CAVE_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    allocatedAddress = VirtualAllocEx(mem.Handle(), nullptr, CAVE_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!allocatedAddress)
     {
         return false;
@@ -117,7 +116,7 @@ bool CavePatch::Hack(HANDLE hProcess)
         delete[] jmpBytes;
         if (allocatedAddress)
         {
-            FreeMem(hProcess, allocatedAddress, CAVE_SIZE);
+            mem.Free(allocatedAddress, CAVE_SIZE);
             allocatedAddress = nullptr;
         }
         originalSize = 0;
@@ -137,7 +136,7 @@ bool CavePatch::Hack(HANDLE hProcess)
 
     if (jmpSize == originalSize)
     {
-        WriteMem(hProcess, originalAddress, jmpBytes, jmpSize);
+        mem.Write(originalAddress, jmpBytes, jmpSize);
     }
     else
     {
@@ -158,7 +157,7 @@ bool CavePatch::Hack(HANDLE hProcess)
 
         std::memcpy(cave_bytes, patchBytes, patchSize);
         std::memcpy(cave_bytes + patchSize, back_jmp_bytes, backJmpSize);
-        WriteMem(hProcess, allocatedAddress, cave_bytes, cave_size);
+        mem.Write(allocatedAddress, cave_bytes, cave_size);
 
         delete[] cave_bytes;
         delete[] back_jmp_bytes;
@@ -172,12 +171,12 @@ bool CavePatch::Hack(HANDLE hProcess)
             std::memset(bytes + jmpSize, 0x90, nops);
             std::memcpy(bytes + jmpSize + nops, originalBytes + jmpSize, originalSize - jmpSize - nops);
 
-            WriteMem(hProcess, originalAddress, bytes, originalSize);
+            mem.Write(originalAddress, bytes, originalSize);
             delete[] bytes;
         }
         else
         {
-            WriteMem(hProcess, originalAddress, jmpBytes, jmpSize);
+            mem.Write(originalAddress, jmpBytes, jmpSize);
         }
     }
 
@@ -186,41 +185,41 @@ bool CavePatch::Hack(HANDLE hProcess)
 }
 
 
-bool CavePatch::Restore(HANDLE hProcess)
+bool CavePatch::Restore(MemoryAccess& mem)
 {
     // Проверяем и восстанавливаем оригинальные байты
-    if (hProcess && originalAddress && originalAddress != INVALID_HANDLE_VALUE && originalSize > 0)
+    if (mem.IsValid() && originalAddress && originalAddress != INVALID_HANDLE_VALUE && originalSize > 0)
     {
         // Проверяем, что процесс еще активен
         DWORD exitCode;
-        if (GetExitCodeProcess(hProcess, &exitCode) && exitCode == STILL_ACTIVE)
+        if (GetExitCodeProcess(mem.Handle(), &exitCode) && exitCode == STILL_ACTIVE)
         {
             // Проверяем доступность памяти для восстановления
             MEMORY_BASIC_INFORMATION mbi;
-            if (VirtualQueryEx(hProcess, (LPCVOID)originalAddress, &mbi, sizeof(mbi)) != 0)
+            if (VirtualQueryEx(mem.Handle(), (LPCVOID)originalAddress, &mbi, sizeof(mbi)) != 0)
             {
                 if (mbi.State == MEM_COMMIT)
                 {
-                    WriteMem(hProcess, originalAddress, originalBytes, originalSize);
+                    mem.Write(originalAddress, originalBytes, originalSize);
                 }
             }
         }
     }
 
     // Проверяем и освобождаем выделенную память
-    if (hProcess && allocatedAddress && allocatedAddress != INVALID_HANDLE_VALUE)
+    if (mem.IsValid() && allocatedAddress && allocatedAddress != INVALID_HANDLE_VALUE)
     {
         // Проверяем, что процесс еще активен
         DWORD exitCode;
-        if (GetExitCodeProcess(hProcess, &exitCode) && exitCode == STILL_ACTIVE)
+        if (GetExitCodeProcess(mem.Handle(), &exitCode) && exitCode == STILL_ACTIVE)
         {
             // Проверяем доступность выделенной памяти
             MEMORY_BASIC_INFORMATION mbi;
-            if (VirtualQueryEx(hProcess, (LPCVOID)allocatedAddress, &mbi, sizeof(mbi)) != 0)
+            if (VirtualQueryEx(mem.Handle(), (LPCVOID)allocatedAddress, &mbi, sizeof(mbi)) != 0)
             {
                 if (mbi.State == MEM_COMMIT)
                 {
-                    FreeMem(hProcess, allocatedAddress, CAVE_SIZE);
+                    mem.Free(allocatedAddress, CAVE_SIZE);
                 }
             }
         }

@@ -3,11 +3,16 @@
 #include <vector>
 #include <string>
 #include <iterator>
+#include <sstream>
 #include <cstdint>
-#include "core/Memory_Functions.h"
+#include "core/MemoryAccess.h"
+#include "patches/IPatch.h"
 
 class CheatOption;	// Предварительное объявление класса CheatOption
-class Patch		// Предварительное объявление класса Patch
+
+// Общая для всех патчей часть: сигнатура, оригинальные байты, ссылка на опцию.
+// Сам контракт (Apply/Restore) объявлен в IPatch.
+class Patch : public IPatch
 {
 protected:
 	std::vector<uint8_t> pattern;   // владеет байтами паттерна (было: PBYTE + new[])
@@ -93,8 +98,8 @@ public:
 		this->dvalue = value;
 	}
 
-	virtual bool Hack(HANDLE hProcess) = 0;
-	virtual bool Restore(HANDLE hProcess) = 0;
+	bool Apply(MemoryAccess& mem) override = 0;
+	bool Restore(MemoryAccess& mem) override = 0;
 
 	CheatOption* GetParent() const
 	{

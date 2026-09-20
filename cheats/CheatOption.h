@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "patches/Patch.h"   // нужен полный тип для unique_ptr<Patch>
+#include "patches/IPatch.h"   // нужен полный тип для unique_ptr<IPatch>
 #include "core/Cheat.h"   // нужен для Cheat* в параметрах методов
 #include "platform/Hotkey.h"
 
@@ -18,7 +18,7 @@ class CheatOption
 
 	// Функции чита
 	bool m_enabled = false;
-	std::vector<std::unique_ptr<Patch>> patches;
+	std::vector<std::unique_ptr<IPatch>> patches;
 
 	// Своя комбинация клавиш с собственным состоянием антидребезга.
 	Hotkey m_hotkey;

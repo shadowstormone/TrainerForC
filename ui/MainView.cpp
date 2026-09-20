@@ -2,7 +2,7 @@
 
 #include <climits>  // Для INT_MAX
 
-#include "patches/WriteAddressPatch.h"
+#include "core/MemoryAccess.h"
 #include "platform/AudioService.h"
 #include "platform/Utils.h"
 #include "platform/VKeys.h"
@@ -308,9 +308,22 @@ void MainView::RenderInputFields()
             }
             else
             {
-                WriteAddressPatch writer;
-                LPCWSTR procName = _process->GetProcessName();
-                if (writer.WriteValueMemory(procName, functionOffset.offsets, _inputValues[buttonName]))
+                // Пишем напрямую через MemoryAccess: отдельный патч ради
+                // одноразовой записи из поля ввода не нужен.
+                MemoryAccess mem(_process->GetProcessID());
+                int valueToWrite = _inputValues[buttonName];
+                SIZE_T written = 0;
+
+                const uintptr_t address = mem.IsValid()
+                    ? mem.ResolveChain(mem.ProcessBase(), functionOffset.offsets)
+                    : 0;
+
+                const bool ok = address != 0
+                    && WriteProcessMemory(mem.Handle(), reinterpret_cast<LPVOID>(address),
+                                          &valueToWrite, sizeof(valueToWrite), &written)
+                    && written == sizeof(valueToWrite);
+
+                if (ok)
                 {
                     AudioService::Instance().Play(Sound::CheatEnabled);
 #ifdef _DEBUG

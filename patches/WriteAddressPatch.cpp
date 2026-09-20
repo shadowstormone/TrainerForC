@@ -1,153 +1,76 @@
 #include "patches/WriteAddressPatch.h"
-#include "platform/Logger.h"
-#include "cheats/CheatOption.h"
-#include <iostream>
+
 #include <format>
 
-WriteAddressPatch::WriteAddressPatch()
-    : m_processId(0), m_hProcess(nullptr), m_baseAddress(0), m_finalAddress(0), m_isApplied(false)
+#include "cheats/CheatOption.h"
+#include "platform/Logger.h"
+
+uintptr_t WriteAddressPatch::ResolveAddress(MemoryAccess& mem) const
 {
+    if (offsets.empty()) return 0;
+
+    // Адрес уже абсолютный — база не прибавляется.
+    if (m_absolute) return offsets.back();
+
+    const LPCWSTR moduleName = parent ? parent->GetModuleName() : nullptr;
+    const DWORD_PTR base = (moduleName && wcslen(moduleName) > 0)
+                               ? mem.ModuleBase(moduleName)
+                               : mem.ProcessBase();
+    if (base == 0) return 0;
+
+    return mem.ResolveChain(base, offsets);
 }
 
-DWORD_PTR WriteAddressPatch::DetermineBaseAddress(HANDLE hProcess) const
+bool WriteAddressPatch::Apply(MemoryAccess& mem)
 {
-    if (!parent)
-    {
-        return GetProcessBaseAddress(hProcess);
-    }
+    // Процесс больше не открывается здесь: раньше патч игнорировал
+    // переданный дескриптор и делал собственный OpenProcess.
+    if (!mem.IsValid()) return false;
+    if (m_isApplied) return false;
 
-    const LPCWSTR moduleName = parent->GetModuleName();
-    if (!moduleName || wcslen(moduleName) == 0)
-	{
-        return GetProcessBaseAddress(hProcess);
-    }
-
-    return GetModuleBaseAddress(hProcess, moduleName);
-}
-
-uintptr_t WriteAddressPatch::CalculateFinalAddress(HANDLE hProcess, DWORD_PTR baseAddr, const std::vector<uintptr_t>& offsets)
-{
-    if (offsets.empty())
-    {
-        return 0;
-    }
-
-    uintptr_t currentAddress = baseAddr;
-
-    for (size_t i = 0; i < offsets.size() - 1; ++i)
-    {
-        currentAddress += offsets[i];
-        currentAddress = ReadMem(hProcess, currentAddress);
-
-        if (currentAddress == 0)
-        {
-            ShowErrorMessage(NULL, L"Failed to read memory at offset");
-            return 0;
-        }
-    }
-
-    return currentAddress + offsets.back();
-}
-
-template<typename T>
-bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, const std::vector<uintptr_t>& offsets, T value)
-{
-    if (!InitializeProcess(processName))
-    {
-        return false;
-    }
-
-    if (m_absolute)
-    {
-        // Адрес уже абсолютный (как в Cheat Engine) — база не прибавляется.
-        m_baseAddress = 0;
-        m_finalAddress = offsets.empty() ? 0 : offsets.back();
-    }
-    else
-    {
-        m_baseAddress = DetermineBaseAddress(m_hProcess);
-        m_finalAddress = CalculateFinalAddress(m_hProcess, m_baseAddress, offsets);
-    }
-
+    m_finalAddress = ResolveAddress(mem);
     if (m_finalAddress == 0)
     {
-        Cleanup();
+        Log::Error("Не удалось вычислить адрес для записи значения");
         return false;
     }
 
 #ifdef _DEBUG
-    std::printf("Final address: 0x%I64X\n", m_finalAddress);
-    Log::Debug(std::format("Финальный адресс значения: 0x{:X}", m_finalAddress));
-#endif // _DEBUG
+    Log::Debug(std::format("Финальный адрес значения: 0x{:X}", m_finalAddress));
+#endif
 
-    SIZE_T bytesWritten = 0;
-    if (!WriteProcessMemory(m_hProcess, (LPVOID)m_finalAddress, &value, sizeof(T), &bytesWritten))
+    const void* source = nullptr;
+    SIZE_T size = 0;
+
+    switch (m_type)
     {
-        ShowErrorMessage(NULL, L"Failed to write memory!");
-        Cleanup();
-        return false;
-    }
-    
-    if (bytesWritten != sizeof(T))
-    {
-        ShowErrorMessage(NULL, L"Failed to write complete value to memory");
-        Cleanup();
-        return false;
+    case ValueType::Int:    source = &value;  size = sizeof(value);  break;
+    case ValueType::Float:  source = &fvalue; size = sizeof(fvalue); break;
+    case ValueType::Double: source = &dvalue; size = sizeof(dvalue); break;
     }
 
-    Cleanup();
+    SIZE_T written = 0;
+    if (!WriteProcessMemory(mem.Handle(), reinterpret_cast<LPVOID>(m_finalAddress), source, size, &written)
+        || written != size)
+    {
+        Log::Error("Не удалось записать значение в память");
+        return false;
+    }
+
+    // Флаг ставим только при успехе: раньше он взводился до записи и врал,
+    // если запись не удалась.
+    m_isApplied = true;
     return true;
 }
 
-// Явные инстанциации шаблона для поддерживаемых типов
-template bool WriteAddressPatch::WriteValueMemory<int>(LPCWSTR, const std::vector<uintptr_t>&, int);
-template bool WriteAddressPatch::WriteValueMemory<float>(LPCWSTR, const std::vector<uintptr_t>&, float);
-template bool WriteAddressPatch::WriteValueMemory<double>(LPCWSTR, const std::vector<uintptr_t>&, double);
-
-bool WriteAddressPatch::InitializeProcess(LPCWSTR processName)
+bool WriteAddressPatch::Restore(MemoryAccess& mem)
 {
-    m_processId = GetProcessIdByProcessName(processName);
-    m_hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_processId);
+    // Это одноразовая запись значения: прежнее значение не сохранялось,
+    // поэтому «откат» лишь снимает флаг применённости.
+    (void)mem;
 
-    if (!m_hProcess)
-    {
-        ShowErrorMessage(NULL, L"Failed to open process");
-        return false;
-    }
+    if (!m_isApplied) return false;
 
+    m_isApplied = false;
     return true;
-}
-
-void WriteAddressPatch::Cleanup()
-{
-    if (m_hProcess)
-    {
-        CloseHandle(m_hProcess);
-        m_hProcess = nullptr;
-    }
-}
-
-bool WriteAddressPatch::Hack(HANDLE hProcess)
-{
-    if (!m_isApplied)
-    {
-        m_isApplied = true;
-        return WriteValueMemory(processName.c_str(), offsets, value);
-    }
-    return false;
-}
-
-bool WriteAddressPatch::Restore(HANDLE hProcess)
-{
-    if (m_isApplied)
-    {
-        m_isApplied = false;
-        return true;
-    }
-    return false;
-}
-
-WriteAddressPatch::~WriteAddressPatch()
-{
-    Cleanup();
 }

@@ -2,7 +2,6 @@
 #include <atomic>
 #include <exception>
 #include <windows.h>
-#include "core/Memory_Functions.h"
 #include "core/MemoryAccess.h"
 #include "cheats/CheatOption.h"
 #include "patches/NopPatch.h"
@@ -26,7 +25,7 @@ bool CheatOption::Enable(int pid)
     {
         try
         {
-            if (!p->Hack(mem.Handle())) applied = false;
+            if (!p->Apply(mem)) applied = false;
         }
         catch (const std::exception&)
         {
@@ -51,7 +50,7 @@ bool CheatOption::Disable(int pid)
     {
         try
         {
-            if (!p->Restore(mem.Handle())) restored = false;
+            if (!p->Restore(mem)) restored = false;
         }
         catch (const std::exception&)
         {
@@ -131,12 +130,14 @@ void CheatOption::Process(int processId)
 
     if (addressPatchApplied)
     {
-        // Сразу сбрасываем флаг WriteAddressPatch (Restore не требует handle)
+        // WriteAddressPatch — одноразовая запись значения, поэтому сразу
+        // снимаем флаг применённости, чтобы горячая клавиша сработала снова.
+        MemoryAccess mem(static_cast<DWORD>(processId));
         for (auto& patch : patches)
         {
             if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
             {
-                writePatch->Restore(nullptr);
+                writePatch->Restore(mem);
                 break;
             }
         }

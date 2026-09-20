@@ -24,8 +24,8 @@ public:
 
     static PBYTE CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize);
 
-    bool Hack(HANDLE hProcess) override;
-    bool Restore(HANDLE hProcess) override;
+    bool Apply(MemoryAccess& mem) override;
+    bool Restore(MemoryAccess& mem) override;
 };
 
 //class CavePatch : public Patch
@@ -47,6 +47,6 @@ public:
 //	}
 //
 //
-//	bool Hack(HANDLE hProcess);
-//	bool Restore(HANDLE hProcess);
+//	bool Apply(MemoryAccess& mem) override;
+//	bool Restore(MemoryAccess& mem) override;
 //};
