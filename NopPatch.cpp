@@ -17,7 +17,7 @@ bool NopPatch::Hack(HANDLE hProcess)
         throw std::runtime_error("Failed to get process/module base address");
     }
 
-    originalAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern, mask);
+    originalAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern.data(), mask);
     if (originalAddress == 0)
     {
         throw std::runtime_error("Failed to find signature");

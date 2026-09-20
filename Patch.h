@@ -3,18 +3,19 @@
 #include <vector>
 #include <string>
 #include <iterator>
+#include <cstdint>
 #include "Memory_Functions.h"
 
 class CheatOption;	// Предварительное объявление класса CheatOption
 class Patch		// Предварительное объявление класса Patch
 {
 protected:
-	PBYTE pattern = NULL;
+	std::vector<uint8_t> pattern;   // владеет байтами паттерна (было: PBYTE + new[])
 	std::wstring mask;
-	LPVOID originalAddress = 0;
-	PBYTE originalBytes = NULL;
+	LPVOID originalAddress = nullptr;
+	PBYTE  originalBytes   = nullptr; // аллоцируется ReadMem в наследниках; освобождается ~Patch
 	SIZE_T patchSize = 0;
-	CheatOption* parent = NULL;
+	CheatOption* parent = nullptr;
 	LPBYTE patchAddress = nullptr;
 	LPVOID patternAddress = nullptr;
 
@@ -29,34 +30,34 @@ protected:
 	{
 		std::wstring signature(sign);
 		std::wstringstream wss(signature);
-		std::vector<BYTE> bytes;
 		std::vector<std::wstring> tokens{ std::istream_iterator<std::wstring, wchar_t>(wss),{} };
 
-		for (std::wstring str : tokens)
+		pattern.clear();
+		mask.clear();
+
+		for (const std::wstring& str : tokens)
 		{
 			if (str.size() == 1 || str._Equal(L"xx") || str._Equal(L"XX"))
 			{
-				mask.append(L"?");
-				bytes.push_back(0);
+				mask += L'?';
+				pattern.push_back(0);
 			}
-			else 
+			else
 			{
-				mask.append(L"x");
-				BYTE singleByte = static_cast<BYTE>(wcstoul(str.c_str(), NULL, 16)); // Явное преобразование unsigned long в BYTE
-				bytes.push_back(singleByte);
+				mask += L'x';
+				pattern.push_back(static_cast<uint8_t>(wcstoul(str.c_str(), nullptr, 16)));
 			}
 		}
-
-		if (pattern)
-		{
-			delete[] pattern;
-		}
-		pattern = new BYTE[bytes.size()];
-		memcpy_s(pattern, bytes.size(), bytes.data(), bytes.size());
 	}
 
 public:
 	Patch(){}
+
+	virtual ~Patch()
+	{
+		delete[] originalBytes;
+		originalBytes = nullptr;
+	}
 
 	Patch(CheatOption* parentInstance, LPCWSTR signature, int patchOffset, SIZE_T pSize)
 	{

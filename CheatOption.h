@@ -2,26 +2,26 @@
 #include <Windows.h>
 #include <vector>
 #include <string>
-#include "Cheat.h"
+#include <memory>
+#include "Patch.h"   // нужен полный тип для unique_ptr<Patch>
+#include "Cheat.h"   // нужен для Cheat* в параметрах методов
 
-class Patch;  // Предварительное объявление класса Patch
-class Cheat;  // Предварительное объявление класса Cheat
+class Cheat;  // предварительное объявление (на случай кольцевого include)
 
 class CheatOption
 {
 	//Свойства чита
-	LPCWSTR m_moduleName = NULL;
-	LPCWSTR m_description = NULL;
+	LPCWSTR m_moduleName = nullptr;
+	LPCWSTR m_description = nullptr;
 	std::vector<int> m_keys;
 
 	// Функции чита
 	bool m_enabled = false;
-	std::vector<Patch*> patches;
+	std::vector<std::unique_ptr<Patch>> patches;
 
-	bool Enable(int pid);
-	//bool Disable(int pid);
 	bool KeyPressed();
 public:
+	bool Enable(int pid);
 	bool Disable(int pid);
 	CheatOption(LPCWSTR moduleName, LPCWSTR description, const std::vector<int>& keys) 
 	{
@@ -70,6 +70,4 @@ public:
 		m_moduleName = moduleName;
 	}
 
-	bool pEnable(int pid);
-	bool pDisable(int pid);
 };

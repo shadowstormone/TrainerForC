@@ -70,7 +70,7 @@ bool CavePatch::Hack(HANDLE hProcess)
         return false;
     }
 
-    patternAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern, mask);
+    patternAddress = ScanSignature(hProcess, baseAddress, scanSize, pattern.data(), mask);
     patchAddress = static_cast<LPBYTE>(patternAddress) + patchOffset;
     originalAddress = reinterpret_cast<LPVOID>(patchAddress);
     originalBytes = static_cast<PBYTE>(ReadMem(hProcess, originalAddress, MAX_INSTRUCTION_LENGTH));

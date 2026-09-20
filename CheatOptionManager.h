@@ -75,7 +75,7 @@ private:
             {
                 if (enabled) {
                     gConsole->addLog("INFO", "Переключатель " + Utils::WStringToUtf8(definition.name) + " активирован");
-                    option->pEnable(processId);
+                    option->Enable(processId);
                     option->IsEnabled(true);
 
                     if (definition.autoDisable) {
@@ -86,7 +86,7 @@ private:
                             definition.autoDisableDelay,
                             [this, definition, toggleId, option, processId]()
                             {
-                                option->pDisable(processId);
+                                option->Disable(processId);
                                 option->IsEnabled(false);
 
                                 auto& toggleStates = Drawing::GetToggleStates();
@@ -99,7 +99,7 @@ private:
                 }
                 else {
                     gConsole->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " выключена");
-                    option->pDisable(processId);
+                    option->Disable(processId);
                     option->IsEnabled(false);
                 }
             };

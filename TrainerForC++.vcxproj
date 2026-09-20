@@ -173,6 +173,7 @@
     <ClCompile Include="Utils.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory_Functions.cpp" />
+    <ClCompile Include="MemoryAccess.cpp" />
     <ClCompile Include="NopPatch.cpp" />
     <ClCompile Include="Errors_test.cpp" />
     <ClCompile Include="WriteAddressPatch.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="ImGuiThemes.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Memory_Functions.h" />
+    <ClInclude Include="MemoryAccess.h" />
     <ClInclude Include="nmd_assembly.h" />
     <ClInclude Include="NopPatch.h" />
     <ClInclude Include="Patch.h" />

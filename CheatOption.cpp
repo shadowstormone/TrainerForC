@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include "Memory_Functions.h"
+#include "MemoryAccess.h"
 #include "CheatOption.h"
 #include "NopPatch.h"
 #include "CavePatch.h"
@@ -13,36 +14,28 @@
 
 bool CheatOption::Enable(int pid)
 {
-    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    MemoryAccess mem(static_cast<DWORD>(pid));
+    if (!mem.IsValid())
+        return false;
 
-    if (hProc)
-    {
-        for (Patch* p : patches)
-        {
-            p->Hack(hProc);
-        }
-        CloseHandle(hProc);
-        std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
-        return true;
-    }
-    return false;
+    for (auto& p : patches)
+        p->Hack(mem.Handle());
+
+    std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), nullptr, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
+    return true;
 }
 
 bool CheatOption::Disable(int pid)
 {
-    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    MemoryAccess mem(static_cast<DWORD>(pid));
+    if (!mem.IsValid())
+        return false;
 
-    if (hProc)
-    {
-        for (Patch* p : patches)
-        {
-            p->Restore(hProc);
-        }
-        CloseHandle(hProc);
-        std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
-        return true;
-    }
-    return false;
+    for (auto& p : patches)
+        p->Restore(mem.Handle());
+
+    std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), nullptr, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
+    return true;
 }
 
 bool CheatOption::KeyPressed()
@@ -59,34 +52,34 @@ bool CheatOption::KeyPressed()
 
 CheatOption* CheatOption::AddNopPatch(LPCWSTR signature, SIZE_T pSize)
 {
-    patches.push_back(new NopPatch(this, signature, pSize));
+    patches.push_back(std::make_unique<NopPatch>(this, signature, pSize));
     return this;
 }
 
 CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize)
 {
-    patches.push_back(new CavePatch(this, signature, pBytes, static_cast<int>(patchSize)));
+    patches.push_back(std::make_unique<CavePatch>(this, signature, pBytes, static_cast<int>(patchSize)));
     return this;
 }
 
 CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();
-    patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
+    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value));
     return this;
 }
 
 CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();
-    patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
+    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value));
     return this;
 }
 
 CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();
-    patches.push_back(new WriteAddressPatch(this, processName, offsets, value));
+    patches.push_back(std::make_unique<WriteAddressPatch>(this, processName, offsets, value));
     return this;
 }
 
@@ -112,7 +105,7 @@ void CheatOption::Process(int processId)
                 bool addressPatchApplied = false;
                 for (auto& patch : patches)
                 {
-                    if (auto writePatch = dynamic_cast<WriteAddressPatch*>(patch))
+                    if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
                     {
                         if (!writePatch->IsApplied())
                         {
@@ -127,12 +120,12 @@ void CheatOption::Process(int processId)
 
                 if (addressPatchApplied)
                 {
-                    // Сразу отключаем WriteAddressPatch после применения
+                    // Сразу сбрасываем флаг WriteAddressPatch (Restore не требует handle)
                     for (auto& patch : patches)
                     {
-                        if (auto writePatch = dynamic_cast<WriteAddressPatch*>(patch))
+                        if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
                         {
-                            writePatch->Restore(OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId));
+                            writePatch->Restore(nullptr);
                             break;
                         }
                     }
@@ -151,36 +144,3 @@ void CheatOption::Process(int processId)
     }
 }
 
-bool CheatOption::pEnable(int pid)
-{
-    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-
-    if (hProc)
-    {
-        for (Patch* p : patches)
-        {
-            p->Hack(hProc);
-        }
-        CloseHandle(hProc);
-        std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
-        return true;
-    }
-    return false;
-}
-
-bool CheatOption::pDisable(int pid)
-{
-    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-
-    if (hProc)
-    {
-        for (Patch* p : patches)
-        {
-            p->Restore(hProc);
-        }
-        CloseHandle(hProc);
-        std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), NULL, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
-        return true;
-    }
-    return false;
-}
