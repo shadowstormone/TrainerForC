@@ -50,15 +50,6 @@
     <ClCompile Include="CavePatch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="BaseRenderer.cpp">
-      <Filter>Исходные файлы\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleRenderer.cpp">
-      <Filter>Исходные файлы\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="StarFieldEffect.cpp">
-      <Filter>Исходные файлы\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Memory_Functions.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -67,9 +58,6 @@
     </ClCompile>
     <ClCompile Include="WriteAddressPatch.cpp">
       <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleRendererv2.cpp">
-      <Filter>Исходные файлы\Rendererv2</Filter>
     </ClCompile>
     <ClCompile Include="Utils.cpp">
       <Filter>Исходные файлы\ImGuiRenderer</Filter>
@@ -115,23 +103,11 @@
     <ClInclude Include="nmd_assembly.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="BaseRenderer.h">
-      <Filter>Файлы заголовков\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleRenderer.h">
-      <Filter>Файлы заголовков\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="StarFieldEffect.h">
-      <Filter>Файлы заголовков\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="WriteAddressPatch.h">
       <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleRendererv2.h">
-      <Filter>Файлы заголовков\RendererV2</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiThemes.h">
       <Filter>Файлы заголовков</Filter>
