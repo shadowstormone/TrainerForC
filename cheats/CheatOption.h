@@ -5,6 +5,7 @@
 #include <memory>
 #include "patches/Patch.h"   // нужен полный тип для unique_ptr<Patch>
 #include "core/Cheat.h"   // нужен для Cheat* в параметрах методов
+#include "platform/Hotkey.h"
 
 class Cheat;  // предварительное объявление (на случай кольцевого include)
 
@@ -19,7 +20,8 @@ class CheatOption
 	bool m_enabled = false;
 	std::vector<std::unique_ptr<Patch>> patches;
 
-	bool KeyPressed();
+	// Своя комбинация клавиш с собственным состоянием антидребезга.
+	Hotkey m_hotkey;
 public:
 	bool Enable(int pid);
 	bool Disable(int pid);
@@ -28,6 +30,7 @@ public:
 		m_moduleName = moduleName;
 		m_description = description;
 		m_keys = keys;
+		m_hotkey.SetKeys(keys);
 		patches.clear();
 	}
 

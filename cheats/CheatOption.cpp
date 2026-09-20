@@ -63,18 +63,6 @@ bool CheatOption::Disable(int pid)
     return restored;
 }
 
-bool CheatOption::KeyPressed()
-{
-    for (int key : m_keys)
-    {
-        if (!(GetAsyncKeyState(key) & 0x8000))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 CheatOption* CheatOption::AddNopPatch(LPCWSTR signature, SIZE_T pSize)
 {
     patches.push_back(std::make_unique<NopPatch>(this, signature, pSize));
@@ -110,62 +98,51 @@ CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<ui
 
 void CheatOption::Process(int processId)
 {
-    static bool keyWasPressed = false; // Флаг, отслеживающий состояние клавиши
+    // Состояние антидребезга живёт в самой комбинации, а не в функциональном
+    // статике: раньше флаг был общим для всех опций, и ненажатые опции
+    // сбрасывали его каждому тику. Блокирующий sleep тоже убран — он вешал
+    // общий поток обработки на 200 мс для всех читов сразу.
+    if (!m_hotkey.JustPressed()) return;
 
-    if (KeyPressed())
+    if (m_enabled)
     {
-        if (!keyWasPressed) // Если клавиша была не нажата до этого
+        if (Disable(processId))
         {
-            keyWasPressed = true; // Устанавливаем флаг, что клавиша нажата
+            m_enabled = false;
+        }
+        return;
+    }
 
-            if (m_enabled)
+    bool addressPatchApplied = false;
+    for (auto& patch : patches)
+    {
+        if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
+        {
+            if (!writePatch->IsApplied())
             {
-                if (Disable(processId))
+                if (Enable(processId))
                 {
-                    m_enabled = false;
+                    addressPatchApplied = true;
+                    break;
                 }
             }
-            else
-            {
-                bool addressPatchApplied = false;
-                for (auto& patch : patches)
-                {
-                    if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
-                    {
-                        if (!writePatch->IsApplied())
-                        {
-                            if (Enable(processId))
-                            {
-                                addressPatchApplied = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (addressPatchApplied)
-                {
-                    // Сразу сбрасываем флаг WriteAddressPatch (Restore не требует handle)
-                    for (auto& patch : patches)
-                    {
-                        if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
-                        {
-                            writePatch->Restore(nullptr);
-                            break;
-                        }
-                    }
-                }
-                else if (Enable(processId))
-                {
-                    m_enabled = true;
-                }
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Задержка для предотвращения многократного срабатывания
         }
     }
-    else
+
+    if (addressPatchApplied)
     {
-        keyWasPressed = false; // Сбрасываем флаг, если клавиша отпущена
+        // Сразу сбрасываем флаг WriteAddressPatch (Restore не требует handle)
+        for (auto& patch : patches)
+        {
+            if (auto* writePatch = dynamic_cast<WriteAddressPatch*>(patch.get()))
+            {
+                writePatch->Restore(nullptr);
+                break;
+            }
+        }
+    }
+    else if (Enable(processId))
+    {
+        m_enabled = true;
     }
 }
-
