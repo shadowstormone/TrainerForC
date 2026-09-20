@@ -1,28 +1,25 @@
 #pragma once
 #include <Windows.h>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "cheats/CheatOptionDefinitions.h"
-#include "platform/EnumClassHash.h"
-
 class Cheat;
 class CheatOption;
+struct CheatDefinition;
 
 // Владеет опциями чита и связывает их с UI-переключателями.
-// Реализация — в CheatOptionManager.cpp, поэтому заголовок не тянет
-// за собой ImGui, Drawing и Utils.
+// Порядок опций задаётся CheatRegistry, поэтому отдельные ID не нужны.
 class CheatOptionManager
 {
     Cheat* _cheatProcess;
-    std::vector<CheatOption*> _orderedOptions; // для UI — сырые указатели в порядке AllOptions
-    std::unordered_map<CheatOptionDefinitions::OptionID, std::unique_ptr<CheatOption>, EnumClassHash> _optionsOwner;
+    std::vector<std::unique_ptr<CheatOption>> _options; // в порядке реестра
     std::unordered_map<std::string, std::function<void(bool, DWORD)>> _toggleHandlers;
 
-    void RegisterToggleHandler(CheatOptionDefinitions::OptionID id, CheatOption* option);
+    void RegisterToggleHandler(const CheatDefinition& definition, CheatOption* option);
 
 public:
     explicit CheatOptionManager(Cheat* cheatProcess);
@@ -34,15 +31,14 @@ public:
     CheatOptionManager(const CheatOptionManager&) = delete;
     CheatOptionManager& operator=(const CheatOptionManager&) = delete;
 
-    // Добавление опции (manager принимает владение)
-    bool AddOption(CheatOptionDefinitions::OptionID id, std::unique_ptr<CheatOption> option);
+    // Создаёт опции из всех зарегистрированных читов (CheatRegistry).
+    void LoadFromRegistry();
 
-    // Все опции (сырые указатели) в порядке AllOptions
+    // Все опции (сырые указатели) в порядке реестра
     std::vector<CheatOption*> GetAllOptions() const;
 
     // Обработка переключения (вызывается Drawing)
     void HandleToggle(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);
 
-    // Получение опции по ID
-    CheatOption* GetOption(CheatOptionDefinitions::OptionID id) const;
+    CheatOption* GetOption(std::size_t index) const;
 };

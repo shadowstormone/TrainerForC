@@ -1,8 +1,6 @@
 #include "app/main.h"
 #include "ui/UI.h"
-#include "cheats/CheatOptionDefinitions.h"
 #include "cheats/CheatOptionManager.h"
-#include "cheats/CheatOptionFactory.h"
 #include "ui/ImGuiConsole.h"
 
 std::unordered_map<std::string, FunctionOffset> offsets = {
@@ -18,8 +16,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 #ifdef _DEBUG
     if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0)
     {
-        RunTests();
-        return 0;
+        return RunTests();
     }
 #endif // _DEBUG
 
@@ -32,15 +29,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     static Console consoleInstance;
     gConsole = &consoleInstance;
 
-    // Создаём и регистрируем опции через фабрику (manager владеет)
-    for (const auto& def : CheatOptionDefinitions::AllOptions)
-    {
-        auto opt = CreateOptionFromDefinition(def, ProcessAttackGame.get());
-        if (!optionManager.AddOption(def.id, std::move(opt)))
-        {
-            gConsole->addLog("ERROR", "Не удалось добавить опцию: " + Utils::WStringToUtf8(def.name));
-        }
-    }
+    // Создаём опции из реестра читов (cheats/registry/*.cpp). Manager владеет.
+    optionManager.LoadFromRegistry();
 
 #ifdef _DEBUG
     ProcessAttackGame->ImGuiOpenConsole();

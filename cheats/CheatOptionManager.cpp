@@ -1,6 +1,9 @@
 #include "cheats/CheatOptionManager.h"
 
+#include "cheats/CheatDefinition.h"
+#include "cheats/CheatFactory.h"
 #include "cheats/CheatOption.h"
+#include "cheats/CheatRegistry.h"
 #include "core/Cheat.h"
 #include "platform/Utils.h" // WStringToUtf8, DelayedToggleOff
 #include "ui/Drawing.h"
@@ -9,56 +12,42 @@
 CheatOptionManager::CheatOptionManager(Cheat* cheatProcess)
     : _cheatProcess(cheatProcess)
 {
-    _orderedOptions.resize(CheatOptionDefinitions::AllOptions.size(), nullptr);
 }
 
 CheatOptionManager::~CheatOptionManager() = default; // unique_ptr сам удалит опции
 
-bool CheatOptionManager::AddOption(CheatOptionDefinitions::OptionID id, std::unique_ptr<CheatOption> option)
+void CheatOptionManager::LoadFromRegistry()
 {
-    if (!option) return false;
+    const auto& definitions = CheatRegistry::Instance().All();
+    _options.reserve(definitions.size());
 
-    int index = -1;
-    for (size_t i = 0; i < CheatOptionDefinitions::AllOptions.size(); ++i)
+    for (const auto& definition : definitions)
     {
-        if (CheatOptionDefinitions::AllOptions[i].id == id)
+        auto option = CreateCheatFromDefinition(definition, _cheatProcess);
+        if (!option)
         {
-            index = static_cast<int>(i);
-            break;
+            gConsole->addLog("ERROR", "Не удалось создать опцию: " + Utils::WStringToUtf8(definition.name));
+            continue;
         }
+
+        CheatOption* raw = option.get();
+        _options.push_back(std::move(option));
+
+        // Регистрируем опцию в процессе (Cheat не владеет и не удаляет)
+        if (_cheatProcess)
+        {
+            _cheatProcess->AddCheatOption(raw);
+        }
+
+        RegisterToggleHandler(definition, raw);
     }
-    if (index == -1)
-    {
-        gConsole->addLog("ERROR", "Опция с ID " + std::to_string(static_cast<int>(id)) + " не найдена в AllOptions");
-        return false;
-    }
-
-    CheatOption* raw = option.get();
-
-    // Сохраняем владение
-    _optionsOwner.emplace(id, std::move(option));
-
-    // Обновляем порядок
-    _orderedOptions[index] = raw;
-
-    // Регистрируем опцию в процессе (Process не владеет и не удаляет)
-    if (_cheatProcess)
-    {
-        _cheatProcess->AddCheatOption(raw);
-    }
-
-    // Регистрируем обработчик переключения
-    RegisterToggleHandler(id, raw);
-
-    return true;
 }
 
-void CheatOptionManager::RegisterToggleHandler(CheatOptionDefinitions::OptionID id, CheatOption* option)
+void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition, CheatOption* option)
 {
-    const auto& definition = CheatOptionDefinitions::GetOptionById(id);
-    std::string optionName = Utils::WStringToUtf8(definition.name);
+    const std::string optionName = Utils::WStringToUtf8(definition.name);
 
-    _toggleHandlers[optionName] = [this, definition, option](bool enabled, DWORD processId)
+    _toggleHandlers[optionName] = [definition, option](bool enabled, DWORD processId)
         {
             if (enabled)
             {
@@ -68,7 +57,7 @@ void CheatOptionManager::RegisterToggleHandler(CheatOptionDefinitions::OptionID 
 
                 if (definition.autoDisable)
                 {
-                    std::string toggleId = "##toggle_" + Utils::WStringToUtf8(definition.name);
+                    const std::string toggleId = "##toggle_" + Utils::WStringToUtf8(definition.name);
                     Utils::DelayedToggleOff(
                         Drawing::GetToggleStates(),
                         toggleId,
@@ -99,9 +88,10 @@ void CheatOptionManager::RegisterToggleHandler(CheatOptionDefinitions::OptionID 
 std::vector<CheatOption*> CheatOptionManager::GetAllOptions() const
 {
     std::vector<CheatOption*> result;
-    for (auto* option : _orderedOptions)
+    result.reserve(_options.size());
+    for (const auto& option : _options)
     {
-        if (option != nullptr) result.push_back(option);
+        if (option) result.push_back(option.get());
     }
     return result;
 }
@@ -109,6 +99,7 @@ std::vector<CheatOption*> CheatOptionManager::GetAllOptions() const
 void CheatOptionManager::HandleToggle(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState)
 {
     if (currentState == previousState) return;
+
     auto it = _toggleHandlers.find(optionName);
     if (it != _toggleHandlers.end())
     {
@@ -116,9 +107,8 @@ void CheatOptionManager::HandleToggle(const std::string& toggleId, const std::st
     }
 }
 
-CheatOption* CheatOptionManager::GetOption(CheatOptionDefinitions::OptionID id) const
+CheatOption* CheatOptionManager::GetOption(std::size_t index) const
 {
-    auto it = _optionsOwner.find(id);
-    if (it == _optionsOwner.end()) return nullptr;
-    return it->second.get();
+    if (index >= _options.size()) return nullptr;
+    return _options[index].get();
 }

@@ -165,8 +165,10 @@
     <ClCompile Include="patches/CavePatch.cpp" />
     <ClCompile Include="core/Cheat.cpp" />
     <ClCompile Include="cheats/CheatOption.cpp" />
-    <ClCompile Include="cheats/CheatOptionFactory.cpp" />
     <ClCompile Include="cheats/CheatOptionManager.cpp" />
+    <ClCompile Include="cheats/CheatRegistry.cpp" />
+    <ClCompile Include="cheats/CheatFactory.cpp" />
+    <ClCompile Include="cheats/registry/GameCheats.cpp" />
     <ClCompile Include="ui/Drawing.cpp" />
     <ClCompile Include="ui/UI.cpp" />
     <ClCompile Include="ui/UIControls.cpp" />
@@ -176,17 +178,18 @@
     <ClCompile Include="core/MemoryAccess.cpp" />
     <ClCompile Include="patches/NopPatch.cpp" />
     <ClCompile Include="tests/Errors_test.cpp" />
+    <ClCompile Include="tests/CheatRegistry_test.cpp" />
     <ClCompile Include="patches/WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="patches/CavePatch.h" />
     <ClInclude Include="core/Cheat.h" />
     <ClInclude Include="cheats/CheatOption.h" />
-    <ClInclude Include="cheats/CheatOptionDefinitions.h" />
-    <ClInclude Include="cheats/CheatOptionFactory.h" />
     <ClInclude Include="cheats/CheatOptionManager.h" />
+    <ClInclude Include="cheats/CheatDefinition.h" />
+    <ClInclude Include="cheats/CheatRegistry.h" />
+    <ClInclude Include="cheats/CheatFactory.h" />
     <ClInclude Include="ui/Drawing.h" />
-    <ClInclude Include="platform/EnumClassHash.h" />
     <ClInclude Include="ui/ImGuiConsole.h" />
     <ClInclude Include="ui/ImGuiThemes.h" />
     <ClInclude Include="app/main.h" />

@@ -13,6 +13,9 @@
     <Filter Include="cheats">
       <UniqueIdentifier>{a1000000-0000-4000-8000-000000000004}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cheats\registry">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000009}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ui">
       <UniqueIdentifier>{a1000000-0000-4000-8000-000000000005}</UniqueIdentifier>
     </Filter>
@@ -54,11 +57,17 @@
     <ClCompile Include="cheats/CheatOption.cpp">
       <Filter>cheats</Filter>
     </ClCompile>
-    <ClCompile Include="cheats/CheatOptionFactory.cpp">
-      <Filter>cheats</Filter>
-    </ClCompile>
     <ClCompile Include="cheats/CheatOptionManager.cpp">
       <Filter>cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="cheats/CheatRegistry.cpp">
+      <Filter>cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="cheats/CheatFactory.cpp">
+      <Filter>cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="cheats/registry/GameCheats.cpp">
+      <Filter>cheats\registry</Filter>
     </ClCompile>
     <ClCompile Include="ui/UI.cpp">
       <Filter>ui</Filter>
@@ -73,6 +82,9 @@
       <Filter>platform</Filter>
     </ClCompile>
     <ClCompile Include="tests/Errors_test.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tests/CheatRegistry_test.cpp">
       <Filter>tests</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,13 +119,16 @@
     <ClInclude Include="cheats/CheatOption.h">
       <Filter>cheats</Filter>
     </ClInclude>
-    <ClInclude Include="cheats/CheatOptionDefinitions.h">
-      <Filter>cheats</Filter>
-    </ClInclude>
-    <ClInclude Include="cheats/CheatOptionFactory.h">
-      <Filter>cheats</Filter>
-    </ClInclude>
     <ClInclude Include="cheats/CheatOptionManager.h">
+      <Filter>cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="cheats/CheatDefinition.h">
+      <Filter>cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="cheats/CheatRegistry.h">
+      <Filter>cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="cheats/CheatFactory.h">
       <Filter>cheats</Filter>
     </ClInclude>
     <ClInclude Include="ui/UI.h">
@@ -135,9 +150,6 @@
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="platform/VKeys.h">
-      <Filter>platform</Filter>
-    </ClInclude>
-    <ClInclude Include="platform/EnumClassHash.h">
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="third_party/nmd_assembly.h">
