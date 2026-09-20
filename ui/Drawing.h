@@ -10,15 +10,14 @@
 #include <functional>
 #include "d3d9.h"
 #include "d3d11.h"
-#include "Cheat.h"
-#include "ImGuiConsole.h"
+#include "core/Cheat.h"
+#include "ui/ImGuiConsole.h"
 
 constexpr auto WIDTH = 500;
 constexpr auto HEIGHT = 555;
 
-// Переменные для управления уведомлениями
-static std::string popupMessage = "";
-static std::string popupType = ""; // "Error" или "Success"
+// Состояние уведомлений живёт в Drawing.cpp (раньше было header-статиками,
+// из-за чего каждый .cpp получал собственную копию).
 extern bool showConsole;
 
 struct FunctionOffset

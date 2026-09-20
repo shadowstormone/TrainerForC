@@ -2,8 +2,8 @@
 #include <Windows.h>
 #include <vector>
 #include <memory>
-#include "Memory_Functions.h"
-#include "Patch.h"
+#include "core/Memory_Functions.h"
+#include "patches/Patch.h"
 
 class WriteAddressPatch : public Patch
 {

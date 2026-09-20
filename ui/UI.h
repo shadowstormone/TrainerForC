@@ -1,6 +1,6 @@
 #pragma once
-#include "Drawing.h"
-#include "Cheat.h"
+#include "ui/Drawing.h"
+#include "core/Cheat.h"
 
 #pragma comment(lib, "d3d11.lib")
 

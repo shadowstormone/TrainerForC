@@ -1,7 +1,7 @@
 #include <thread>
 #include <chrono>
 #include <Windows.h>
-#include "Utils.h"
+#include "platform/Utils.h"
 #include <codecvt>
 
 std::string Utils::WStringToUtf8(const std::wstring& wstr)

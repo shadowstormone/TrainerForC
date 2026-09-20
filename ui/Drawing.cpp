@@ -1,10 +1,10 @@
 #include <climits>  // Для INT_MAX
-#include "Drawing.h"
-#include "WriteAddressPatch.h"
+#include "ui/Drawing.h"
+#include "patches/WriteAddressPatch.h"
 #include "resource.h"
-#include "Utils.h"
-#include "UIControls.h"
-#include "VKeys.h"
+#include "platform/Utils.h"
+#include "ui/UIControls.h"
+#include "platform/VKeys.h"
 
 // ---------------- Static Member Initialization ----------------
 LPCSTR Drawing::lpWindowName = "Test Trainer (+1)";
@@ -20,6 +20,13 @@ std::map<std::string, int> Drawing::inputValues = {};
 std::map<std::string, bool> Drawing::inputFieldFocused = {};
 
 // ---------------- Global Variables ----------------
+namespace
+{
+    // Состояние всплывающих уведомлений — только для этого файла.
+    std::string popupMessage;
+    std::string popupType; // "Error" или "Success"
+}
+
 bool showConsole = false;
 bool isKeyHold = false;
 std::vector<CheatOption*> existingVector;

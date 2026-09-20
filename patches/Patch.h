@@ -4,7 +4,7 @@
 #include <string>
 #include <iterator>
 #include <cstdint>
-#include "Memory_Functions.h"
+#include "core/Memory_Functions.h"
 
 class CheatOption;	// Предварительное объявление класса CheatOption
 class Patch		// Предварительное объявление класса Patch

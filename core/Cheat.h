@@ -4,8 +4,8 @@
 #include <string>
 #include <map>
 #include <thread>
-#include "CheatOption.h"
-#include "Memory_Functions.h"
+#include "cheats/CheatOption.h"
+#include "core/Memory_Functions.h"
 
 class CheatOption; // Предварительное объявление класса CheatOption
 

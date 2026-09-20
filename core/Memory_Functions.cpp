@@ -1,4 +1,4 @@
-#include "Memory_Functions.h"
+#include "core/Memory_Functions.h"
 
 int GetProcessIdByWindowName(LPCWSTR className, LPCWSTR windowName)
 {

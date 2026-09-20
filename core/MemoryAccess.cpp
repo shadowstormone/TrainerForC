@@ -1,4 +1,4 @@
-#include "MemoryAccess.h"
+#include "core/MemoryAccess.h"
 
 MemoryAccess::MemoryAccess(DWORD pid) : m_pid(pid)
 {

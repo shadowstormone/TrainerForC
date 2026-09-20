@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 #include <string>
-#include "Memory_Functions.h"
-#include "CavePatch.h"
+#include "core/Memory_Functions.h"
+#include "patches/CavePatch.h"
 
 // Вспомогательная функция для преобразования std::string в std::wstring
 std::wstring StringToWString(const std::string& str)

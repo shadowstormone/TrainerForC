@@ -1,12 +1,12 @@
-#include "CavePatch.h"
-#include "CheatOption.h"
-#include "Memory_Functions.h"
+#include "patches/CavePatch.h"
+#include "cheats/CheatOption.h"
+#include "core/Memory_Functions.h"
 #include <stdexcept>
 #include <cstring>
 
 #define NMD_ASSEMBLY_IMPLEMENTATION
-#include "nmd_assembly.h"
-#include "ImGuiConsole.h"
+#include "third_party/nmd_assembly.h"
+#include "ui/ImGuiConsole.h"
 
 namespace
 {

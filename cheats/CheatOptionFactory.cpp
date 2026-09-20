@@ -1,6 +1,6 @@
-#include "CheatOptionFactory.h"
-#include "CheatOption.h"
-#include "Utils.h" // Utf8ToWString
+#include "cheats/CheatOptionFactory.h"
+#include "cheats/CheatOption.h"
+#include "platform/Utils.h" // Utf8ToWString
 #include <variant>
 
 using namespace CheatOptionDefinitions;

@@ -2,13 +2,13 @@
 #include <atomic>
 #include <windows.h>
 #include <mmsystem.h>
-#include "Memory_Functions.h"
-#include "MemoryAccess.h"
-#include "CheatOption.h"
-#include "NopPatch.h"
-#include "CavePatch.h"
+#include "core/Memory_Functions.h"
+#include "core/MemoryAccess.h"
+#include "cheats/CheatOption.h"
+#include "patches/NopPatch.h"
+#include "patches/CavePatch.h"
 #include "resource.h"
-#include "WriteAddressPatch.h"
+#include "patches/WriteAddressPatch.h"
 
 #pragma comment(lib, "Winmm.lib")
 

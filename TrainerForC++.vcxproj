@@ -81,7 +81,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -100,7 +100,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -121,7 +121,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -144,7 +144,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -162,45 +162,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CavePatch.cpp" />
-    <ClCompile Include="Cheat.cpp" />
-    <ClCompile Include="CheatOption.cpp" />
-    <ClCompile Include="CheatOptionFactory.cpp" />
-    <ClCompile Include="Drawing.cpp" />
-    <ClCompile Include="UI.cpp" />
-    <ClCompile Include="UIControls.cpp" />
-    <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="Utils.h" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Memory_Functions.cpp" />
-    <ClCompile Include="MemoryAccess.cpp" />
-    <ClCompile Include="NopPatch.cpp" />
-    <ClCompile Include="Errors_test.cpp" />
-    <ClCompile Include="WriteAddressPatch.cpp" />
+    <ClCompile Include="patches/CavePatch.cpp" />
+    <ClCompile Include="core/Cheat.cpp" />
+    <ClCompile Include="cheats/CheatOption.cpp" />
+    <ClCompile Include="cheats/CheatOptionFactory.cpp" />
+    <ClCompile Include="cheats/CheatOptionManager.cpp" />
+    <ClCompile Include="ui/Drawing.cpp" />
+    <ClCompile Include="ui/UI.cpp" />
+    <ClCompile Include="ui/UIControls.cpp" />
+    <ClCompile Include="platform/Utils.cpp" />
+    <ClCompile Include="app/main.cpp" />
+    <ClCompile Include="core/Memory_Functions.cpp" />
+    <ClCompile Include="core/MemoryAccess.cpp" />
+    <ClCompile Include="patches/NopPatch.cpp" />
+    <ClCompile Include="tests/Errors_test.cpp" />
+    <ClCompile Include="patches/WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CavePatch.h" />
-    <ClInclude Include="Cheat.h" />
-    <ClInclude Include="CheatOption.h" />
-    <ClInclude Include="CheatOptionDefinitions.h" />
-    <ClInclude Include="CheatOptionFactory.h" />
-    <ClInclude Include="CheatOptionManager.h" />
-    <ClInclude Include="Drawing.h" />
-    <ClInclude Include="EnumClassHash.h" />
-    <ClInclude Include="ImGuiConsole.h" />
-    <ClInclude Include="ImGuiThemes.h" />
-    <ClInclude Include="main.h" />
-    <ClInclude Include="Memory_Functions.h" />
-    <ClInclude Include="MemoryAccess.h" />
-    <ClInclude Include="nmd_assembly.h" />
-    <ClInclude Include="NopPatch.h" />
-    <ClInclude Include="Patch.h" />
-    <ClInclude Include="PatchLibrary.h" />
+    <ClInclude Include="patches/CavePatch.h" />
+    <ClInclude Include="core/Cheat.h" />
+    <ClInclude Include="cheats/CheatOption.h" />
+    <ClInclude Include="cheats/CheatOptionDefinitions.h" />
+    <ClInclude Include="cheats/CheatOptionFactory.h" />
+    <ClInclude Include="cheats/CheatOptionManager.h" />
+    <ClInclude Include="ui/Drawing.h" />
+    <ClInclude Include="platform/EnumClassHash.h" />
+    <ClInclude Include="ui/ImGuiConsole.h" />
+    <ClInclude Include="ui/ImGuiThemes.h" />
+    <ClInclude Include="app/main.h" />
+    <ClInclude Include="core/Memory_Functions.h" />
+    <ClInclude Include="core/MemoryAccess.h" />
+    <ClInclude Include="third_party/nmd_assembly.h" />
+    <ClInclude Include="patches/NopPatch.h" />
+    <ClInclude Include="patches/Patch.h" />
+    <ClInclude Include="patches/PatchLibrary.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="UI.h" />
-    <ClInclude Include="UIControls.h" />
-    <ClInclude Include="VKeys.h" />
-    <ClInclude Include="WriteAddressPatch.h" />
+    <ClInclude Include="ui/UI.h" />
+    <ClInclude Include="platform/Utils.h" />
+    <ClInclude Include="ui/UIControls.h" />
+    <ClInclude Include="platform/VKeys.h" />
+    <ClInclude Include="patches/WriteAddressPatch.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />

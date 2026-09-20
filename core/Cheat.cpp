@@ -1,5 +1,5 @@
-#include "Cheat.h"
-#include "Memory_Functions.h"
+#include "core/Cheat.h"
+#include "core/Memory_Functions.h"
 
 void Cheat::ProcessorOptions()
 {

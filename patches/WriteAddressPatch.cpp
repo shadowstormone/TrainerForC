@@ -1,6 +1,6 @@
-#include "WriteAddressPatch.h"
-#include "CheatOption.h"
-#include "ImGuiConsole.h"
+#include "patches/WriteAddressPatch.h"
+#include "cheats/CheatOption.h"
+#include "ui/ImGuiConsole.h"
 #include <iostream>
 #include <format>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Patch.h"
+#include "patches/Patch.h"
 
 class NopPatch : public Patch
 {

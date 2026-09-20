@@ -1,9 +1,9 @@
-#include "main.h"
-#include "UI.h"
-#include "CheatOptionDefinitions.h"
-#include "CheatOptionManager.h"
-#include "CheatOptionFactory.h"
-#include "ImGuiConsole.h"
+#include "app/main.h"
+#include "ui/UI.h"
+#include "cheats/CheatOptionDefinitions.h"
+#include "cheats/CheatOptionManager.h"
+#include "cheats/CheatOptionFactory.h"
+#include "ui/ImGuiConsole.h"
 
 std::unordered_map<std::string, FunctionOffset> offsets = {
 	{"Set HP", {"Set HP", {0x00240600, 0x4B4}}},

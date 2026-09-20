@@ -1,147 +1,149 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Исходные файлы">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="app">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Файлы заголовков">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="core">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Файлы заголовков\Renderer">
-      <UniqueIdentifier>{691a7718-d09e-43fb-ae8a-d0c856a6cb4f}</UniqueIdentifier>
+    <Filter Include="patches">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Исходные файлы\Renderer">
-      <UniqueIdentifier>{03141567-3842-4777-bbf7-ced33cc1856d}</UniqueIdentifier>
+    <Filter Include="cheats">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third_party">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests">
+      <UniqueIdentifier>{a1000000-0000-4000-8000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="ResourceExtern">
       <UniqueIdentifier>{c69663be-056c-41a5-b6e0-9c46a023cc7d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Google Test">
-      <UniqueIdentifier>{145eac6d-1c0d-49da-a48c-a122ffd659df}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Файлы заголовков\RendererV2">
-      <UniqueIdentifier>{cc9d1b17-c8fb-4920-a15c-3c215fc32c0a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Исходные файлы\Rendererv2">
-      <UniqueIdentifier>{1d296029-30f2-44ad-a529-24f7ae75b589}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Файлы заголовков\ImGuiRenderer">
-      <UniqueIdentifier>{533a6535-6d34-4ccc-92b3-55f07008fd31}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Исходные файлы\ImGuiRenderer">
-      <UniqueIdentifier>{60e62dc6-2216-443b-98dc-250b081ce5e2}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="app/main.cpp">
+      <Filter>app</Filter>
     </ClCompile>
-    <ClCompile Include="Cheat.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="core/Cheat.cpp">
+      <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="CheatOption.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="core/MemoryAccess.cpp">
+      <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="NopPatch.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="core/Memory_Functions.cpp">
+      <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="CavePatch.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="patches/CavePatch.cpp">
+      <Filter>patches</Filter>
     </ClCompile>
-    <ClCompile Include="Memory_Functions.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="patches/NopPatch.cpp">
+      <Filter>patches</Filter>
     </ClCompile>
-    <ClCompile Include="Errors_test.cpp">
-      <Filter>Google Test</Filter>
+    <ClCompile Include="patches/WriteAddressPatch.cpp">
+      <Filter>patches</Filter>
     </ClCompile>
-    <ClCompile Include="WriteAddressPatch.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="cheats/CheatOption.cpp">
+      <Filter>cheats</Filter>
     </ClCompile>
-    <ClCompile Include="Utils.cpp">
-      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    <ClCompile Include="cheats/CheatOptionFactory.cpp">
+      <Filter>cheats</Filter>
     </ClCompile>
-    <ClCompile Include="Utils.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    <ClCompile Include="cheats/CheatOptionManager.cpp">
+      <Filter>cheats</Filter>
     </ClCompile>
-    <ClCompile Include="UIControls.cpp">
-      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    <ClCompile Include="ui/UI.cpp">
+      <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="CheatOptionFactory.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="ui/Drawing.cpp">
+      <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="Drawing.cpp">
-      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    <ClCompile Include="ui/UIControls.cpp">
+      <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
-      <Filter>Исходные файлы\ImGuiRenderer</Filter>
+    <ClCompile Include="platform/Utils.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="tests/Errors_test.cpp">
+      <Filter>tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Cheat.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="app/main.h">
+      <Filter>app</Filter>
     </ClInclude>
-    <ClInclude Include="CheatOption.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="core/Cheat.h">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="Memory_Functions.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="core/MemoryAccess.h">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="Patch.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="core/Memory_Functions.h">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="NopPatch.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="patches/Patch.h">
+      <Filter>patches</Filter>
     </ClInclude>
-    <ClInclude Include="main.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="patches/CavePatch.h">
+      <Filter>patches</Filter>
     </ClInclude>
-    <ClInclude Include="CavePatch.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="patches/NopPatch.h">
+      <Filter>patches</Filter>
     </ClInclude>
-    <ClInclude Include="nmd_assembly.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="patches/WriteAddressPatch.h">
+      <Filter>patches</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="patches/PatchLibrary.h">
+      <Filter>patches</Filter>
     </ClInclude>
-    <ClInclude Include="WriteAddressPatch.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="cheats/CheatOption.h">
+      <Filter>cheats</Filter>
     </ClInclude>
-    <ClInclude Include="ImGuiThemes.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="cheats/CheatOptionDefinitions.h">
+      <Filter>cheats</Filter>
     </ClInclude>
-    <ClInclude Include="ImGuiConsole.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="cheats/CheatOptionFactory.h">
+      <Filter>cheats</Filter>
     </ClInclude>
-    <ClInclude Include="UIControls.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    <ClInclude Include="cheats/CheatOptionManager.h">
+      <Filter>cheats</Filter>
     </ClInclude>
-    <ClInclude Include="VKeys.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="ui/UI.h">
+      <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="CheatOptionDefinitions.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="ui/Drawing.h">
+      <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="CheatOptionManager.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="ui/UIControls.h">
+      <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="CheatOptionFactory.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="ui/ImGuiConsole.h">
+      <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="EnumClassHash.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="ui/ImGuiThemes.h">
+      <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="PatchLibrary.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="platform/Utils.h">
+      <Filter>platform</Filter>
     </ClInclude>
-    <ClInclude Include="Drawing.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    <ClInclude Include="platform/VKeys.h">
+      <Filter>platform</Filter>
     </ClInclude>
-    <ClInclude Include="UI.h">
-      <Filter>Файлы заголовков\ImGuiRenderer</Filter>
+    <ClInclude Include="platform/EnumClassHash.h">
+      <Filter>platform</Filter>
     </ClInclude>
+    <ClInclude Include="third_party/nmd_assembly.h">
+      <Filter>third_party</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav">

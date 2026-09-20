@@ -7,8 +7,8 @@
 #include <string_view>
 #include <cstddef>
 
-#include "VKeys.h"
-#include "PatchLibrary.h"
+#include "platform/VKeys.h"
+#include "patches/PatchLibrary.h"
 
 namespace CheatOptionDefinitions
 {

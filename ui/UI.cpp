@@ -6,9 +6,9 @@
 
 #define NOMINMAX
 #include "resource.h"
-#include "UI.h"
-#include "ImGuiThemes.h"
-#include "ImGuiConsole.h"
+#include "ui/UI.h"
+#include "ui/ImGuiThemes.h"
+#include "ui/ImGuiConsole.h"
 #include <imgui_internal.h>
 #include <shlobj.h>
 #include <KnownFolders.h>

@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "Patch.h"   // нужен полный тип для unique_ptr<Patch>
-#include "Cheat.h"   // нужен для Cheat* в параметрах методов
+#include "patches/Patch.h"   // нужен полный тип для unique_ptr<Patch>
+#include "core/Cheat.h"   // нужен для Cheat* в параметрах методов
 
 class Cheat;  // предварительное объявление (на случай кольцевого include)
 
