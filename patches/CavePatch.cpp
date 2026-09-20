@@ -6,7 +6,6 @@
 
 #define NMD_ASSEMBLY_IMPLEMENTATION
 #include "third_party/nmd_assembly.h"
-#include "ui/ImGuiConsole.h"
 
 namespace
 {
