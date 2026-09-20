@@ -5,8 +5,7 @@
 #include "cheats/CheatOption.h"
 #include "cheats/CheatRegistry.h"
 #include "core/Cheat.h"
-#include "platform/Utils.h" // WStringToUtf8, DelayedToggleOff
-#include "ui/Drawing.h"
+#include "platform/Utils.h" // WStringToUtf8, RunAfter
 #include "ui/ImGuiConsole.h"
 
 CheatOptionManager::CheatOptionManager(Cheat* cheatProcess)
@@ -49,21 +48,17 @@ void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition
 
     _toggleHandlers[optionName] = [definition, option](bool enabled, DWORD processId)
         {
+            const std::string name = Utils::WStringToUtf8(definition.name);
+
             if (enabled)
             {
-                const std::string name = Utils::WStringToUtf8(definition.name);
-
                 if (!option->Enable(processId))
                 {
-                    // Патч не применился: не оставляем опцию "включённой"
-                    // и возвращаем переключатель в UI обратно.
+                    // Патч не применился — опция остаётся выключенной.
+                    // Лезть в UI не нужно: переключатели рисуются по
+                    // IsEnabled(), поэтому интерфейс сам покажет верное
+                    // состояние на следующем кадре.
                     option->IsEnabled(false);
-
-                    auto& toggleStates = Drawing::GetToggleStates();
-                    const std::string id = "##toggle_" + name;
-                    auto it = toggleStates.find(id);
-                    if (it != toggleStates.end()) it->second = false;
-
                     gConsole->addLog("ERROR", "Не удалось применить " + name + " — опция выключена");
                     return;
                 }
@@ -73,28 +68,18 @@ void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition
 
                 if (definition.autoDisable)
                 {
-                    const std::string toggleId = "##toggle_" + Utils::WStringToUtf8(definition.name);
-                    Utils::DelayedToggleOff(
-                        Drawing::GetToggleStates(),
-                        toggleId,
-                        definition.autoDisableDelay,
-                        [definition, toggleId, option, processId]()
+                    Utils::RunAfter(definition.autoDisableDelay,
+                        [option, processId, name]()
                         {
                             option->Disable(processId);
                             option->IsEnabled(false);
-
-                            auto& toggleStates = Drawing::GetToggleStates();
-                            if (toggleStates.find(toggleId) != toggleStates.end())
-                            {
-                                toggleStates[toggleId] = false;
-                            }
-                            gConsole->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " была временной и выключена автоматически");
+                            gConsole->addLog("INFO", "Опция " + name + " была временной и выключена автоматически");
                         });
                 }
             }
             else
             {
-                gConsole->addLog("INFO", "Опция " + Utils::WStringToUtf8(definition.name) + " выключена");
+                gConsole->addLog("INFO", "Опция " + name + " выключена");
                 option->Disable(processId);
                 option->IsEnabled(false);
             }

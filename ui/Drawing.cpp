@@ -17,7 +17,6 @@ Cheat* Drawing::_cheatProcGame = nullptr;
 
 std::unordered_map<std::string, FunctionOffset> Drawing::OffsetFunctions = {};
 std::vector<uintptr_t> Drawing::Offsets = {};
-std::unordered_map<std::string, bool> Drawing::toggleStatesFunction = {};
 std::map<std::string, int> Drawing::inputValues = {};
 std::map<std::string, bool> Drawing::inputFieldFocused = {};
 
@@ -237,18 +236,17 @@ void Drawing::RenderToggles()
             ImGui::BeginDisabled();
         }
 
-        // Проверка на существование состояния в карте
-        if (toggleStatesFunction.find(toggleId) == toggleStatesFunction.end())
-        {
-            toggleStatesFunction[toggleId] = option->IsEnabled(); // Инициализируем состояние переключателя
-        }
+        // Источник истины — сама опция, а не отдельная карта в UI.
+        // Раньше состояние дублировалось, из-за чего менеджеру приходилось
+        // писать в карту UI (в том числе из другого потока).
+        const bool previousState = option->IsEnabled();
+        bool state = previousState;
 
-        // Сохраняем предыдущее состояние переключателя
-        bool previousState = toggleStatesFunction[toggleId];
-
-        if (UIControls::AnimatedToggleSwitch(toggleId.c_str(), &toggleStatesFunction[toggleId]))
+        // Анимация переключателя хранится внутри виджета по его id,
+        // поэтому локальной переменной здесь достаточно.
+        if (UIControls::AnimatedToggleSwitch(toggleId.c_str(), &state))
         {
-            HandleToggleInteraction(toggleId, name, toggleStatesFunction[toggleId], previousState);
+            HandleToggleInteraction(toggleId, name, state, previousState);
         }
 
         if (!isGameRunning)

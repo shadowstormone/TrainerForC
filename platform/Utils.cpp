@@ -118,12 +118,13 @@ ImFont* Utils::LoadFontFromResource(ImGuiIO& io, UINT resourceID, float fontSize
 }
 
 // std::function<void()> onFinish лямбда-обработчик завершения
-void Utils::DelayedToggleOff(std::unordered_map<std::string, bool>& toggleStates, const std::string& toggleId, int delayMs, std::function<void()> onFinish)
+void Utils::RunAfter(int delayMs, std::function<void()> action)
 {
-    std::thread([&toggleStates, toggleId, delayMs, onFinish]()
+    if (!action) return;
+
+    std::thread([delayMs, action = std::move(action)]()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-            toggleStates[toggleId] = false;
-            if (onFinish) onFinish();
+            action();
         }).detach();
 }

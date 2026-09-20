@@ -36,9 +36,6 @@ private:
     static Cheat* _cheatProcGame;
     static std::function<void(const std::string&, const std::string&, bool, bool)> _toggleHandler;
 
-    // Добавим карту для хранения состояний переключателей
-    static std::unordered_map<std::string, bool> toggleStatesFunction;
-
     static std::vector<uintptr_t> Offsets;
     static std::unordered_map<std::string, FunctionOffset> OffsetFunctions; // Ассоциация кнопок и офсетов
     static std::map<std::string, int> inputValues;
@@ -71,11 +68,6 @@ public:
     static void Initialize(Cheat* ClassCheatProcGame, const std::vector<uintptr_t>& offsets);
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets);
     static void Initialize(Cheat* ClassCheatProcGame, const std::unordered_map<std::string, FunctionOffset>& offsets, const std::vector<CheatOption*>& cheatOptions);
-
-    static std::unordered_map<std::string, bool>& GetToggleStates()
-    {
-        return toggleStatesFunction;
-    }
 
     // Установите обратный вызов обработчика переключения
     static void SetToggleHandler(std::function<void(const std::string&, const std::string&, bool, bool)> handler)

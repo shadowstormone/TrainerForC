@@ -35,5 +35,9 @@ namespace Utils
     ImFont* LoadFontFromResource(ImGuiIO& io, UINT resourceID, float fontSize, const ImFontConfig* fontConfig = nullptr, const ImWchar* glyphRanges = nullptr);
 
     //void TemporaryToggleOff(std::unordered_map<std::string, bool>& toggleMap, const std::string& toggleId,int delayMs = 250, std::function<void()> onFinish);
-    void DelayedToggleOff(std::unordered_map<std::string, bool>& toggleStates, const std::string& toggleId, int delayMs, std::function<void()> onFinish);
+    // Выполнить действие через delayMs миллисекунд.
+    // Раньше здесь был DelayedToggleOff, который захватывал карту состояний
+    // UI по ссылке и писал в неё из отдельного потока, пока UI-поток читал
+    // и вставлял в ту же unordered_map каждый кадр — это гонка и UB.
+    void RunAfter(int delayMs, std::function<void()> action);
 }
