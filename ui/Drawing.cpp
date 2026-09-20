@@ -36,6 +36,11 @@ namespace
     // До первого кадра — "бесконечность", чтобы вся полоса считалась
     // заголовком и окно таскалось сразу, а не со второго кадра.
     float g_titleButtonsMinX = FLT_MAX;
+
+    // Есть ли под курсором интерактивный элемент ImGui (или открыт popup).
+    // Обновляется в конце кадра; хиттест по нему решает, тащить окно
+    // или отдать клик виджету.
+    bool g_pointerOverWidget = false;
 }
 
 void Drawing::SetWindowHandle(HWND hWnd)
@@ -45,10 +50,21 @@ void Drawing::SetWindowHandle(HWND hWnd)
 
 bool Drawing::IsCaptionPoint(POINT clientPoint)
 {
-    if (clientPoint.y < 0 || clientPoint.y >= static_cast<LONG>(TITLE_BAR_HEIGHT)) return false;
+    if (clientPoint.y < 0) return false;
 
-    // Над кнопками — не заголовок, иначе клики уйдут в перетаскивание.
-    return static_cast<float>(clientPoint.x) < g_titleButtonsMinX;
+    // Кнопки заголовка (свернуть/закрыть) — обычные клики.
+    if (clientPoint.y < static_cast<LONG>(TITLE_BAR_HEIGHT)
+        && static_cast<float>(clientPoint.x) >= g_titleButtonsMinX)
+    {
+        return false;
+    }
+
+    // Под курсором переключатель, поле ввода или кнопка (или открыт popup) —
+    // отдаём клик интерфейсу, иначе по виджетам нельзя будет попасть.
+    if (g_pointerOverWidget) return false;
+
+    // Всё остальное окно тащится, а не только полоса заголовка.
+    return true;
 }
 
 bool showConsole = false;
@@ -507,6 +523,11 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
         RenderProcessInfo();
 
         HandlePopupsWithIcons(successIcon, errorIcon);
+
+        // Для хиттеста окна: занят ли курсор интерфейсом прямо сейчас.
+        g_pointerOverWidget = ImGui::IsAnyItemHovered()
+                           || ImGui::IsAnyItemActive()
+                           || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel);
 
         ImGui::End();
     }
