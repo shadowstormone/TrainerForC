@@ -363,12 +363,11 @@ private:
      */
     static void ApplyFontToContext(ImFont* font, ImGuiIO& io)
     {
-        if (auto* context = ImGui::GetCurrentContext())
-        {
-            context->Font = font;
-            context->FontSize = font->FontSize;
-            context->FontBaseSize = io.FontGlobalScale * font->FontSize;
-        }
+        // ImGui 1.92: шрифты стали масштабируемыми, поля ImFont::FontSize и
+        // ImGuiContext::FontBaseSize удалены. Шрифт по умолчанию задаётся через
+        // io.FontDefault (см. SetupFont) и применяется ImGui автоматически.
+        (void)font;
+        (void)io;
     }
 };
 
@@ -719,16 +718,9 @@ void UI::Render()
 		ImGui_ImplWin32_Init(hwnd); // Инициализация ImGui для Win32
 		ImGui_ImplDX11_Init(pd3dDevice, pd3dDeviceContext); // Инициализация ImGui для DirectX 11
 
-        // Принудительное обновление контекста шрифта
-        if (font && io.FontDefault == font)
-        {
-            if (auto* context = ImGui::GetCurrentContext())
-            {
-                context->Font = font;
-                context->FontSize = font->FontSize;
-                context->FontBaseSize = io.FontGlobalScale * font->FontSize;
-            }
-        }
+        // ImGui 1.92: шрифт по умолчанию задаётся через io.FontDefault в SetupFont;
+        // ручное обновление контекста шрифта больше не требуется.
+        (void)font;
 
 		ImGui_ImplDX11_InvalidateDeviceObjects(); // Очистка объектов устройства ImGui
 		ImGui_ImplDX11_CreateDeviceObjects(); // Создание объектов устройства ImGui
