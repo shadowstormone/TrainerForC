@@ -17,6 +17,11 @@ class MemoryAccess
     HANDLE m_handle = nullptr;
     DWORD  m_pid    = 0;
 
+    // Разрядность цели определяется один раз при открытии процесса.
+    // Она нужна не только для дизассемблера: в 32-битной игре указатели
+    // занимают 4 байта, а не 8, и цепочки оффсетов надо читать именно так.
+    bool m_targetIsX64 = false;
+
 public:
     explicit MemoryAccess(DWORD pid);
     ~MemoryAccess();
@@ -31,7 +36,11 @@ public:
     DWORD  Pid()     const { return m_pid; }
 
     // --- Сведения о процессе ---
-    bool      IsTargetX64() const;
+    bool      IsTargetX64() const { return m_targetIsX64; }
+
+    // Размер указателя В ЦЕЛЕВОМ процессе: 8 для x64, 4 для x86.
+    SIZE_T    PointerSize() const { return m_targetIsX64 ? 8u : 4u; }
+
     DWORD_PTR ProcessBase() const;
     DWORD_PTR ModuleBase(LPCWSTR moduleName) const;
 

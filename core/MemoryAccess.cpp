@@ -6,6 +6,9 @@ MemoryAccess::MemoryAccess(DWORD pid) : m_pid(pid)
 {
     if (pid != 0)
         m_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    if (IsValid())
+        m_targetIsX64 = isTargetX64Process(m_handle);
 }
 
 MemoryAccess::~MemoryAccess()
@@ -19,11 +22,6 @@ MemoryAccess::~MemoryAccess()
 
 // Реализация опирается на функции из Memory_Functions — теперь это
 // внутренняя деталь: наружу торчат только методы MemoryAccess.
-
-bool MemoryAccess::IsTargetX64() const
-{
-    return isTargetX64Process(m_handle);
-}
 
 DWORD_PTR MemoryAccess::ProcessBase() const
 {
@@ -42,7 +40,22 @@ LPVOID MemoryAccess::Read(LPVOID address, SIZE_T amount) const
 
 uintptr_t MemoryAccess::ReadPointer(uintptr_t address) const
 {
-    return ReadMem(m_handle, address);
+    if (!IsValid()) return 0;
+
+    // Читаем РОВНО столько байт, сколько занимает указатель в цели.
+    // Раньше читалось sizeof(uintptr_t) трейнера (8 байт на x64), из-за чего
+    // в 32-битных играх в старшую половину попадал мусор и вся цепочка
+    // оффсетов вела не туда.
+    std::uint64_t raw = 0;
+    SIZE_T read = 0;
+
+    if (!ReadProcessMemory(m_handle, reinterpret_cast<LPCVOID>(address), &raw, PointerSize(), &read)
+        || read != PointerSize())
+    {
+        return 0;
+    }
+
+    return static_cast<uintptr_t>(raw);
 }
 
 int MemoryAccess::Write(LPVOID address, LPVOID source, SIZE_T amount) const
