@@ -494,12 +494,31 @@ void UI::Render()
         Window window;
         D3DContext d3d;
 
-        if (!window.Create(L"Test Trainer", L"Test Trainer", posX, posY, 50, 50))
+        const HINSTANCE instance = GetModuleHandle(nullptr);
+
+        WindowDesc desc;
+        desc.className = L"TestTrainerWindow";
+        desc.title = L"Test Trainer";
+        desc.x = posX;
+        desc.y = posY;
+        desc.width = WIDTH;
+        desc.height = HEIGHT;
+        desc.icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON2));
+        desc.iconSmall = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
+        desc.borderless = true;      // системный заголовок убран, свой рисует ImGui
+        desc.resizable = false;      // фиксированный размер
+        desc.roundedCorners = true;  // скруглённые углы (Windows 11)
+
+        if (!window.Create(desc))
         {
             throw std::runtime_error("Failed to create window");
         }
 
-		MakeWindowTopMostTemporary(window.Handle(), 5000); // Устанавливаем окно поверх других на 5 секунд
+        // Кнопки заголовка управляют этим окном
+        Drawing::SetWindowHandle(window.Handle());
+
+        // Перетаскивание за полосу заголовка; над кнопками — обычные клики
+        window.SetCaptionHitTest([](POINT pt) { return Drawing::IsCaptionPoint(pt); });
 
         if (!d3d.Create(window.Handle()))
         {
@@ -542,23 +561,20 @@ void UI::Render()
                 return false; // остальное — стандартная обработка в Window
             });
 
-        window.Hide();
+        window.Show();
 
         // Инициализация ImGui
 		IMGUI_CHECKVERSION();       // Проверка версии ImGui
 		ImGui::CreateContext();     // Создание контекста ImGui
 		ImGuiIO& io = ImGui::GetIO();       // Получение объекта ImGuiIO
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_ViewportsEnable;
+        // Viewports отключены намеренно: интерфейс живёт в одном настоящем
+        // окне, у которого есть кнопка в таскбаре, своя иконка и нормальный
+        // фокус. Раньше видимым окном был ImGui-viewport (tool window), из-за
+        // чего и понадобились topmost/автоклик/раздача иконок вьюпортам.
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.IniFilename = nullptr;       // Отключаем сохранение настроек в ini-файл
 
 		SetModernDarkStyle(); // Установка стиля интерфейса
-
-        ImGuiStyle& style = ImGui::GetStyle();
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            style.WindowRounding = 4.0f;
-            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-        }
 
 #ifdef _DEBUG
         char message[128];
@@ -623,8 +639,6 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager
     bool done = false;
 
     // Флаги для отслеживания состояния окна
-    static bool windowFullyCreated = false;
-    static bool autoClickPerformed = false;
     static int framesRendered = 0;
 
     while (!done)
@@ -672,34 +686,10 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager
         d3d.BeginFrame(clear_color_with_alpha);
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();
-			ApplyIconsToAllViewports(GetModuleHandle(nullptr));
-            ImGui::RenderPlatformWindowsDefault();
-
-#ifdef _DEBUG
-            if (gConsole && framesRendered < 10)
-            {
-                ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-                int viewport_count = platform_io.Viewports.Size;
-                char debug_msg[128];
-                sprintf_s(debug_msg, "Viewport count: %d", viewport_count);
-                gConsole->addLog("INFO", debug_msg);
-            }
-#endif // _DEBUG
-        }
-
         d3d.Present(1);
 
         // Увеличиваем счетчик кадров
         framesRendered++;
-
-        if (framesRendered >= 3 && !autoClickPerformed)
-        {
-            PerformAutoClick(window.Handle());
-            autoClickPerformed = true;
-        }
 
 #ifndef _WINDLL
         if (!Drawing::isActive())
@@ -707,85 +697,5 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager
             break;
         }
 #endif
-    }
-}
-
-void UI::MakeWindowTopMostTemporary(HWND hWnd, int milliseconds)
-{
-    // Делаем окно всегда поверх всех
-    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-
-    // Запускаем отдельный поток, который через заданное время снимет TopMost
-    std::thread([hWnd, milliseconds]()
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-            SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        }).detach();
-}
-
-void UI::PerformAutoClick(HWND hWnd)
-{
-    if (hWnd != nullptr)
-    {
-        auto displayInfo = DisplayManager::getDisplayInfo();
-        POINT originalPos;
-        GetCursorPos(&originalPos); // Сохраняем текущую позицию
-
-        // Вычисление позиции окна для центрирования на экране
-        const int posX = displayInfo.centerX - WIDTH / 5;
-        const int posY = displayInfo.centerY - HEIGHT / 5;
-
-        // Устанавливаем курсор в центр окна
-        SetCursorPos(posX, posY);
-
-        // Выполняем клик левой кнопкой мыши
-        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-        mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-
-        SetCursorPos(originalPos.x, originalPos.y); // Восстанавливаем позицию
-    }
-}
-
-void UI::ApplyIconsToAllViewports(HINSTANCE hInstance)
-{
-    static HICON hIcon = nullptr;
-    static HICON hIconSm = nullptr;
-
-    if (!hIcon)
-    {
-        hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON2));
-    }
-
-    if (!hIconSm)
-    {
-        hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-    }
-
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-
-    for (ImGuiViewport* viewport : platform_io.Viewports)
-    {
-        if (viewport->PlatformHandle)
-        {
-            HWND hwnd = (HWND)viewport->PlatformHandle;
-            if (hIcon)
-            {
-                SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-            }
-            else if (gConsole)
-            {
-                gConsole->addLog("ERROR", "Failed to load big icon for viewport");
-            }
-            if (hIconSm)
-            {
-                SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
-            }
-            else if (gConsole)
-            {
-                gConsole->addLog("ERROR", "Failed to load small icon for viewport");
-            }
-        }
     }
 }

@@ -25,6 +25,26 @@ namespace
     // Состояние всплывающих уведомлений — только для этого файла.
     std::string popupMessage;
     std::string popupType; // "Error" или "Success"
+
+    // Окно, которым управляют кнопки заголовка.
+    HWND g_windowHandle = nullptr;
+
+    // Левая граница блока кнопок заголовка (в клиентских координатах).
+    // Обновляется каждый кадр в RenderTitleBar и используется хиттестом.
+    float g_titleButtonsMinX = 0.0f;
+}
+
+void Drawing::SetWindowHandle(HWND hWnd)
+{
+    g_windowHandle = hWnd;
+}
+
+bool Drawing::IsCaptionPoint(POINT clientPoint)
+{
+    if (clientPoint.y < 0 || clientPoint.y >= static_cast<LONG>(TITLE_BAR_HEIGHT)) return false;
+
+    // Над кнопками — не заголовок, иначе клики уйдут в перетаскивание.
+    return static_cast<float>(clientPoint.x) < g_titleButtonsMinX;
 }
 
 bool showConsole = false;
@@ -383,6 +403,66 @@ void Drawing::HandleToggleInteraction(const std::string& toggleId, const std::st
     }
 }
 
+void Drawing::RenderTitleBar()
+{
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    const ImVec2 winPos = ImGui::GetWindowPos();
+    const float winWidth = ImGui::GetWindowWidth();
+
+    // Фон полосы во всю ширину (рисуем напрямую, минуя отступы окна)
+    draw->AddRectFilled(winPos,
+                        ImVec2(winPos.x + winWidth, winPos.y + TITLE_BAR_HEIGHT),
+                        IM_COL32(32, 34, 38, 255));
+
+    // Название чита
+    ImGui::SetCursorPos(ImVec2(12.0f, (TITLE_BAR_HEIGHT - ImGui::GetTextLineHeight()) * 0.5f));
+    ImGui::TextUnformatted(lpWindowName);
+
+    const float btnW = 46.0f;
+    const float btnH = TITLE_BAR_HEIGHT;
+    const float minimizeX = winWidth - btnW * 2.0f;
+    const float closeX = winWidth - btnW;
+
+    // Запоминаем для хиттеста: левее этой границы — перетаскивание окна
+    g_titleButtonsMinX = minimizeX;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(255, 255, 255, 40));
+
+    // Свернуть
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 255, 255, 25));
+    ImGui::SetCursorPos(ImVec2(minimizeX, 0.0f));
+    if (ImGui::Button("##minimize", ImVec2(btnW, btnH)) && g_windowHandle)
+    {
+        ::ShowWindow(g_windowHandle, SW_MINIMIZE);
+    }
+    ImGui::PopStyleColor();
+
+    // Закрыть
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(196, 43, 28, 255));
+    ImGui::SetCursorPos(ImVec2(closeX, 0.0f));
+    if (ImGui::Button("##close", ImVec2(btnW, btnH)) && g_windowHandle)
+    {
+        ::PostMessageW(g_windowHandle, WM_CLOSE, 0, 0);
+    }
+    ImGui::PopStyleColor();
+
+    ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar();
+
+    // Значки поверх кнопок
+    const ImU32 glyph = IM_COL32(230, 230, 230, 255);
+    const float cy = winPos.y + btnH * 0.5f;
+
+    const float mcx = winPos.x + minimizeX + btnW * 0.5f;
+    draw->AddLine(ImVec2(mcx - 5.0f, cy), ImVec2(mcx + 5.0f, cy), glyph, 1.0f);
+
+    const float ccx = winPos.x + closeX + btnW * 0.5f;
+    draw->AddLine(ImVec2(ccx - 5.0f, cy - 5.0f), ImVec2(ccx + 5.0f, cy + 5.0f), glyph, 1.2f);
+    draw->AddLine(ImVec2(ccx + 5.0f, cy - 5.0f), ImVec2(ccx - 5.0f, cy + 5.0f), glyph, 1.2f);
+}
+
 void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
 {
 #ifdef _DEBUG
@@ -391,8 +471,26 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
 
     if (isActive() && _cheatProcGame)
     {
-        ImGui::SetNextWindowSize(vWindowSize, ImGuiCond_Once);
-        ImGui::Begin(lpWindowName, &bDraw, WindowFlags);
+        // Одно окно ImGui на весь клиент: размером владеет Win32, поэтому
+        // ручной размер и флаг NoResize больше не нужны.
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+
+        const ImGuiWindowFlags flags =
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavInputs;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::Begin("##MainWindow", nullptr, flags);
+        ImGui::PopStyleVar();
+
+        RenderTitleBar();
+
+        // Содержимое — под полосой заголовка, с обычными отступами окна
+        const ImGuiStyle& style = ImGui::GetStyle();
+        ImGui::SetCursorPos(ImVec2(style.WindowPadding.x, TITLE_BAR_HEIGHT + style.WindowPadding.y));
 
         RenderToggles();
         ImGui::Separator();
@@ -400,10 +498,9 @@ void Drawing::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceVi
         ImGui::Separator();
 
         // Переместить курсор в нижнюю часть окна
-        ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 65); // 53 - расстояние от низа окна(Чем больше цифра тем выше от низа)
+        ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 65); // Чем больше цифра, тем выше от низа
         RenderProcessInfo();
 
-        //DisplayPopup(successIcon, errorIcon);
         HandlePopupsWithIcons(successIcon, errorIcon);
 
         ImGui::End();

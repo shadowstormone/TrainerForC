@@ -18,9 +18,10 @@ class Window;
 class UI
 {
 public:
-    // Window dimensions
-    static constexpr int WIDTH = 800;
-    static constexpr int HEIGHT = 600;
+    // Размер окна. Окно теперь borderless, поэтому клиентская область
+    // равна всему окну и совпадает с размером интерфейса ImGui.
+    static constexpr int WIDTH = 500;
+    static constexpr int HEIGHT = 555;
 
     // Main methods
     static void Render();
@@ -30,9 +31,6 @@ public:
 private:
     // Private helper methods
     static void RenderLoop(Window& window, D3DContext& d3d, ImGuiIO& io, TextureManager& textureManager);
-    static void MakeWindowTopMostTemporary(HWND hWnd, int milliseconds = 2000);
-    static void PerformAutoClick(HWND hWnd);
-    static void ApplyIconsToAllViewports(HINSTANCE hInstance);
 
     // Prevent instantiation
     UI() = delete;

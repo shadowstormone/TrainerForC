@@ -51,7 +51,21 @@ private:
     static void HandleToggleInteraction(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);
     static void HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon);
     static void RenderAuthorLink(const char* text, const char* url, float offsetRight = 1.0f);
+
+    // Своя полоса заголовка (системной у borderless-окна нет)
+    static void RenderTitleBar();
 public:
+    // Высота полосы заголовка, которую рисует ImGui
+    static constexpr float TITLE_BAR_HEIGHT = 32.0f;
+
+    // Окно, которым управляют кнопки заголовка (свернуть/закрыть)
+    static void SetWindowHandle(HWND hWnd);
+
+    // true, если точка (в клиентских координатах) — перетаскиваемая часть
+    // заголовка. Над кнопками возвращает false, иначе клики по ним уйдут
+    // в перетаскивание окна.
+    static bool IsCaptionPoint(POINT clientPoint);
+
     // Методы инициализации
     static void Initialize(Cheat* ClassCheatProcGame);
     static void Initialize(Cheat* ClassCheatProcGame, const std::vector<uintptr_t>& offsets);
