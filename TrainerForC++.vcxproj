@@ -175,6 +175,7 @@
     <ClCompile Include="ui/D3DContext.cpp" />
     <ClCompile Include="ui/UIControls.cpp" />
     <ClCompile Include="platform/Utils.cpp" />
+    <ClCompile Include="platform/AudioService.cpp" />
     <ClCompile Include="app/main.cpp" />
     <ClCompile Include="core/Memory_Functions.cpp" />
     <ClCompile Include="core/MemoryAccess.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="ui/Window.h" />
     <ClInclude Include="ui/D3DContext.h" />
     <ClInclude Include="platform/Utils.h" />
+    <ClInclude Include="platform/AudioService.h" />
     <ClInclude Include="ui/UIControls.h" />
     <ClInclude Include="platform/VKeys.h" />
     <ClInclude Include="patches/WriteAddressPatch.h" />

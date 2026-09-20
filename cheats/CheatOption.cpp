@@ -2,16 +2,14 @@
 #include <atomic>
 #include <exception>
 #include <windows.h>
-#include <mmsystem.h>
 #include "core/Memory_Functions.h"
 #include "core/MemoryAccess.h"
 #include "cheats/CheatOption.h"
 #include "patches/NopPatch.h"
 #include "patches/CavePatch.h"
+#include "platform/AudioService.h"
 #include "resource.h"
 #include "patches/WriteAddressPatch.h"
-
-#pragma comment(lib, "Winmm.lib")
 
 bool CheatOption::Enable(int pid)
 {
@@ -38,7 +36,7 @@ bool CheatOption::Enable(int pid)
 
     if (!applied) return false;
 
-    std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), nullptr, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
+    AudioService::Instance().Play(Sound::CheatEnabled);
     return true;
 }
 
@@ -61,7 +59,7 @@ bool CheatOption::Disable(int pid)
         }
     }
 
-    std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE2), nullptr, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT); }).detach();
+    AudioService::Instance().Play(Sound::CheatDisabled);
     return restored;
 }
 

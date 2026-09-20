@@ -3,6 +3,7 @@
 #include "ui/Drawing.h"
 #include "patches/WriteAddressPatch.h"
 #include "resource.h"
+#include "platform/AudioService.h"
 #include "platform/Utils.h"
 #include "ui/UIControls.h"
 #include "platform/VKeys.h"
@@ -357,7 +358,7 @@ void Drawing::RenderInputFields()
                 LPCWSTR procName = _cheatProcGame->GetProcessName();
                 if (writer.WriteValueMemory(procName, functionOffset.offsets, inputValues[buttonName]))
                 {
-                    std::thread([]() { PlaySound(MAKEINTRESOURCE(IDR_WAVE1), NULL, SND_RESOURCE | SND_ASYNC); }).detach();
+                    AudioService::Instance().Play(Sound::CheatEnabled);
 #ifdef _DEBUG
                     popupType = "Success";
                     popupMessage = "Значение " + std::to_string(inputValues[buttonName]) + " успешно записанно в память!";

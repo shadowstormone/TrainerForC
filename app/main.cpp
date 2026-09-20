@@ -1,6 +1,7 @@
 #include "app/main.h"
 #include "ui/UI.h"
 #include "cheats/CheatOptionManager.h"
+#include "platform/AudioService.h"
 #include "ui/ImGuiConsole.h"
 
 std::unordered_map<std::string, FunctionOffset> offsets = {
@@ -49,6 +50,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     ProcessAttackGame->Stop();
 
     ProcessAttackGame->DisableAllFunctionMem();
+
+    // Гасим звуковой движок явно, а не в деструкторе статика:
+    // COM/XAudio2 не любят разрушение на выходе из процесса.
+    AudioService::Instance().Shutdown();
 
     return 0;
 }

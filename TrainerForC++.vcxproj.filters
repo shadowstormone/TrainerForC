@@ -87,6 +87,9 @@
     <ClCompile Include="platform/Utils.cpp">
       <Filter>platform</Filter>
     </ClCompile>
+    <ClCompile Include="platform/AudioService.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
     <ClCompile Include="tests/Errors_test.cpp">
       <Filter>tests</Filter>
     </ClCompile>
@@ -159,6 +162,9 @@
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="platform/Utils.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform/AudioService.h">
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="platform/VKeys.h">
