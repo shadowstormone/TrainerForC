@@ -36,6 +36,9 @@
     <ClCompile Include="app/main.cpp">
       <Filter>app</Filter>
     </ClCompile>
+    <ClCompile Include="app/Application.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
     <ClCompile Include="core/Cheat.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -102,6 +105,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app/main.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="app/Application.h">
       <Filter>app</Filter>
     </ClInclude>
     <ClInclude Include="core/Cheat.h">

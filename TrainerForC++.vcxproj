@@ -178,6 +178,7 @@
     <ClCompile Include="platform/AudioService.cpp" />
     <ClCompile Include="platform/Hotkey.cpp" />
     <ClCompile Include="app/main.cpp" />
+    <ClCompile Include="app/Application.cpp" />
     <ClCompile Include="core/Memory_Functions.cpp" />
     <ClCompile Include="core/MemoryAccess.cpp" />
     <ClCompile Include="patches/NopPatch.cpp" />
@@ -197,6 +198,7 @@
     <ClInclude Include="ui/ImGuiConsole.h" />
     <ClInclude Include="ui/ImGuiThemes.h" />
     <ClInclude Include="app/main.h" />
+    <ClInclude Include="app/Application.h" />
     <ClInclude Include="core/Memory_Functions.h" />
     <ClInclude Include="core/MemoryAccess.h" />
     <ClInclude Include="third_party/nmd_assembly.h" />
