@@ -1,6 +1,6 @@
 #include "patches/WriteAddressPatch.h"
+#include "platform/Logger.h"
 #include "cheats/CheatOption.h"
-#include "ui/ImGuiConsole.h"
 #include <iostream>
 #include <format>
 
@@ -77,7 +77,7 @@ bool WriteAddressPatch::WriteValueMemory(LPCWSTR processName, const std::vector<
 
 #ifdef _DEBUG
     std::printf("Final address: 0x%I64X\n", m_finalAddress);
-    gConsole->addLog("DEBUG", std::format("Финальный адресс значения: 0x{:X}", m_finalAddress));
+    Log::Debug(std::format("Финальный адресс значения: 0x{:X}", m_finalAddress));
 #endif // _DEBUG
 
     SIZE_T bytesWritten = 0;

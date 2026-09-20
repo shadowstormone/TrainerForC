@@ -177,6 +177,7 @@
     <ClCompile Include="platform/Utils.cpp" />
     <ClCompile Include="platform/AudioService.cpp" />
     <ClCompile Include="platform/Hotkey.cpp" />
+    <ClCompile Include="platform/Logger.cpp" />
     <ClCompile Include="app/main.cpp" />
     <ClCompile Include="app/Application.cpp" />
     <ClCompile Include="core/Memory_Functions.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="platform/Utils.h" />
     <ClInclude Include="platform/AudioService.h" />
     <ClInclude Include="platform/Hotkey.h" />
+    <ClInclude Include="platform/Logger.h" />
     <ClInclude Include="ui/UIControls.h" />
     <ClInclude Include="platform/VKeys.h" />
     <ClInclude Include="patches/WriteAddressPatch.h" />

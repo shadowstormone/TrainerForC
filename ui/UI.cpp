@@ -6,6 +6,7 @@
 
 #define NOMINMAX
 #include "resource.h"
+#include "platform/Logger.h"
 #include "ui/UI.h"
 #include "ui/D3DContext.h"
 #include "ui/ImGuiThemes.h"
@@ -476,7 +477,7 @@ std::pair<int, int> UI::getScreenCenter()
  * @brief Основная функция рендеринга интерфейса
  * @details Инициализирует окно, DirectX 11, ImGui и запускает основной цикл рендеринга
  */
-void UI::Render(MainView& view)
+void UI::Render(MainView& view, Console& console)
 {
     try
     {
@@ -577,11 +578,10 @@ void UI::Render(MainView& view)
 		SetModernDarkStyle(); // Установка стиля интерфейса
 
 #ifdef _DEBUG
-        if (gConsole)
         {
             char message[128];
             sprintf_s(message, "Screen resolution: %dx%d", displayInfo.width, displayInfo.height);
-            gConsole->addLog("INFO", message);
+            Log::Info(message);
         }
 #endif // _DEBUG
 
@@ -592,7 +592,7 @@ void UI::Render(MainView& view)
 #ifdef _DEBUG
             MessageBoxA(nullptr, "Unable to load any font.", "Font Load Error", MB_OK | MB_ICONERROR);
 #else
-            gConsole->addLog("ERROR", "Unable to load any font.");
+            Log::Error("Unable to load any font.");
 #endif
         }
 
@@ -613,7 +613,7 @@ void UI::Render(MainView& view)
             MessageBoxA(nullptr, "Failed to load one or more textures.", "Texture Load Error", MB_OK | MB_ICONERROR);
         }
 
-		RenderLoop(window, d3d, view, io, textureManager); // Запуск основного цикла рендеринга
+		RenderLoop(window, d3d, view, console, io, textureManager); // Запуск основного цикла рендеринга
 
         // Очистка ресурсов ImGui; окно и D3D освободят себя сами (RAII).
         ImGui_ImplDX11_Shutdown();
@@ -625,7 +625,7 @@ void UI::Render(MainView& view)
 #ifdef _DEBUG
         MessageBoxA(nullptr, e.what(), "Error", MB_OK | MB_ICONERROR);
 #else
-        if (gConsole) gConsole->addLog("FATAL", std::string("UI::Render exception: ") + e.what());
+        Log::Fatal(std::string("UI::Render exception: ") + e.what());
 #endif
     }
 }
@@ -635,7 +635,7 @@ void UI::Render(MainView& view)
  * @param io Объект ImGuiIO для управления вводом/выводом
  * @param textureManager Менеджер текстур
  */
-void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ImGuiIO& io, TextureManager& textureManager)
+void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, Console& console, ImGuiIO& io, TextureManager& textureManager)
 {
     const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool done = false;
@@ -670,7 +670,7 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ImGuiIO& io
         // Отрисовка элементов интерфейса
         if (showConsole)
         {
-            gConsole->draw("Debug Console", &showConsole);
+            console.draw("Debug Console", &showConsole);
         }
 
         ImGui::GetStyle().Alpha = fadeAnimation.getAlpha();

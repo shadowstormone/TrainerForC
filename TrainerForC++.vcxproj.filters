@@ -96,6 +96,9 @@
     <ClCompile Include="platform/Hotkey.cpp">
       <Filter>platform</Filter>
     </ClCompile>
+    <ClCompile Include="platform/Logger.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
     <ClCompile Include="tests/Errors_test.cpp">
       <Filter>tests</Filter>
     </ClCompile>
@@ -177,6 +180,9 @@
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="platform/Hotkey.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform/Logger.h">
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="platform/VKeys.h">

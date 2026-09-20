@@ -1,4 +1,5 @@
 #include "cheats/CheatOptionManager.h"
+#include "platform/Logger.h"
 
 #include "cheats/CheatDefinition.h"
 #include "cheats/CheatFactory.h"
@@ -6,7 +7,6 @@
 #include "cheats/CheatRegistry.h"
 #include "core/Cheat.h"
 #include "platform/Utils.h" // WStringToUtf8, RunAfter
-#include "ui/ImGuiConsole.h"
 
 CheatOptionManager::CheatOptionManager(Cheat* cheatProcess)
     : _cheatProcess(cheatProcess)
@@ -25,7 +25,7 @@ void CheatOptionManager::LoadFromRegistry()
         auto option = CreateCheatFromDefinition(definition, _cheatProcess);
         if (!option)
         {
-            gConsole->addLog("ERROR", "Не удалось создать опцию: " + Utils::WStringToUtf8(definition.name));
+            Log::Error("Не удалось создать опцию: " + Utils::WStringToUtf8(definition.name));
             continue;
         }
 
@@ -59,11 +59,11 @@ void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition
                     // IsEnabled(), поэтому интерфейс сам покажет верное
                     // состояние на следующем кадре.
                     option->IsEnabled(false);
-                    gConsole->addLog("ERROR", "Не удалось применить " + name + " — опция выключена");
+                    Log::Error("Не удалось применить " + name + " — опция выключена");
                     return;
                 }
 
-                gConsole->addLog("INFO", "Переключатель " + name + " активирован");
+                Log::Info("Переключатель " + name + " активирован");
                 option->IsEnabled(true);
 
                 if (definition.autoDisable)
@@ -73,13 +73,13 @@ void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition
                         {
                             option->Disable(processId);
                             option->IsEnabled(false);
-                            gConsole->addLog("INFO", "Опция " + name + " была временной и выключена автоматически");
+                            Log::Info("Опция " + name + " была временной и выключена автоматически");
                         });
                 }
             }
             else
             {
-                gConsole->addLog("INFO", "Опция " + name + " выключена");
+                Log::Info("Опция " + name + " выключена");
                 option->Disable(processId);
                 option->IsEnabled(false);
             }

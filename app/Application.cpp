@@ -3,6 +3,7 @@
 #include "cheats/CheatOptionManager.h"
 #include "core/Cheat.h"
 #include "platform/AudioService.h"
+#include "platform/Logger.h"
 #include "ui/ImGuiConsole.h"
 #include "ui/UI.h"
 
@@ -14,17 +15,18 @@ Application::~Application()
     // COM/XAudio2 не любят разрушение на выходе из процесса.
     AudioService::Instance().Shutdown();
 
-    // Консоль умрёт вместе с этим объектом — снимаем указатель на неё.
-    gConsole = nullptr;
+    // Консоль умрёт вместе с этим объектом — снимаем приёмник логов.
+    Log::SetSink(nullptr);
 }
 
 bool Application::Initialize(const wchar_t* targetProcessName)
 {
     // Консоль нужна первой: остальные части уже пишут в неё при создании.
     _console = std::make_unique<Console>();
-    gConsole = _console.get();
+    Log::SetSink(_console.get());
 
     _process = std::make_unique<Cheat>(targetProcessName);
+    _console->SetProcess(_process.get()); // для команд GetPID/status
 
     _cheats = std::make_unique<CheatOptionManager>(_process.get());
     _cheats->LoadFromRegistry();
@@ -53,7 +55,7 @@ bool Application::Initialize(const wchar_t* targetProcessName)
 int Application::Run()
 {
     _process->Start();
-    UI::Render(*_view);
+    UI::Render(*_view, *_console);
     _process->Stop();
 
     _process->DisableAllFunctionMem();

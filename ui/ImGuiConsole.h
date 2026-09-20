@@ -12,7 +12,8 @@
 #include <functional>
 #include <format>
 
-extern Cheat* procGameCheat;
+#include "core/Cheat.h"
+#include "platform/Logger.h"
 
 /**
  * @class Console
@@ -21,9 +22,13 @@ extern Cheat* procGameCheat;
  * Предназначен для ввода команд, просмотра логов и отладки в реальном времени.
  * Поддерживает: историю команд, автодополнение (Tab), цветные сообщения, прокрутку.
  */
-class Console
+class Console : public ILogger
 {
 private:
+    // Процесс-цель для команд консоли. Раньше читался из глобала
+    // procGameCheat; теперь его отдаёт владелец через SetProcess().
+    Cheat* _process = nullptr;
+
     /**
      * @brief Структура, представляющая одну запись в логе консоли.
      */
@@ -240,7 +245,8 @@ private:
 
         AddCommand("GetPID", "Получить ID процесса", [](Console* console, const std::vector<std::string>& args)
             {
-                DWORD pid = ::procGameCheat->GetProcessID();
+                Cheat* proc = console->GetProcess();
+                DWORD pid = proc ? proc->GetProcessID() : 0;
 
                 if (pid != 0)
                 {
@@ -254,10 +260,16 @@ private:
 
         AddCommand("status", "Показать состояние процесса", [](Console* console, const std::vector<std::string>& args)
             {
-                LPCWSTR rawName = ::procGameCheat->GetProcessName();
-                std::string procName = Utils::WStringToUtf8(rawName);
-                bool running = ::procGameCheat->isProcessRunning();
-                DWORD pid = ::procGameCheat->GetProcessID();
+                Cheat* proc = console->GetProcess();
+                if (!proc)
+                {
+                    console->addLog("ERROR", "Процесс не задан");
+                    return;
+                }
+
+                std::string procName = Utils::WStringToUtf8(proc->GetProcessName());
+                bool running = proc->isProcessRunning();
+                DWORD pid = proc->GetProcessID();
 
                 console->addLog("INFO", "Имя процесса: " + procName);
                 console->addLog("INFO", "Запущен: " + std::string(running ? "Да" : "Нет"));
@@ -320,6 +332,15 @@ public:
      * @param message Текст сообщения.
      * @param isUserInput Является ли сообщение вводом пользователя (не отображает тип и время).
      */
+    void SetProcess(Cheat* process) { _process = process; }
+    Cheat* GetProcess() const { return _process; }
+
+    // ILogger: домен пишет сюда, не зная про ImGui.
+    void Log(const std::string& level, const std::string& message) override
+    {
+        addLog(level, message);
+    }
+
     void addLog(const std::string& type, const std::string& message, bool isUserInput = false)
     {
         LogEntry entry;
@@ -479,7 +500,3 @@ public:
     }
 };
 
-/**
- * @brief Глобальный указатель на экземпляр консоли.
- */
-inline Console* gConsole = nullptr;

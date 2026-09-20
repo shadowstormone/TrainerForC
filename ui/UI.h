@@ -24,13 +24,13 @@ public:
     static constexpr int HEIGHT = 555;
 
     // Main methods
-    static void Render(MainView& view);
+    static void Render(MainView& view, Console& console);
     static std::string getFontPath();
     static std::pair<int, int> getScreenCenter();
 
 private:
     // Private helper methods
-    static void RenderLoop(Window& window, D3DContext& d3d, MainView& view, ImGuiIO& io, TextureManager& textureManager);
+    static void RenderLoop(Window& window, D3DContext& d3d, MainView& view, Console& console, ImGuiIO& io, TextureManager& textureManager);
 
     // Prevent instantiation
     UI() = delete;
@@ -41,7 +41,7 @@ private:
 
 // External dependencies (assumed to be defined elsewhere)
 extern bool showConsole;
-extern class Console* gConsole;
+class Console;
 
 // Theme function (assumed to be defined elsewhere)
 void SetModernDarkStyle();

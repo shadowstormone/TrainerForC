@@ -12,9 +12,6 @@
 // Флаг отладочной консоли остаётся глобальным: его читают и UI, и сама консоль.
 bool showConsole = false;
 
-// Процесс-цель для отладочной консоли (ImGuiConsole.h читает его напрямую).
-// Legacy-глобал: уйдёт на Этапе 6 вместе с инжекцией логгера.
-Cheat* procGameCheat = nullptr;
 
 namespace
 {
@@ -48,7 +45,6 @@ void MainView::Initialize(Cheat* process,
     _offsetFunctions = offsets;
     _options = options;
 
-    procGameCheat = process; // для отладочной консоли, см. выше
 }
 
 bool MainView::IsCaptionPoint(POINT clientPoint) const
