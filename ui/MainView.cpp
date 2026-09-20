@@ -49,21 +49,12 @@ void MainView::Initialize(Cheat* process,
 
 bool MainView::IsCaptionPoint(POINT clientPoint) const
 {
-    if (clientPoint.y < 0) return false;
+    // Только полоса заголовка и только вне кнопок. Всё остальное окно —
+    // HTCLIENT, иначе ImGui перестанет получать WM_MOUSEMOVE и виджеты
+    // станут некликабельными.
+    if (clientPoint.y < 0 || clientPoint.y >= static_cast<LONG>(TITLE_BAR_HEIGHT)) return false;
 
-    // Кнопки заголовка (свернуть/закрыть) — обычные клики.
-    if (clientPoint.y < static_cast<LONG>(TITLE_BAR_HEIGHT)
-        && static_cast<float>(clientPoint.x) >= _titleButtonsMinX)
-    {
-        return false;
-    }
-
-    // Под курсором переключатель, поле ввода или кнопка (или открыт popup) —
-    // отдаём клик интерфейсу, иначе по виджетам нельзя будет попасть.
-    if (_pointerOverWidget) return false;
-
-    // Всё остальное окно тащится, а не только полоса заголовка.
-    return true;
+    return static_cast<float>(clientPoint.x) < _titleButtonsMinX;
 }
 
 void MainView::HandlePopupsWithIcons(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceView* errorIcon)
@@ -475,10 +466,25 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
 
         HandlePopupsWithIcons(successIcon, errorIcon);
 
-        // Для хиттеста окна: занят ли курсор интерфейсом прямо сейчас.
-        _pointerOverWidget = ImGui::IsAnyItemHovered()
-                           || ImGui::IsAnyItemActive()
-                           || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel);
+        // Перетаскивание окна за любое пустое место.
+        //
+        // Делается здесь, а не в WM_NCHITTEST: ImGui знает, есть ли под
+        // курсором виджет, только пока область остаётся HTCLIENT и он
+        // получает обычные WM_MOUSEMOVE. Поэтому мы ловим нажатие по пустому
+        // месту и просим саму систему начать перетаскивание — ровно так же,
+        // как если бы нажали на заголовок.
+        if (_windowHandle
+            && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+            && !ImGui::IsAnyItemHovered()
+            && !ImGui::IsAnyItemActive()
+            && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)
+            && !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel))
+        {
+            // ImGui на нажатии захватывает мышь — отпускаем, иначе система
+            // не начнёт свой цикл перетаскивания.
+            ::ReleaseCapture();
+            ::SendMessageW(_windowHandle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        }
 
         ImGui::End();
     }

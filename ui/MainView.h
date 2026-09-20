@@ -58,11 +58,6 @@ class MainView
     // До первого кадра — "бесконечность", чтобы окно таскалось сразу.
     float _titleButtonsMinX = 3.4e38f;
 
-    // Есть ли под курсором интерактивный элемент ImGui (или открыт popup).
-    // Обновляется в конце кадра; по нему хиттест решает, тащить окно
-    // или отдать клик виджету.
-    bool _pointerOverWidget = false;
-
     void RenderTitleBar();
     void RenderToggles();
     void RenderInputFields();
@@ -86,9 +81,13 @@ public:
     // Окно, которым управляют кнопки заголовка (свернуть/закрыть)
     void SetWindowHandle(HWND hWnd) { _windowHandle = hWnd; }
 
-    // true, если за точку (в клиентских координатах) можно тащить окно.
-    // Над кнопками заголовка и над виджетами — false, иначе по ним
-    // нельзя будет кликнуть.
+    // true, если точка (в клиентских координатах) — полоса заголовка.
+    //
+    // Перетаскивание за ОСТАЛЬНОЕ окно сделано не здесь: если объявить
+    // заголовком всё подряд, Windows начнёт слать WM_NCMOUSEMOVE вместо
+    // WM_MOUSEMOVE, ImGui перестанет видеть курсор, и по виджетам станет
+    // невозможно кликнуть. Поэтому хиттест отвечает только за геометрию
+    // заголовка, а тягу с пустого места инициирует Draw() (см. .cpp).
     bool IsCaptionPoint(POINT clientPoint) const;
 
     void SetToggleHandler(std::function<void(const std::string&, const std::string&, bool, bool)> handler)
