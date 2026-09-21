@@ -158,6 +158,10 @@ void ConsoleWindow::SetVisible(bool visible)
     if (visible)
     {
         ::SetForegroundWindow(_window.Handle());
+
+        // Курсор сразу в строку ввода: иначе первый набор команды уходит
+        // в пустоту, пока не кликнешь по полю.
+        if (_console) _console->RequestInputFocus();
     }
 }
 

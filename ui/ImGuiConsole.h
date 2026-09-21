@@ -11,8 +11,10 @@
 #include <Windows.h>
 #include <functional>
 #include <format>
+#include <utility>
 
 #include "core/Cheat.h"
+#include "core/MemoryAccess.h"
 #include "platform/Logger.h"
 
 /**
@@ -28,6 +30,12 @@ private:
     // Процесс-цель для команд консоли. Раньше читался из глобала
     // procGameCheat; теперь его отдаёт владелец через SetProcess().
     Cheat* _process = nullptr;
+
+    // Поставить фокус в строку ввода на следующем кадре. Нужно, когда окно
+    // консоли только что показали: иначе пришлось бы сначала кликать в поле.
+    bool _focusInput = false;
+
+    std::function<std::vector<std::pair<std::string, bool>>()> _cheatLister;
 
     /**
      * @brief Структура, представляющая одну запись в логе консоли.
@@ -284,6 +292,119 @@ private:
                 }
             });
 
+        AddCommand("base", "Базовый адрес процесса или модуля", [](Console* console, const std::vector<std::string>& args)
+            {
+                Cheat* proc = console->GetProcess();
+                if (!proc) { console->addLog("ERROR", "Процесс не задан"); return; }
+
+                MemoryAccess mem(proc->GetProcessID());
+                if (!mem.IsValid()) { console->addLog("ERROR", "Процесс не открыт"); return; }
+
+                // args[0] — само имя команды, настоящие аргументы с единицы.
+                const DWORD_PTR base = args.size() < 2
+                    ? mem.ProcessBase()
+                    : mem.ModuleBase(Utils::Utf8ToWString(args[1]).c_str());
+
+                if (base == 0)
+                {
+                    console->addLog("ERROR", std::format("База не определена (PID {})", mem.Pid()));
+                }
+                else
+                {
+                    console->addLog("INFO", std::format("База: 0x{:X} (PID {})", base, mem.Pid()));
+                }
+            });
+
+        AddCommand("arch", "Разрядность целевого процесса", [](Console* console, const std::vector<std::string>& args)
+            {
+                Cheat* proc = console->GetProcess();
+                if (!proc) { console->addLog("ERROR", "Процесс не задан"); return; }
+
+                MemoryAccess mem(proc->GetProcessID());
+                if (!mem.IsValid()) { console->addLog("ERROR", "Процесс не открыт"); return; }
+
+                console->addLog("INFO", std::string("Цель: ") + (mem.IsTargetX64() ? "x64" : "x86")
+                                      + std::format(", указатель {} байт", mem.PointerSize()));
+            });
+
+        AddCommand("ptr", "Пройти цепочку оффсетов: ptr 346C10 800", [](Console* console, const std::vector<std::string>& args)
+            {
+                // args[0] — имя команды, оффсеты идут с единицы.
+                if (args.size() < 2) { console->addLog("ERROR", "Нужен хотя бы один оффсет"); return; }
+
+                Cheat* proc = console->GetProcess();
+                if (!proc) { console->addLog("ERROR", "Процесс не задан"); return; }
+
+                MemoryAccess mem(proc->GetProcessID());
+                if (!mem.IsValid()) { console->addLog("ERROR", "Процесс не открыт"); return; }
+
+                std::vector<std::uintptr_t> offsets;
+                for (std::size_t i = 1; i < args.size(); ++i)
+                {
+                    offsets.push_back(static_cast<std::uintptr_t>(std::strtoull(args[i].c_str(), nullptr, 16)));
+                }
+
+                const std::uintptr_t address = mem.ResolveChain(mem.ProcessBase(), offsets);
+
+                if (address == 0) console->addLog("ERROR", "Цепочка оборвалась");
+                else console->addLog("INFO", std::format("Адрес: 0x{:X}", address));
+            });
+
+        AddCommand("mem", "Показать байты: mem 7FF612340000 16", [](Console* console, const std::vector<std::string>& args)
+            {
+                // args[0] — имя команды, адрес идёт первым аргументом.
+                if (args.size() < 2) { console->addLog("ERROR", "Нужен адрес"); return; }
+
+                Cheat* proc = console->GetProcess();
+                if (!proc) { console->addLog("ERROR", "Процесс не задан"); return; }
+
+                MemoryAccess mem(proc->GetProcessID());
+                if (!mem.IsValid()) { console->addLog("ERROR", "Процесс не открыт"); return; }
+
+                const auto address = static_cast<std::uintptr_t>(std::strtoull(args[1].c_str(), nullptr, 16));
+                std::size_t count = args.size() > 2 ? std::strtoul(args[2].c_str(), nullptr, 10) : 16;
+                if (count == 0 || count > 64) count = 16;
+
+                auto* bytes = static_cast<unsigned char*>(mem.Read(reinterpret_cast<LPVOID>(address), count));
+                if (!bytes) { console->addLog("ERROR", "Не удалось прочитать память"); return; }
+
+                std::string dump;
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                    dump += std::format("{:02X} ", bytes[i]);
+                }
+                delete[] bytes;
+
+                console->addLog("INFO", std::format("0x{:X}: {}", address, dump));
+            });
+
+        AddCommand("log", "Путь к файлу лога", [](Console* console, const std::vector<std::string>& args)
+            {
+                wchar_t path[MAX_PATH] = {};
+                const DWORD length = GetModuleFileNameW(nullptr, path, MAX_PATH);
+
+                std::wstring full(path, length);
+                const size_t slash = full.find_last_of(L"\/");
+                const std::wstring dir = slash == std::wstring::npos ? L"" : full.substr(0, slash + 1);
+
+                console->addLog("INFO", "Лог: " + Utils::WStringToUtf8(dir + L"trainer.log"));
+            });
+
+        AddCommand("cheats", "Список читов и их состояние", [](Console* console, const std::vector<std::string>& args)
+            {
+                const auto& lister = console->GetCheatLister();
+                if (!lister) { console->addLog("ERROR", "Список читов недоступен"); return; }
+
+                const auto rows = lister();
+                if (rows.empty()) { console->addLog("INFO", "Читов нет"); return; }
+
+                for (std::size_t i = 0; i < rows.size(); ++i)
+                {
+                    console->addLog("INFO", std::format("{}. {} — {}",
+                                    i + 1, rows[i].first, rows[i].second ? "включён" : "выключен"));
+                }
+            });
+
         AddCommand("echo", "Вывести текст", [](Console* console, const std::vector<std::string>& args)
             {
                 if (args.size() < 2)
@@ -333,12 +454,78 @@ public:
      * @param isUserInput Является ли сообщение вводом пользователя (не отображает тип и время).
      */
     void SetProcess(Cheat* process) { _process = process; }
+
+    // Запросить фокус в строке ввода (окно консоли только что показали).
+    void RequestInputFocus() { _focusInput = true; }
+
+    // Список читов отдаётся колбэком: консоль не знает про менеджер опций
+    // и не тянет за собой слой cheats.
+    using CheatLister = std::function<std::vector<std::pair<std::string, bool>>()>;
+    void SetCheatLister(CheatLister lister) { _cheatLister = std::move(lister); }
+    const CheatLister& GetCheatLister() const { return _cheatLister; }
     Cheat* GetProcess() const { return _process; }
 
     // ILogger: домен пишет сюда, не зная про ImGui.
     void Log(const std::string& level, const std::string& message) override
     {
         addLog(level, message);
+    }
+
+    // Рисует сообщение, подсвечивая числа.
+    //
+    // "Process ID: 24672" читается быстрее, когда значение видно сразу,
+    // а не сливается с текстом. Понимает и десятичные, и 0x-шестнадцатеричные.
+    static void DrawMessageWithAccents(const std::string& text)
+    {
+        const ImVec4 accent(0.45f, 0.78f, 1.00f, 1.00f);
+
+        const auto isDigit = [](char c) { return c >= '0' && c <= '9'; };
+        const auto isHex = [&](char c)
+        {
+            return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+        };
+
+        std::size_t i = 0;
+        bool first = true;
+
+        const auto emit = [&](const std::string& part, bool highlighted)
+        {
+            if (part.empty()) return;
+
+            if (!first) ImGui::SameLine(0.0f, 0.0f);
+            first = false;
+
+            if (highlighted) ImGui::TextColored(accent, "%s", part.c_str());
+            else             ImGui::TextUnformatted(part.c_str());
+        };
+
+        while (i < text.size())
+        {
+            if (isDigit(text[i]))
+            {
+                const std::size_t start = i;
+
+                if (text[i] == '0' && i + 1 < text.size() && (text[i + 1] == 'x' || text[i + 1] == 'X'))
+                {
+                    i += 2;
+                    while (i < text.size() && isHex(text[i])) ++i;
+                }
+                else
+                {
+                    while (i < text.size() && (isDigit(text[i])
+                           || (text[i] == '.' && i + 1 < text.size() && isDigit(text[i + 1])))) ++i;
+                }
+
+                emit(text.substr(start, i - start), true);
+                continue;
+            }
+
+            const std::size_t start = i;
+            while (i < text.size() && !isDigit(text[i])) ++i;
+            emit(text.substr(start, i - start), false);
+        }
+
+        if (first) ImGui::TextUnformatted("");
     }
 
     void addLog(const std::string& type, const std::string& message, bool isUserInput = false)
@@ -437,7 +624,7 @@ public:
                 }
                 ImGui::TextColored(typeColor, "[%s]", item.type.c_str());
                 ImGui::SameLine();
-                ImGui::TextUnformatted(item.message.c_str());
+                DrawMessageWithAccents(item.message);
             }
         }
         ImGui::PopStyleVar();
@@ -458,6 +645,14 @@ public:
 
         bool reclaimFocus = false;
         ImGui::SetNextItemWidth(-1);
+        // Окно консоли только что показали — ставим курсор в строку ввода,
+        // чтобы команду можно было набрать сразу, без клика по полю.
+        if (_focusInput)
+        {
+            ImGui::SetKeyboardFocusHere();
+            _focusInput = false;
+        }
+
         if (ImGui::InputText("##Input", inputBuf, IM_ARRAYSIZE(inputBuf), inputFlags, &Console::TextEditCallbackStub, (void*)this))
         {
             if (inputBuf[0] != 0)

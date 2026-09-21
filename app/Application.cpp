@@ -6,6 +6,7 @@
 #include "platform/AudioService.h"
 #include "platform/FileLogger.h"
 #include "platform/Logger.h"
+#include "platform/Utils.h"
 #include "ui/ImGuiConsole.h"
 #include "ui/UI.h"
 
@@ -35,6 +36,19 @@ bool Application::Initialize(const wchar_t* targetProcessName)
 
     _process = std::make_unique<Cheat>(targetProcessName);
     _console->SetProcess(_process.get()); // для команд GetPID/status
+
+    // Команда cheats берёт список отсюда: консоль не знает про менеджер.
+    _console->SetCheatLister([this]()
+    {
+        std::vector<std::pair<std::string, bool>> rows;
+
+        for (CheatOption* option : _cheats->GetAllOptions())
+        {
+            rows.emplace_back(Utils::WStringToUtf8(option->GetDescription()), option->IsEnabled());
+        }
+
+        return rows;
+    });
 
     _cheats = std::make_unique<CheatOptionManager>(_process.get());
     _cheats->LoadFromRegistry();

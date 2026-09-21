@@ -52,5 +52,5 @@ REGISTER_CHEAT({
 //
 // Описываются тем же Address, что и читы: база модуля + 0x240600 ->
 // разыменовать -> + 0x4B4.
-REGISTER_VALUE_FIELD(ValueField(L"Set HP", Address::Module(0x00240600).Deref(0x4B4)))
-REGISTER_VALUE_FIELD(ValueField(L"Set MP", Address::Module(0x00240600).Deref(0x4B4)))
+REGISTER_VALUE_FIELD(ValueField(L"Set HP", Address::Module(0x00346C10).Deref(0x800)))
+REGISTER_VALUE_FIELD(ValueField(L"Set MP", Address::Module(0x00346C10).Deref(0x800)))

@@ -1,5 +1,11 @@
 #include "core/Memory_Functions.h"
 
+#include <psapi.h>
+
+#include <format>
+
+#include "platform/Logger.h"
+
 int GetProcessIdByWindowName(LPCWSTR className, LPCWSTR windowName)
 {
 	HWND window = FindWindow(className, windowName);
@@ -39,31 +45,48 @@ int GetProcessIdByProcessName(LPCWSTR processName)
 
 DWORD_PTR GetProcessBaseAddress(HANDLE hProcess)
 {
-	DWORD_PTR baseAddress = 0;
-	HMODULE*  moduleArray = NULL;
-	LPBYTE	  moduleArrayBytes = NULL;
-	DWORD	  bytesRequired = 0;
+	if (!hProcess) return 0;
 
-	if (!EnumProcessModules(hProcess, NULL, 0, &bytesRequired) || !bytesRequired)
+	const DWORD pid = GetProcessId(hProcess);
+	if (pid == 0)
 	{
+		// Тихо выходить нельзя: именно так эта функция молча возвращала
+		// ноль, и патч целился не туда без единого сообщения.
+		Log::Error(std::format("Дескриптор процесса непригоден: GetProcessId дал 0, код {}",
+		                       GetLastError()));
 		return 0;
 	}
 
-	moduleArrayBytes = (LPBYTE)LocalAlloc(LPTR, bytesRequired);
-
-	if (moduleArrayBytes)
+	// Снимок Toolhelp, а не EnumProcessModules.
+	//
+	// Обычный EnumProcessModules не видит модули 32-битного процесса, когда
+	// трейнер собран как x64 — в x86-играх база выходила нулевой. Вариант с
+	// EnumProcessModulesEx на проверке возвращал успех с пустым модулем.
+	// Toolhelp со снимком SNAPMODULE32 отрабатывает для обеих разрядностей,
+	// и этим же способом в проекте уже ищутся модули по имени.
+	//
+	// Первый модуль в снимке — всегда сам исполняемый файл процесса.
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
+	if (snapshot == INVALID_HANDLE_VALUE)
 	{
-		unsigned int moduleCount;
-
-		moduleCount = bytesRequired / sizeof(HMODULE);
-		moduleArray = (HMODULE*)moduleArrayBytes;
-
-		if (EnumProcessModules(hProcess, moduleArray, bytesRequired, &bytesRequired))
-		{
-			baseAddress = (DWORD_PTR)moduleArray[0];
-		}
-		LocalFree(moduleArrayBytes);
+		Log::Error(std::format("Не удалось сделать снимок модулей, код {}", GetLastError()));
+		return 0;
 	}
+
+	MODULEENTRY32W entry{};
+	entry.dwSize = sizeof(entry);
+
+	DWORD_PTR baseAddress = 0;
+	if (Module32FirstW(snapshot, &entry))
+	{
+		baseAddress = reinterpret_cast<DWORD_PTR>(entry.modBaseAddr);
+	}
+	else
+	{
+		Log::Error(std::format("Снимок модулей пуст, код {}", GetLastError()));
+	}
+
+	CloseHandle(snapshot);
 	return baseAddress;
 }
 
