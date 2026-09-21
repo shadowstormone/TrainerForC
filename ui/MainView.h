@@ -17,7 +17,11 @@
 #include "ui/ImGuiConsole.h"
 
 constexpr auto WIDTH = 620;
-constexpr auto HEIGHT = 690;
+constexpr auto HEIGHT = 690;      // стартовая высота, дальше подгоняется под содержимое
+
+// Ниже этого окно не ужимается, даже когда читов один-два: совсем
+// маленькая панель выглядит обрубком и в неё неудобно целиться мышью.
+constexpr auto MIN_HEIGHT = 340;
 
 extern bool showConsole;
 
@@ -49,6 +53,13 @@ class MainView
     std::vector<InputFieldView> _valueFields;
 
     std::function<void(const std::string&, const std::string&, bool, bool)> _toggleHandler;
+
+    // Высота, под которую окно подогнали в прошлый раз. Нужна, чтобы не
+    // дёргать SetWindowPos каждый кадр одним и тем же значением.
+    int _fittedHeight = 0;
+
+    // Подгоняет высоту окна под содержимое.
+    void FitWindowHeightToContent();
 
     // Плавность перехода цвета строки состояния: 0 — игра не запущена, 1 — запущена.
     float _runningFade = 0.0f;

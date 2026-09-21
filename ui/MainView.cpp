@@ -328,6 +328,64 @@ void MainView::RenderInputFields()
     }
 }
 
+// Подгоняет высоту окна под количество строк.
+//
+// Считается ВНУТРИ кадра, когда ImGui уже знает реальную высоту строки и
+// отступы: до создания контекста их пришлось бы угадывать, да ещё с
+// поправкой на масштаб экрана.
+void MainView::FitWindowHeightToContent()
+{
+    if (!_windowHandle) return;
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+
+    const float rowPitch = Layout::RowHeight() + style.ItemSpacing.y;
+    const float rows = static_cast<float>(_options.size() + _valueFields.size());
+
+    // Шапка таблицы с разделителем, подвал в две строки и отступы сверху
+    // и снизу — всё, что есть в окне помимо самих строк.
+    const float header = ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.y * 2.0f;
+    const float footer = ImGui::GetTextLineHeightWithSpacing() * 2.0f + style.ItemSpacing.y * 3.0f;
+
+    const float content = TITLE_BAR_HEIGHT + 14.0f + header + rowPitch * rows + footer
+                        + style.WindowPadding.y * 2.0f;
+
+    // Потолок — чтобы окно не выросло во весь экран на полусотне читов:
+    // дальше уже работает прокрутка.
+    RECT work{};
+    SystemParametersInfoW(SPI_GETWORKAREA, 0, &work, 0);
+    const int maxHeight = static_cast<int>((work.bottom - work.top) * 0.85f);
+
+    int desired = static_cast<int>(content + 0.5f);
+    desired = Utils::Clamp(desired, static_cast<int>(MIN_HEIGHT), maxHeight);
+
+    if (desired == _fittedHeight) return;
+    _fittedHeight = desired;
+
+    RECT current{};
+    if (!GetWindowRect(_windowHandle, &current)) return;
+
+    // Окно растёт вниз от своей верхней кромки, поэтому при большом списке
+    // оно уехало бы за нижний край экрана. Если не помещается — поднимаем.
+    int top = current.top;
+    if (top + desired > work.bottom)
+    {
+        top = work.bottom - desired;
+    }
+    if (top < work.top)
+    {
+        top = work.top;
+    }
+
+    const UINT flags = (top == current.top)
+        ? (SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE)
+        : (SWP_NOZORDER | SWP_NOACTIVATE);
+
+    SetWindowPos(_windowHandle, nullptr, current.left, top,
+                 current.right - current.left, desired,
+                 flags);
+}
+
 void MainView::RenderProcessInfo()
 {
     std::wstring processName = _process->GetProcessName();
@@ -491,6 +549,8 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
 
         ImGui::Separator();
         RenderProcessInfo();
+
+        FitWindowHeightToContent();
 
         HandlePopupsWithIcons(successIcon, errorIcon);
 
