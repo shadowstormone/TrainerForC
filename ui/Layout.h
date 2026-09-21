@@ -114,14 +114,26 @@ namespace Layout
         ImGui::Dummy(ImVec2(0.0f, gap));
     }
 
-    // Подсветка строки под курсором.
+    // Единая высота строки таблицы.
     //
-    // Рисуется ДО содержимого строки: фон, нарисованный после, лёг бы
-    // поверх текста. Поэтому высоту строки нужно знать заранее.
+    // Раньше высоту задавал самый высокий элемент строки, поэтому ряды
+    // с переключателем и ряды с полем ввода были разной высоты.
+    inline float RowHeight()
+    {
+        const float byToggle = TOGGLE_HEIGHT;
+        const float byWidget = ImGui::GetFrameHeight();
+
+        return (std::max)(byToggle, byWidget);
+    }
+
+    // Фон строки: чередование, подсветка включённого и наведения.
     //
-    // Переменные названы не min/max намеренно: Windows.h определяет их
-    // макросами, и такие имена здесь не компилируются.
-    inline void HighlightRowUnderCursor(float rowHeight)
+    // Всё в одном месте намеренно — иначе три вида подсветки неизбежно
+    // разъедутся по цвету и высоте между разными таблицами.
+    //
+    // Рисуется ДО содержимого: фон поверх текста его бы закрыл.
+    // Переменные названы не min/max: Windows.h определяет их макросами.
+    inline void RowBackground(int index, bool enabled)
     {
         const ImGuiStyle& style = ImGui::GetStyle();
         const ImVec2 origin = ImGui::GetCursorScreenPos();
@@ -129,13 +141,30 @@ namespace Layout
 
         const ImVec2 topLeft(origin.x - style.WindowPadding.x * 0.5f, origin.y - padY);
         const ImVec2 bottomRight(topLeft.x + ContentWidth() + style.WindowPadding.x,
-                                 origin.y + rowHeight + padY);
+                                 origin.y + RowHeight() + padY);
 
-        if (!ImGui::IsMouseHoveringRect(topLeft, bottomRight)) return;
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+        const float rounding = style.FrameRounding;
 
-        ImGui::GetWindowDrawList()->AddRectFilled(
-            topLeft, bottomRight,
-            ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.35f),
-            style.FrameRounding);
+        // Чередование: с двумя десятками строк глаз иначе теряет строку
+        // на полпути к правой колонке.
+        if (index % 2 == 1)
+        {
+            draw->AddRectFilled(topLeft, bottomRight,
+                                ImGui::GetColorU32(ImGuiCol_TableRowBgAlt, 0.5f), rounding);
+        }
+
+        // Включённый чит виден сразу, не вчитываясь в цвет подписи.
+        if (enabled)
+        {
+            draw->AddRectFilled(topLeft, bottomRight,
+                                ImGui::GetColorU32(ImVec4(0.20f, 0.65f, 0.30f, 0.18f)), rounding);
+        }
+
+        if (ImGui::IsMouseHoveringRect(topLeft, bottomRight))
+        {
+            draw->AddRectFilled(topLeft, bottomRight,
+                                ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.30f), rounding);
+        }
     }
 }

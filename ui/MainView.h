@@ -50,6 +50,9 @@ class MainView
 
     std::function<void(const std::string&, const std::string&, bool, bool)> _toggleHandler;
 
+    // Плавность перехода цвета строки состояния: 0 — игра не запущена, 1 — запущена.
+    float _runningFade = 0.0f;
+
     std::map<std::string, int> _inputValues;
     std::map<std::string, bool> _inputFieldFocused; // Для отслеживания фокуса каждого поля
 
@@ -68,10 +71,10 @@ class MainView
     // Считает X колонок таблицы: переключателей и названий.
     void ComputeColumns(float& outToggleX, float& outNameX) const;
 
-    void RenderToggles();
+    // Шапка таблицы — вне прокрутки.
+    void RenderTableHeader();
 
-    // Флажок звука и громкость.
-    void RenderAudioControls();
+    void RenderToggles();
     void RenderInputFields();
     void RenderProcessInfo();
     void HandleToggleInteraction(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);

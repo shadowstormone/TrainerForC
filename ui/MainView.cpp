@@ -7,6 +7,8 @@
 #include <climits>  // Для INT_MAX
 
 #include "core/MemoryAccess.h"
+#include <cmath>
+
 #include "platform/AudioService.h"
 #include "platform/Utils.h"
 #include "platform/VKeys.h"
@@ -176,6 +178,20 @@ void MainView::ComputeColumns(float& outToggleX, float& outNameX) const
     outNameX   = outToggleX + Layout::TOGGLE_WIDTH + spacing * 2.0f;
 }
 
+// Шапка таблицы. Рисуется ВНЕ прокручиваемой области, иначе уезжала бы
+// вместе со списком.
+void MainView::RenderTableHeader()
+{
+    float toggleX = 0.0f;
+    float nameX = 0.0f;
+    ComputeColumns(toggleX, nameX);
+
+    ImGui::TextDisabled("Hotkeys");
+    ImGui::SameLine(nameX);
+    ImGui::TextDisabled("Options");
+    ImGui::Separator();
+}
+
 void MainView::RenderToggles()
 {
     const bool isGameRunning = _process->GetProcessID() != 0;
@@ -184,11 +200,7 @@ void MainView::RenderToggles()
     float nameX = 0.0f;
     ComputeColumns(toggleX, nameX);
 
-    // Шапка таблицы: клавиша — переключатель — название.
-    ImGui::TextDisabled("Hotkeys");
-    ImGui::SameLine(nameX);
-    ImGui::TextDisabled("Options");
-    ImGui::Separator();
+    int rowIndex = 0;
 
     for (CheatOption* option : _options)
     {
@@ -196,8 +208,8 @@ void MainView::RenderToggles()
         const std::string toggleId = "##toggle_" + name;
         const std::string hotkey = KeyNames::Hotkey(option->GetKeys());
 
-        // Подсветка строки под курсором — до отрисовки содержимого.
-        Layout::HighlightRowUnderCursor(Layout::TOGGLE_HEIGHT);
+        // Фон строки — до отрисовки содержимого.
+        Layout::RowBackground(rowIndex++, option->IsEnabled());
 
         // Клавиша — отдельная колонка, а не часть названия: подпись
         // выводится из реально назначенных кодов и не может с ними разойтись.
@@ -240,57 +252,15 @@ void MainView::RenderToggles()
 }
 
 
-// Управление звуком. AudioService умеет громкость и отключение с самого
-// начала, но из интерфейса до них было не добраться.
-void MainView::RenderAudioControls()
-{
-    AudioService& audio = AudioService::Instance();
-
-    const ImGuiStyle& style = ImGui::GetStyle();
-    const float spacing = style.ItemSpacing.x;
-    const float boxWidth = ImGui::GetFrameHeight();   // флажок квадратный
-    const float sliderWidth = Layout::INPUT_WIDTH;
-
-    const float sliderX = Layout::ControlX(sliderWidth);
-    const float boxX = sliderX - spacing - boxWidth;
-
-    float toggleX = 0.0f;
-    float nameX = 0.0f;
-    ComputeColumns(toggleX, nameX);
-
-    Layout::HighlightRowUnderCursor(ImGui::GetFrameHeight());
-
-    ImGui::SetCursorPosX(nameX);
-    Layout::RowLabel("Звук", boxX - nameX - spacing, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-    bool enabled = audio.IsEnabled();
-    ImGui::SameLine(boxX);
-    if (ImGui::Checkbox("##sound_enabled", &enabled))
-    {
-        audio.SetEnabled(enabled);
-    }
-
-    // Громкость показываем процентами: 0.75 в подписи читается хуже, чем 75%.
-    float percent = audio.GetVolume() * 100.0f;
-
-    ImGui::SameLine(sliderX);
-    ImGui::SetNextItemWidth(sliderWidth);
-
-    if (!enabled) ImGui::BeginDisabled();
-
-    if (ImGui::SliderFloat("##sound_volume", &percent, 0.0f, 100.0f, "%.0f%%"))
-    {
-        audio.SetVolume(percent / 100.0f);
-    }
-
-    if (!enabled) ImGui::EndDisabled();
-}
-
 void MainView::RenderInputFields()
 {
+    int rowIndex = 0;
+
     for (const InputFieldView& field : _valueFields)
     {
         const std::string& buttonName = field.label;
+
+        Layout::RowBackground(rowIndex++, false);
 
         // Инициализация значения, если его нет
         if (_inputValues.find(buttonName) == _inputValues.end())
@@ -467,8 +437,32 @@ void MainView::RenderProcessInfo()
         processName = processName.substr(0, dotPos);
     }
 
-    bool isRunning = _process->isProcessRunning();
-    ImGui::TextColored(isRunning ? ImVec4(0.1f, 0.7f, 0.3f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "%s %s",
+    const bool isRunning = _process->isProcessRunning();
+
+    // Цвет переходит плавно, а не прыгает: запуск и закрытие игры перестают
+    // выглядеть как дёрганье строки. Сглаживание то же, что у тумблера, —
+    // не зависящее от частоты кадров.
+    const float target = isRunning ? 1.0f : 0.0f;
+    const float t = 1.0f - std::exp(-6.0f * ImGui::GetIO().DeltaTime);
+    _runningFade += (target - _runningFade) * t;
+
+    const ImVec4 idle(0.55f, 0.55f, 0.58f, 1.0f);
+    const ImVec4 live(0.20f, 0.80f, 0.35f, 1.0f);
+    const ImVec4 statusColor(
+        idle.x + (live.x - idle.x) * _runningFade,
+        idle.y + (live.y - idle.y) * _runningFade,
+        idle.z + (live.z - idle.z) * _runningFade,
+        1.0f);
+
+    // Кружок-индикатор: состояние видно боковым зрением, не читая текст.
+    const ImVec2 dot = ImGui::GetCursorScreenPos();
+    const float radius = ImGui::GetTextLineHeight() * 0.22f;
+    ImGui::GetWindowDrawList()->AddCircleFilled(
+        ImVec2(dot.x + radius, dot.y + ImGui::GetTextLineHeight() * 0.5f),
+        radius, ImGui::GetColorU32(statusColor));
+
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + radius * 3.0f);
+    ImGui::TextColored(statusColor, "%s %s",
         Utils::WStringToUtf8(processName).c_str(), isRunning ? "is running" : "is not running");
 
     // PID Информация
@@ -577,15 +571,34 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
         const ImGuiStyle& style = ImGui::GetStyle();
         ImGui::SetCursorPos(ImVec2(style.WindowPadding.x, TITLE_BAR_HEIGHT + 14.0f));
 
+        RenderTableHeader();
+
+        // Список читов и поля ввода — в прокручиваемой области.
+        //
+        // Раньше всё рисовалось сплошняком, а подвал ставился абсолютно на
+        // GetWindowHeight() - 65. При двух десятках читов список уходил за
+        // нижний край окна, прокрутки не было, а строка состояния ложилась
+        // ПОВЕРХ строк списка.
+        //
+        // Нулевые отступы у дочерней области не случайны: так её содержимое
+        // считает координаты от тех же краёв, что и шапка с подвалом, и
+        // колонки не разъезжаются между ними.
+        const float footerHeight = ImGui::GetTextLineHeightWithSpacing() * 2.0f
+                                 + style.ItemSpacing.y * 3.0f;
+        const float listHeight = ImGui::GetContentRegionAvail().y - footerHeight;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::BeginChild("##content", ImVec2(0.0f, listHeight), ImGuiChildFlags_None,
+                          ImGuiWindowFlags_NoBackground);
+
         RenderToggles();
-        ImGui::Separator();
         Layout::GroupGap();
         RenderInputFields();
-        RenderAudioControls();
-        ImGui::Separator();
 
-        // Переместить курсор в нижнюю часть окна
-        ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 65); // Чем больше цифра, тем выше от низа
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+
+        ImGui::Separator();
         RenderProcessInfo();
 
         HandlePopupsWithIcons(successIcon, errorIcon);
