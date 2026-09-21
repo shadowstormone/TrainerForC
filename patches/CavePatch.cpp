@@ -1,15 +1,21 @@
 #include "patches/CavePatch.h"
-#include "cheats/CheatOption.h"
-#include <stdexcept>
-#include <cstring>
 
-#define NMD_ASSEMBLY_IMPLEMENTATION
-#include "third_party/nmd_assembly.h"
+#include <cstring>
+#include <memory>
+#include <stdexcept>
+#include <vector>
+
+#include "cheats/CheatOption.h"
+#include "core/Relocator.h"
+#include "platform/Logger.h"
 
 namespace
 {
-    constexpr size_t MAX_INSTRUCTION_LENGTH = 15;
     constexpr size_t CAVE_SIZE = 4096;
+
+    // Читаем с запасом: одна инструкция бывает до 15 байт, а украсть
+    // приходится до нескольких.
+    constexpr size_t PROBE_SIZE = 15 * 4;
 }
 
 PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
@@ -21,14 +27,16 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
 
     if (normalized_delta < (1ULL << 31))
     {
+        // E9 rel32 — короткий прыжок, достаёт в пределах ±2 ГБ
         bytes = new BYTE[5];
         bytes[0] = 0xE9;
         const uint32_t relative_addr = static_cast<uint32_t>(delta - 5);
         std::memcpy(bytes + 1, &relative_addr, sizeof(relative_addr));
         outSize = 5;
     }
-    else if (normalized_delta < (1ULL << 63))
+    else
     {
+        // FF 25 00000000 + абсолютный адрес — прыжок куда угодно, но 14 байт
         bytes = new BYTE[14];
         bytes[0] = 0xFF;
         bytes[1] = 0x25;
@@ -36,10 +44,6 @@ PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
         const uintptr_t to_address = reinterpret_cast<uintptr_t>(to);
         std::memcpy(bytes + 6, &to_address, sizeof(to_address));
         outSize = 14;
-    }
-    else
-    {
-        throw std::runtime_error("Jump distance too large");
     }
 
     return bytes;
@@ -49,71 +53,50 @@ bool CavePatch::Apply(MemoryAccess& mem)
 {
     originalSize = 0;
 
+    if (!mem.IsValid()) return false;
+
     const bool is64BitProcess = mem.IsTargetX64();
-    uintptr_t baseAddress;
     const uintptr_t scanSize = is64BitProcess ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
 
-    if (parent->GetModuleName() && wcslen(parent->GetModuleName()) > 0)
-    {
-        baseAddress = mem.ModuleBase(parent->GetModuleName());
-    }
-    else
-    {
-        baseAddress = mem.ProcessBase();
-    }
-
+    const LPCWSTR moduleName = parent ? parent->GetModuleName() : nullptr;
+    const uintptr_t baseAddress = (moduleName && wcslen(moduleName) > 0)
+                                      ? mem.ModuleBase(moduleName)
+                                      : mem.ProcessBase();
     if (!baseAddress)
     {
-        throw std::runtime_error("Failed to get base address.");
+        Log::Error("Не удалось получить базовый адрес процесса");
         return false;
     }
 
     patternAddress = mem.ScanSignature(baseAddress, scanSize, pattern.data(), mask);
-    patchAddress = static_cast<LPBYTE>(patternAddress) + patchOffset;
-    originalAddress = reinterpret_cast<LPVOID>(patchAddress);
-    originalBytes = static_cast<PBYTE>(mem.Read(originalAddress, MAX_INSTRUCTION_LENGTH));
-
-    allocatedAddress = VirtualAllocEx(mem.Handle(), nullptr, CAVE_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    if (!allocatedAddress)
+    if (!patternAddress)
     {
+        // Раньше отсюда шли дальше с нулём и патчили по адресу patchOffset.
+        Log::Error("Сигнатура не найдена — патч не применён");
         return false;
     }
 
-    BYTE jmpSize = 0;
-    const PBYTE jmpBytes = CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize);
+    patchAddress = static_cast<LPBYTE>(patternAddress) + patchOffset;
+    originalAddress = reinterpret_cast<LPVOID>(patchAddress);
 
-    // Считаем, сколько целых инструкций нужно "украсть" под прыжок.
-    // Если длино-дизассемблер не смог разобрать инструкцию, он возвращает 0:
-    // раньше originalSize не рос, offset не двигался и цикл крутился вечно,
-    // подвешивая интерфейс. Теперь такой случай — честная ошибка.
-    size_t offset = 0;
-    bool decoded = true;
-
-    while (originalSize < jmpSize)
+    originalBytes = static_cast<PBYTE>(mem.Read(originalAddress, PROBE_SIZE));
+    if (!originalBytes)
     {
-        if (offset >= MAX_INSTRUCTION_LENGTH)
-        {
-            decoded = false;
-            break;
-        }
-
-        const size_t length = nmd_x86_ldisasm(originalBytes + offset,
-                                              MAX_INSTRUCTION_LENGTH - offset,
-                                              is64BitProcess ? NMD_X86_MODE_64 : NMD_X86_MODE_32);
-        if (length == 0)
-        {
-            decoded = false;
-            break;
-        }
-
-        originalSize += static_cast<BYTE>(length);
-        offset += length;
+        Log::Error("Не удалось прочитать оригинальные байты");
+        return false;
     }
 
-    // Общий откат: освобождаем кейв и буфер прыжка, чтобы не утекали.
-    const auto rollback = [&]()
+    // Кейв рядом с целью — тогда хватит короткого прыжка и красть придётся
+    // меньше инструкций.
+    allocatedAddress = mem.AllocNear(reinterpret_cast<uintptr_t>(originalAddress), CAVE_SIZE);
+    if (!allocatedAddress)
     {
-        delete[] jmpBytes;
+        Log::Error("Не удалось выделить память под кейв");
+        return false;
+    }
+
+    const auto freeCave = [&]()
+    {
         if (allocatedAddress)
         {
             mem.Free(allocatedAddress, CAVE_SIZE);
@@ -122,79 +105,79 @@ bool CavePatch::Apply(MemoryAccess& mem)
         originalSize = 0;
     };
 
-    if (!decoded)
+    BYTE jmpSize = 0;
+    const std::unique_ptr<BYTE[]> jmpBytes(CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize));
+
+    // Сколько ЦЕЛЫХ инструкций займёт прыжок — считает Zydis.
+    // Раньше это делал длино-дизассемблер, который на непонятных байтах
+    // возвращал 0: счётчик не двигался и цикл висел вечно.
+    const RelocationResult reloc = Relocator::Relocate(
+        reinterpret_cast<uintptr_t>(originalAddress),
+        originalBytes, PROBE_SIZE,
+        is64BitProcess,
+        reinterpret_cast<uintptr_t>(allocatedAddress),
+        jmpSize);
+
+    if (!reloc.ok)
     {
-        rollback();
-        throw std::runtime_error("Failed to decode original instructions at patch address.");
+        freeCave();
+        Log::Error("Патч невозможен: " + reloc.error);
+        return false;
     }
 
-    if (originalSize > patchSize)
+    originalSize = static_cast<BYTE>(reloc.stolen);
+
+    if (originalSize > PROBE_SIZE)
     {
-        rollback();
-        throw std::runtime_error("Original instructions too large to fit in the cave.");
+        freeCave();
+        return false;
     }
 
-    if (jmpSize == originalSize)
+    // --- Кейв: код пользователя, затем прыжок обратно ---
+    //
+    // Украденные инструкции сюда НЕ переносятся: патч заменяет их собой,
+    // как в [ENABLE]-скрипте Cheat Engine. Возврат идёт на адрес сразу
+    // за ними, поэтому красть нужно целые инструкции — иначе вернёмся
+    // в середину следующей.
+    BYTE backSize = 0;
+    const std::unique_ptr<BYTE[]> backJmp(CalculateJumpBytes(
+        static_cast<PBYTE>(allocatedAddress) + patchSize,
+        static_cast<PBYTE>(originalAddress) + originalSize,
+        backSize));
+
+    std::vector<BYTE> cave(patchSize + backSize);
+    std::memcpy(cave.data(), patchBytes, patchSize);
+    std::memcpy(cave.data() + patchSize, backJmp.get(), backSize);
+
+    if (!mem.Write(allocatedAddress, cave.data(), cave.size()))
     {
-        mem.Write(originalAddress, jmpBytes, jmpSize);
-    }
-    else
-    {
-        BYTE backJmpSize = 0;
-        const PBYTE back_jmp_bytes = CalculateJumpBytes(
-            static_cast<PBYTE>(allocatedAddress) + caveSize + patchSize,
-            static_cast<PBYTE>(originalAddress) + originalSize, backJmpSize);
-
-        if (!back_jmp_bytes)
-        {
-            throw std::runtime_error("Failed to allocate memory for the backward jump.");
-            delete[] jmpBytes;
-            return false;
-        }
-
-        const size_t cave_size = patchSize + backJmpSize;
-        PBYTE cave_bytes = new BYTE[cave_size];
-
-        std::memcpy(cave_bytes, patchBytes, patchSize);
-        std::memcpy(cave_bytes + patchSize, back_jmp_bytes, backJmpSize);
-        mem.Write(allocatedAddress, cave_bytes, cave_size);
-
-        delete[] cave_bytes;
-        delete[] back_jmp_bytes;
-
-        const size_t nops = originalSize - jmpSize;
-        if (nops > 0)
-        {
-            PBYTE bytes = new BYTE[originalSize];
-
-            std::memcpy(bytes, jmpBytes, jmpSize);
-            std::memset(bytes + jmpSize, 0x90, nops);
-            std::memcpy(bytes + jmpSize + nops, originalBytes + jmpSize, originalSize - jmpSize - nops);
-
-            mem.Write(originalAddress, bytes, originalSize);
-            delete[] bytes;
-        }
-        else
-        {
-            mem.Write(originalAddress, jmpBytes, jmpSize);
-        }
+        freeCave();
+        Log::Error("Не удалось записать кейв");
+        return false;
     }
 
-    delete[] jmpBytes;
+    // --- На месте патча: прыжок, остаток добиваем NOP-ами ---
+    std::vector<BYTE> site(originalSize, 0x90);
+    std::memcpy(site.data(), jmpBytes.get(), jmpSize);
+
+    if (!mem.Write(originalAddress, site.data(), site.size()))
+    {
+        freeCave();
+        Log::Error("Не удалось записать прыжок на месте патча");
+        return false;
+    }
+
     return true;
 }
 
-
 bool CavePatch::Restore(MemoryAccess& mem)
 {
-    // Проверяем и восстанавливаем оригинальные байты
+    // Возвращаем оригинальные байты
     if (mem.IsValid() && originalAddress && originalAddress != INVALID_HANDLE_VALUE && originalSize > 0)
     {
-        // Проверяем, что процесс еще активен
         DWORD exitCode;
         if (GetExitCodeProcess(mem.Handle(), &exitCode) && exitCode == STILL_ACTIVE)
         {
-            // Проверяем доступность памяти для восстановления
             MEMORY_BASIC_INFORMATION mbi;
             if (VirtualQueryEx(mem.Handle(), (LPCVOID)originalAddress, &mbi, sizeof(mbi)) != 0)
             {
@@ -206,14 +189,12 @@ bool CavePatch::Restore(MemoryAccess& mem)
         }
     }
 
-    // Проверяем и освобождаем выделенную память
+    // Освобождаем кейв
     if (mem.IsValid() && allocatedAddress && allocatedAddress != INVALID_HANDLE_VALUE)
     {
-        // Проверяем, что процесс еще активен
         DWORD exitCode;
         if (GetExitCodeProcess(mem.Handle(), &exitCode) && exitCode == STILL_ACTIVE)
         {
-            // Проверяем доступность выделенной памяти
             MEMORY_BASIC_INFORMATION mbi;
             if (VirtualQueryEx(mem.Handle(), (LPCVOID)allocatedAddress, &mbi, sizeof(mbi)) != 0)
             {
@@ -223,6 +204,8 @@ bool CavePatch::Restore(MemoryAccess& mem)
                 }
             }
         }
+
+        allocatedAddress = nullptr;
     }
 
     originalSize = 0;

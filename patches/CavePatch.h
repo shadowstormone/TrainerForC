@@ -6,7 +6,6 @@ class CavePatch : public Patch
     LPVOID allocatedAddress = nullptr;
     PBYTE patchBytes = nullptr;
     BYTE originalSize = 0;
-    int caveSize = 0;
     int patchOffset = 0;
 
 public:

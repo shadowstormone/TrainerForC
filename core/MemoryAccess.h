@@ -52,6 +52,14 @@ public:
 
     // --- Память и поиск ---
     LPVOID Alloc(LPVOID startAddress, SIZE_T amount) const;
+
+    // Выделяет память ПОБЛИЗОСТИ от target — в пределах ±2 ГБ, чтобы до неё
+    // доставал короткий 5-байтный прыжок. VirtualAllocEx с nullptr кладёт
+    // блок куда угодно, и на x64 он почти всегда оказывается дальше 2 ГБ:
+    // тогда нужен 14-байтный прыжок, а значит больше украденных инструкций
+    // и выше шанс, что среди них попадётся непереносимая.
+    // Если рядом места нет — выделяет где получится (не nullptr).
+    LPVOID AllocNear(std::uintptr_t target, SIZE_T amount) const;
     int    Free(LPVOID address, SIZE_T amount) const;
     LPVOID ScanSignature(ULONG_PTR startAddress, SIZE_T scanSize, PBYTE pattern, std::wstring& mask) const;
 

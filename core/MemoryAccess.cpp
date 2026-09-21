@@ -97,3 +97,63 @@ uintptr_t MemoryAccess::ResolveChain(uintptr_t base, const std::vector<uintptr_t
 
     return current + offsets.back();
 }
+
+LPVOID MemoryAccess::AllocNear(std::uintptr_t target, SIZE_T amount) const
+{
+    if (!IsValid()) return nullptr;
+
+    SYSTEM_INFO si{};
+    GetSystemInfo(&si);
+    const std::uintptr_t granularity = si.dwAllocationGranularity;
+
+    constexpr std::uintptr_t RANGE = 0x7FFF0000; // чуть меньше 2 ГБ, с запасом
+    const std::uintptr_t low  = (target > RANGE) ? (target - RANGE) : 0;
+    const std::uintptr_t high = target + RANGE;
+
+    const auto tryAt = [&](std::uintptr_t address) -> LPVOID
+    {
+        const std::uintptr_t aligned = (address + granularity - 1) & ~(granularity - 1);
+        if (aligned < low || aligned >= high) return nullptr;
+
+        return VirtualAllocEx(m_handle, reinterpret_cast<LPVOID>(aligned), amount,
+                              MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    };
+
+    // Вверх от цели: перепрыгиваем занятые участки по их реальному размеру,
+    // а не шагаем по 64 КБ через всё адресное пространство.
+    for (std::uintptr_t probe = target; probe < high; )
+    {
+        MEMORY_BASIC_INFORMATION mbi{};
+        if (VirtualQueryEx(m_handle, reinterpret_cast<LPCVOID>(probe), &mbi, sizeof(mbi)) == 0) break;
+
+        if (mbi.State == MEM_FREE && mbi.RegionSize >= amount)
+        {
+            if (LPVOID got = tryAt(reinterpret_cast<std::uintptr_t>(mbi.BaseAddress))) return got;
+        }
+
+        probe = reinterpret_cast<std::uintptr_t>(mbi.BaseAddress) + mbi.RegionSize;
+    }
+
+    // Вниз от цели.
+    for (std::uintptr_t probe = target; probe > low; )
+    {
+        MEMORY_BASIC_INFORMATION mbi{};
+        if (VirtualQueryEx(m_handle, reinterpret_cast<LPCVOID>(probe), &mbi, sizeof(mbi)) == 0) break;
+
+        const std::uintptr_t regionBase = reinterpret_cast<std::uintptr_t>(mbi.BaseAddress);
+
+        if (mbi.State == MEM_FREE && mbi.RegionSize >= amount)
+        {
+            // Ближе к цели — значит выше по региону.
+            const std::uintptr_t last = regionBase + mbi.RegionSize - amount;
+            if (LPVOID got = tryAt(last > regionBase ? (last & ~(granularity - 1)) : regionBase)) return got;
+            if (LPVOID got = tryAt(regionBase)) return got;
+        }
+
+        if (regionBase < granularity) break;
+        probe = regionBase - 1;
+    }
+
+    // Рядом не нашлось — берём где угодно, прыжок тогда будет длинным.
+    return VirtualAllocEx(m_handle, nullptr, amount, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+}

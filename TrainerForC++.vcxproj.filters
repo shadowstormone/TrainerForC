@@ -293,7 +293,6 @@
     <ClInclude Include="platform/VKeys.h">
       <Filter>platform</Filter>
     </ClInclude>
-    <ClInclude Include="third_party/nmd_assembly.h">
       <Filter>third_party</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
