@@ -337,6 +337,7 @@
     </ClCompile>
     <ClCompile Include="core/Memory_Functions.cpp" />
     <ClCompile Include="core/MemoryAccess.cpp" />
+    <ClCompile Include="core/Relocator.cpp" />
     <ClCompile Include="patches/NopPatch.cpp" />
     <ClCompile Include="tests/Errors_test.cpp" />
     <ClCompile Include="tests/CheatRegistry_test.cpp" />
@@ -358,6 +359,7 @@
     <ClInclude Include="app/Application.h" />
     <ClInclude Include="core/Memory_Functions.h" />
     <ClInclude Include="core/MemoryAccess.h" />
+    <ClInclude Include="core/Relocator.h" />
     <ClInclude Include="third_party/nmd_assembly.h" />
     <ClInclude Include="patches/NopPatch.h" />
     <ClInclude Include="patches/Patch.h" />

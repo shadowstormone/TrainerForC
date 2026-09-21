@@ -141,6 +141,9 @@
     <ClCompile Include="core/MemoryAccess.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="core/Relocator.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
     <ClCompile Include="core/Memory_Functions.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -216,6 +219,9 @@
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="core/MemoryAccess.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="core/Relocator.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="core/Memory_Functions.h">

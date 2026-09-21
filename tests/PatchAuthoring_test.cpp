@@ -1,9 +1,12 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 #include "cheats/CheatDefinition.h"
+#include "core/Relocator.h"
 #include "patches/Patch.h"
 
 namespace
@@ -123,4 +126,113 @@ TEST(WriteValue, CarriesChainAndAbsoluteFlagFromAddress)
 
     const PatchSpec direct = WriteValue(Address::At(0x1000), 1);
     EXPECT_TRUE(direct.absoluteAddress);
+}
+
+// ===================== Перенос инструкций в кейв =====================
+
+TEST(Relocator, StealsWholeInstructionsAndCopiesPlainOnesAsIs)
+{
+    // Настоящая сигнатура из реестра, disp32 подставлены:
+    //   sub [rbx+0x4B4], edx      (6)
+    //   mov ecx, [rbx+0x4B4]      (6)
+    //   mov r9d, 0xFF             (6)
+    //   lea r8, [rbp-0x108]       (7)
+    const std::uint8_t code[] = {
+        0x29, 0x93, 0xB4, 0x04, 0x00, 0x00,
+        0x8B, 0x8B, 0xB4, 0x04, 0x00, 0x00,
+        0x41, 0xB9, 0xFF, 0x00, 0x00, 0x00,
+        0x4C, 0x8D, 0x85, 0xF8, 0xFE, 0xFF, 0xFF,
+    };
+
+    // 14 байт — длинный прыжок x64. Крадём целые инструкции: 6+6+6 = 18.
+    const auto r = Relocator::Relocate(0x140001000, code, sizeof(code), true, 0x7FF000000000, 14);
+
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_EQ(r.stolen, 18u);            // не 14: инструкции не режутся пополам
+    EXPECT_EQ(r.bytes.size(), 18u);
+
+    // Ни RIP-обращений, ни относительных переходов — байты должны совпасть.
+    EXPECT_TRUE(std::equal(r.bytes.begin(), r.bytes.end(), code));
+}
+
+TEST(Relocator, FixesRipRelativeDisplacement)
+{
+    // lea rax, [rip+0x10] по адресу 0x1000 -> целится в 0x1017
+    const std::uint8_t code[] = { 0x48, 0x8D, 0x05, 0x10, 0x00, 0x00, 0x00 };
+
+    const auto r = Relocator::Relocate(0x1000, code, sizeof(code), true, 0x5000, 5);
+    ASSERT_TRUE(r.ok) << r.error;
+    ASSERT_EQ(r.bytes.size(), 7u);
+
+    std::int32_t disp = 0;
+    std::memcpy(&disp, r.bytes.data() + 3, sizeof(disp));
+
+    // Из кейва до той же цели: 0x1017 - (0x5000 + 7)
+    EXPECT_EQ(disp, static_cast<std::int32_t>(0x1017 - (0x5000 + 7)));
+
+    // Прежний длино-дизассемблер оставил бы здесь исходные 0x10
+    // и инструкция читала бы чужую память.
+    EXPECT_NE(disp, 0x10);
+}
+
+TEST(Relocator, FixesNearCallDisplacement)
+{
+    // call $+5 по адресу 0x1000 -> цель 0x1005
+    const std::uint8_t code[] = { 0xE8, 0x00, 0x00, 0x00, 0x00 };
+
+    const auto r = Relocator::Relocate(0x1000, code, sizeof(code), true, 0x5000, 5);
+    ASSERT_TRUE(r.ok) << r.error;
+
+    std::int32_t rel = 0;
+    std::memcpy(&rel, r.bytes.data() + 1, sizeof(rel));
+    EXPECT_EQ(rel, static_cast<std::int32_t>(0x1005 - (0x5000 + 5)));
+}
+
+TEST(Relocator, RefusesShortJumpThatCannotReach)
+{
+    // jmp short +0x10 — адресуется одним байтом, из далёкого кейва не достаёт
+    const std::uint8_t code[] = { 0xEB, 0x10, 0x90, 0x90, 0x90, 0x90 };
+
+    const auto r = Relocator::Relocate(0x1000, code, sizeof(code), true, 0x700000000000, 5);
+
+    // Честная ошибка вместо перехода в никуда
+    EXPECT_FALSE(r.ok);
+    EXPECT_FALSE(r.error.empty());
+}
+
+TEST(Relocator, ShortJumpThatStillReachesIsAdjusted)
+{
+    // Тот же переход, но кейв рядом — уложиться в байт можно
+    const std::uint8_t code[] = { 0xEB, 0x10, 0x90, 0x90, 0x90, 0x90 };
+
+    const auto r = Relocator::Relocate(0x1000, code, sizeof(code), true, 0x1040, 2);
+    ASSERT_TRUE(r.ok) << r.error;
+
+    const auto rel = static_cast<std::int8_t>(r.bytes[1]);
+    EXPECT_EQ(rel, static_cast<std::int8_t>(0x1012 - (0x1040 + 2)));
+}
+
+TEST(Relocator, WorksIn32BitMode)
+{
+    // call $+5 в 32-битном режиме
+    const std::uint8_t code[] = { 0xE8, 0x00, 0x00, 0x00, 0x00 };
+
+    const auto r = Relocator::Relocate(0x401000, code, sizeof(code), false, 0x500000, 5);
+    ASSERT_TRUE(r.ok) << r.error;
+
+    std::int32_t rel = 0;
+    std::memcpy(&rel, r.bytes.data() + 1, sizeof(rel));
+    EXPECT_EQ(rel, static_cast<std::int32_t>(0x401005 - (0x500000 + 5)));
+}
+
+TEST(Relocator, ReportsGarbageInsteadOfLoopingForever)
+{
+    // Байты, которые не разбираются. Старый цикл на nmd_x86_ldisasm
+    // получал длину 0, offset не двигался — и подвешивал интерфейс.
+    const std::uint8_t garbage[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+    const auto r = Relocator::Relocate(0x1000, garbage, sizeof(garbage), true, 0x5000, 14);
+
+    EXPECT_FALSE(r.ok);
+    EXPECT_FALSE(r.error.empty());
 }
