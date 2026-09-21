@@ -1,5 +1,7 @@
 #include "ui/UIControls.h"
 
+#include <cmath>
+
 bool UIControls::AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size, float animationSpeed)
 {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -9,9 +11,13 @@ bool UIControls::AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& siz
     float width = size.x;
     float radius = height * 0.5f;
 
-    // Уникальные анимации для каждого переключателя
-    static std::map<std::string, float> animationProgressMap;
-    float& animationProgress = animationProgressMap[std::string(id)];
+    // Прогресс анимации храним в ImGuiStorage по идентификатору элемента.
+    // Раньше это была функциональная static-карта std::map<std::string,float>:
+    // она выделяла строку на КАЖДЫЙ кадр ради поиска и росла без конца,
+    // потому что записи из неё никогда не удалялись.
+    const ImGuiID storageId = ImGui::GetID(id);
+    ImGuiStorage* storage = ImGui::GetStateStorage();
+    float animationProgress = storage->GetFloat(storageId, *v ? 1.0f : 0.0f);
 
     // Невидимая кнопка
     ImGui::InvisibleButton(id, size);
@@ -21,10 +27,21 @@ bool UIControls::AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& siz
         *v = !*v;
     }
 
-    // Плавная анимация
-    float targetProgress = *v ? 1.0f : 0.0f;
-    animationProgress += (targetProgress - animationProgress) * (animationSpeed * ImGui::GetIO().DeltaTime * 60.0f);
+    // Плавная анимация, не зависящая от частоты кадров.
+    //
+    // Было: progress += (target - progress) * (speed * dt * 60). При
+    // просадке кадров множитель вылетал за единицу — например, после паузы
+    // в полсекунды он равен 3, — и анимация перелетала цель, после чего её
+    // подрезал clamp. Экспоненциальное сглаживание 1 - e^(-k*dt) всегда
+    // остаётся в пределах [0,1) и даёт одинаковую скорость на любом FPS.
+    const float target = *v ? 1.0f : 0.0f;
+    const float rate = animationSpeed * 60.0f; // скорость в единицах в секунду
+    const float t = 1.0f - std::exp(-rate * ImGui::GetIO().DeltaTime);
+
+    animationProgress += (target - animationProgress) * t;
     animationProgress = Utils::Clamp(animationProgress, 0.0f, 1.0f);
+
+    storage->SetFloat(storageId, animationProgress);
 
     // Easing
     float easeFactor = animationProgress * animationProgress * (3.0f - 2.0f * animationProgress);

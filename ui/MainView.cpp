@@ -196,6 +196,9 @@ void MainView::RenderToggles()
         const std::string toggleId = "##toggle_" + name;
         const std::string hotkey = KeyNames::Hotkey(option->GetKeys());
 
+        // Подсветка строки под курсором — до отрисовки содержимого.
+        Layout::HighlightRowUnderCursor(Layout::TOGGLE_HEIGHT);
+
         // Клавиша — отдельная колонка, а не часть названия: подпись
         // выводится из реально назначенных кодов и не может с ними разойтись.
         ImGui::TextUnformatted(hotkey.c_str());
@@ -236,6 +239,52 @@ void MainView::RenderToggles()
     }
 }
 
+
+// Управление звуком. AudioService умеет громкость и отключение с самого
+// начала, но из интерфейса до них было не добраться.
+void MainView::RenderAudioControls()
+{
+    AudioService& audio = AudioService::Instance();
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const float spacing = style.ItemSpacing.x;
+    const float boxWidth = ImGui::GetFrameHeight();   // флажок квадратный
+    const float sliderWidth = Layout::INPUT_WIDTH;
+
+    const float sliderX = Layout::ControlX(sliderWidth);
+    const float boxX = sliderX - spacing - boxWidth;
+
+    float toggleX = 0.0f;
+    float nameX = 0.0f;
+    ComputeColumns(toggleX, nameX);
+
+    Layout::HighlightRowUnderCursor(ImGui::GetFrameHeight());
+
+    ImGui::SetCursorPosX(nameX);
+    Layout::RowLabel("Звук", boxX - nameX - spacing, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    bool enabled = audio.IsEnabled();
+    ImGui::SameLine(boxX);
+    if (ImGui::Checkbox("##sound_enabled", &enabled))
+    {
+        audio.SetEnabled(enabled);
+    }
+
+    // Громкость показываем процентами: 0.75 в подписи читается хуже, чем 75%.
+    float percent = audio.GetVolume() * 100.0f;
+
+    ImGui::SameLine(sliderX);
+    ImGui::SetNextItemWidth(sliderWidth);
+
+    if (!enabled) ImGui::BeginDisabled();
+
+    if (ImGui::SliderFloat("##sound_volume", &percent, 0.0f, 100.0f, "%.0f%%"))
+    {
+        audio.SetVolume(percent / 100.0f);
+    }
+
+    if (!enabled) ImGui::EndDisabled();
+}
 
 void MainView::RenderInputFields()
 {
@@ -532,6 +581,7 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
         ImGui::Separator();
         Layout::GroupGap();
         RenderInputFields();
+        RenderAudioControls();
         ImGui::Separator();
 
         // Переместить курсор в нижнюю часть окна

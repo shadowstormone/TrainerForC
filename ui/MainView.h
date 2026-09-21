@@ -69,6 +69,9 @@ class MainView
     void ComputeColumns(float& outToggleX, float& outNameX) const;
 
     void RenderToggles();
+
+    // Флажок звука и громкость.
+    void RenderAudioControls();
     void RenderInputFields();
     void RenderProcessInfo();
     void HandleToggleInteraction(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);

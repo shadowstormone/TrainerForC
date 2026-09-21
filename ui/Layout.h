@@ -21,9 +21,10 @@ namespace Layout
     // Ширина поля ввода значения. Подпись получает всё, что останется.
     inline constexpr float INPUT_WIDTH = 150.0f;
 
-    // Ширина переключателя. Должна совпадать со значением по умолчанию
+    // Размеры переключателя. Должны совпадать со значением по умолчанию
     // у AnimatedToggleSwitch.
     inline constexpr float TOGGLE_WIDTH = 50.0f;
+    inline constexpr float TOGGLE_HEIGHT = 25.0f;
 
     inline float ContentLeft()
     {
@@ -111,5 +112,30 @@ namespace Layout
         ImGui::Dummy(ImVec2(0.0f, gap));
         ImGui::Separator();
         ImGui::Dummy(ImVec2(0.0f, gap));
+    }
+
+    // Подсветка строки под курсором.
+    //
+    // Рисуется ДО содержимого строки: фон, нарисованный после, лёг бы
+    // поверх текста. Поэтому высоту строки нужно знать заранее.
+    //
+    // Переменные названы не min/max намеренно: Windows.h определяет их
+    // макросами, и такие имена здесь не компилируются.
+    inline void HighlightRowUnderCursor(float rowHeight)
+    {
+        const ImGuiStyle& style = ImGui::GetStyle();
+        const ImVec2 origin = ImGui::GetCursorScreenPos();
+        const float padY = style.ItemSpacing.y * 0.5f;
+
+        const ImVec2 topLeft(origin.x - style.WindowPadding.x * 0.5f, origin.y - padY);
+        const ImVec2 bottomRight(topLeft.x + ContentWidth() + style.WindowPadding.x,
+                                 origin.y + rowHeight + padY);
+
+        if (!ImGui::IsMouseHoveringRect(topLeft, bottomRight)) return;
+
+        ImGui::GetWindowDrawList()->AddRectFilled(
+            topLeft, bottomRight,
+            ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.35f),
+            style.FrameRounding);
     }
 }

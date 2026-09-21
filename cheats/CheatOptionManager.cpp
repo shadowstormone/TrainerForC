@@ -1,4 +1,5 @@
 #include "cheats/CheatOptionManager.h"
+#include "platform/AudioService.h"
 #include "platform/Logger.h"
 
 #include "cheats/CheatDefinition.h"
@@ -120,6 +121,21 @@ int CheatOptionManager::DisableAll()
 
     const int processId = _cheatProcess->GetProcessID();
     if (processId == 0) return 0;
+
+    // Откат на выходе — это не пользовательское действие, а уборка.
+    // Без этого на закрытии играла бы очередь щелчков: по одному на
+    // каждый включённый чит.
+    struct MuteWhileRestoring
+    {
+        bool wasEnabled;
+
+        MuteWhileRestoring() : wasEnabled(AudioService::Instance().IsEnabled())
+        {
+            AudioService::Instance().SetEnabled(false);
+        }
+
+        ~MuteWhileRestoring() { AudioService::Instance().SetEnabled(wasEnabled); }
+    } mute;
 
     int restored = 0;
 
