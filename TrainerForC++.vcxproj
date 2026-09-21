@@ -80,8 +80,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -99,8 +99,8 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -120,8 +120,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -143,8 +143,8 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -180,6 +180,356 @@
     <ClCompile Include="platform/Logger.cpp" />
     <ClCompile Include="app/main.cpp" />
     <ClCompile Include="app/Application.cpp" />
+    <ClCompile Include="libs\asmjit\asmjit\core\arch_traits.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\assembler.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\builder.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\code_holder.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\code_holder_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\code_writer.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\compiler.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\const_pool.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\const_pool_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\cpu_info.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\debug_utils.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\emit_helper.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\emitter.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\emitter_utils.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\environment.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\error.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\error_handler.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\formatter.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\func.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\func_args_context.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\func_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\inst.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\inst_db.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\jit_allocator.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\jit_allocator_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\jit_runtime.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\logger.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\operand_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\os_utils.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\pauth.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\ra_local.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\ra_pass.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\ra_stack.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\string.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\string_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\target.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\type.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\virt_mem.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\virt_mem_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_assembler.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_builder.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_compiler.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_emit_helper.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_formatter.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_func.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_inst_api.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_inst_db.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_inst_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_operand_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_ra_pass.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\algorithm_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_bit_set.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_bit_set_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_hash.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_hash_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_list_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_tree_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_vector.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_vector_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\bit_set_utils_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\commons_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\string_index_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\string_utils_test.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\ujit\uni_compiler_a64.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\ujit\uni_compiler_x86.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\ujit\vec_const_table.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmtk\asmtk\asmparser.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libs\asmtk\asmtk\asmtokenizer.cpp">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="libs\zycore\src\API\Memory.c">
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>false</SDLCheck>
@@ -338,6 +688,7 @@
     <ClCompile Include="core/Memory_Functions.cpp" />
     <ClCompile Include="core/MemoryAccess.cpp" />
     <ClCompile Include="core/Relocator.cpp" />
+    <ClCompile Include="core/Assembler.cpp" />
     <ClCompile Include="patches/NopPatch.cpp" />
     <ClCompile Include="tests/Errors_test.cpp" />
     <ClCompile Include="tests/CheatRegistry_test.cpp" />
@@ -360,6 +711,7 @@
     <ClInclude Include="core/Memory_Functions.h" />
     <ClInclude Include="core/MemoryAccess.h" />
     <ClInclude Include="core/Relocator.h" />
+    <ClInclude Include="core/Assembler.h" />
     <ClInclude Include="patches/NopPatch.h" />
     <ClInclude Include="patches/Patch.h" />
     <ClInclude Include="patches/PatchLibrary.h" />

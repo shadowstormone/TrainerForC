@@ -27,6 +27,13 @@ std::unique_ptr<CheatOption> CreateCheatFromDefinition(const CheatDefinition& de
         case PatchSpec::Kind::Cave:
         {
             const std::wstring wsig = Utils::Utf8ToWString(spec.signature);
+            if (!spec.patchAsm.empty())
+            {
+                option->AddCavePatchAsm(wsig.c_str(), spec.patchAsm,
+                                        spec.caveMode, spec.preserveRegisters);
+                break;
+            }
+
             // Байты живут в определении чита, а оно — в реестре, то есть всё
             // время работы программы.
             auto* bytes = reinterpret_cast<PBYTE>(const_cast<std::uint8_t*>(spec.patchBytes.data()));

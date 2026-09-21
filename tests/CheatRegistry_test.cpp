@@ -43,9 +43,10 @@ TEST(CheatRegistry, CavePatchSpecCarriesBytes)
     ASSERT_EQ(cheat.patches.size(), 1u);
 
     EXPECT_EQ(cheat.patches[0].kind, PatchSpec::Kind::Cave);
-    // Длина берётся из самих байт, руками её никто не пишет.
-    EXPECT_FALSE(cheat.patches[0].patchBytes.empty());
-    EXPECT_EQ(cheat.patches[0].length, cheat.patches[0].patchBytes.size());
+    // Патч описан текстом ассемблера: байты появятся при применении,
+    // когда станет известна разрядность цели.
+    EXPECT_FALSE(cheat.patches[0].patchAsm.empty());
+    EXPECT_TRUE(cheat.patches[0].patchBytes.empty());
     EXPECT_FALSE(cheat.patches[0].signature.empty());
 }
 

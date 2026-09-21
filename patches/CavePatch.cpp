@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "cheats/CheatOption.h"
+#include "core/Assembler.h"
 #include "core/Relocator.h"
 #include "platform/Logger.h"
 
@@ -72,6 +73,30 @@ bool CavePatch::Apply(MemoryAccess& mem)
     const bool is64BitProcess = mem.IsTargetX64();
     const uintptr_t scanSize = is64BitProcess ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
 
+    // Код патча. Если он задан текстом — собираем ИМЕННО СЕЙЧАС, под
+    // разрядность цели: одна и та же мнемоника кодируется по-разному.
+    std::vector<BYTE> code;
+    if (!patchAsm.empty())
+    {
+        const AssembleResult assembled = Assembler::Assemble(patchAsm, is64BitProcess);
+        if (!assembled.ok)
+        {
+            Log::Error("Не удалось собрать патч: " + assembled.error);
+            return false;
+        }
+        code.assign(assembled.bytes.begin(), assembled.bytes.end());
+    }
+    else
+    {
+        code.assign(patchBytes, patchBytes + patchSize);
+    }
+
+    if (code.empty())
+    {
+        Log::Error("Патч пуст");
+        return false;
+    }
+
     const LPCWSTR moduleName = parent ? parent->GetModuleName() : nullptr;
     const uintptr_t baseAddress = (moduleName && wcslen(moduleName) > 0)
                                       ? mem.ModuleBase(moduleName)
@@ -133,7 +158,7 @@ bool CavePatch::Apply(MemoryAccess& mem)
     if (preserveRegisters)
     {
         const auto clobbered = Relocator::FindClobberedGpRegisters(
-            patchBytes, static_cast<size_t>(patchSize), is64BitProcess);
+            code.data(), code.size(), is64BitProcess);
 
         for (const BYTE id : clobbered)
         {
@@ -155,7 +180,7 @@ bool CavePatch::Apply(MemoryAccess& mem)
 
     // Куда в кейве лягут перенесённые оригинальные инструкции.
     const uintptr_t stolenAtCave = reinterpret_cast<uintptr_t>(allocatedAddress)
-                                 + prologue.size() + patchSize + epilogue.size();
+                                 + prologue.size() + code.size() + epilogue.size();
 
     // Сколько ЦЕЛЫХ инструкций займёт прыжок — считает Zydis.
     // Раньше это делал длино-дизассемблер, который на непонятных байтах
@@ -211,7 +236,7 @@ bool CavePatch::Apply(MemoryAccess& mem)
     //   прыжок обратно — на адрес сразу за украденными байтами
     std::vector<BYTE> cave;
     cave.insert(cave.end(), prologue.begin(), prologue.end());
-    cave.insert(cave.end(), patchBytes, patchBytes + patchSize);
+    cave.insert(cave.end(), code.begin(), code.end());
     cave.insert(cave.end(), epilogue.begin(), epilogue.end());
     cave.insert(cave.end(), relocated.begin(), relocated.end());
 

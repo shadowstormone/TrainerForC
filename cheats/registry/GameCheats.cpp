@@ -1,18 +1,23 @@
 // Реестр читов. Одна запись — один чит.
 //
-// Сигнатуры и байты патча пишутся строкой ровно в том виде, в каком их
-// показывает Cheat Engine: "29 93 ?? ??". Длину считать не нужно.
+// Сигнатуры пишутся как их показывает Cheat Engine: "29 93 ?? ??".
+// Патчи — текстом ассемблера, как в auto-assembler CE. Байты, ModRM,
+// REX-префиксы и размеры констант считает ассемблер; кейв сам спасает
+// регистры, которые патч затирает.
 
 #include "cheats/CheatRegistry.h"
 #include "patches/PatchLibrary.h"
 #include "platform/VKeys.h"
 
+// Записать 1000 в [rbx+0x800] вместо того, чтобы вычитать урон.
+//
+// rsi здесь затирается, но беспокоиться не о чем: кейв оборачивает патч
+// в push rsi / pop rsi сам — он разбирает патч и видит, что тот портит.
 REGISTER_CHEAT({
     L"[Numpad 1] - Cave Cheat Test 1",
     { VKeys::KEY_NUMPAD1 },
-    { Cave(PatchLibrary::SIG_CHEAT_TEST_3,
-           // movabs rsi, 1000 ; mov [rbx+0x800], rsi
-           "48 BE E8 03 00 00 00 00 00 00 48 89 B3 00 08 00 00") },
+    { Cave(PatchLibrary::SIG_CHEAT_TEST_3, Asm("mov rsi, 1000\n"
+                                               "mov [rbx+0x800], rsi")) },
 })
 
 // Значение по цепочке указателей, как её видно в Cheat Engine:
@@ -24,11 +29,13 @@ REGISTER_CHEAT({
     true, 450
 })
 
+// То же место, но оригинальная инструкция СОХРАНЯЕТСЯ: она переносится
+// в кейв и выполняется после патча. Нужно, когда игре всё ещё нужно то,
+// что она делала, — настоящий хук, а не подмена.
 REGISTER_CHEAT({
-    L"[Numpad 3] - Cheat Test 3 (no used)",
+    L"[Numpad 3] - Cave с сохранением оригинала",
     { VKeys::KEY_NUMPAD3 },
-    { Cave(PatchLibrary::SIG_CHEAT_TEST_3,
-           "48 BE E8 03 00 00 00 00 00 00 48 89 B3 00 08 00 00") },
+    { CaveKeepOriginal(PatchLibrary::SIG_CHEAT_TEST_3, Asm("mov [rbx+0x800], 1000")) },
 })
 
 REGISTER_CHEAT({

@@ -30,6 +30,10 @@ struct PatchSpec
     std::size_t length = 0;                // для Nop: сколько байт занопить
     std::vector<std::uint8_t> patchBytes;  // для Cave: сами байты; длина = size()
 
+    // Cave: текст ассемблера, если патч описан им, а не байтами.
+    // Собирается при применении — под разрядность цели.
+    std::string patchAsm;
+
     // Cave: что делать с инструкциями, которые затирает прыжок, и спасать ли
     // регистры, в которые пишет патч.
     CaveMode caveMode = CaveMode::ReplaceOriginal;
@@ -74,6 +78,16 @@ inline std::vector<std::uint8_t> ParseBytes(std::string_view text)
 
     return bytes;
 }
+
+// Патч, написанный текстом ассемблера, а не байтами:
+//     Cave(SIG, Asm("mov [rbx+800], 1000"))
+// как в auto-assembler Cheat Engine. Байты, ModRM, REX-префиксы и размеры
+// констант считает ассемблер — там, где человек ошибается чаще всего.
+struct Asm
+{
+    std::string text;
+    explicit Asm(std::string_view source) : text(source) {}
+};
 
 // Адрес значения — читается так же, как его находишь в Cheat Engine.
 //
@@ -141,6 +155,15 @@ inline PatchSpec Cave(std::string_view signature, std::string_view patchHex)
     return Cave(signature, ParseBytes(patchHex));
 }
 
+inline PatchSpec Cave(std::string_view signature, Asm code)
+{
+    PatchSpec s;
+    s.kind = PatchSpec::Kind::Cave;
+    s.signature = std::string(signature);
+    s.patchAsm = std::move(code.text);
+    return s;
+}
+
 // Кейв, который СОХРАНЯЕТ оригинальные инструкции: они переносятся в кейв
 // и выполняются после кода патча. Нужно, когда игре всё ещё нужно то, что
 // они делали, — настоящий хук, а не подмена.
@@ -154,6 +177,13 @@ inline PatchSpec CaveKeepOriginal(std::string_view signature, std::vector<std::u
 inline PatchSpec CaveKeepOriginal(std::string_view signature, std::string_view patchHex)
 {
     return CaveKeepOriginal(signature, ParseBytes(patchHex));
+}
+
+inline PatchSpec CaveKeepOriginal(std::string_view signature, Asm code)
+{
+    PatchSpec s = Cave(signature, std::move(code));
+    s.caveMode = CaveMode::KeepOriginal;
+    return s;
 }
 
 // Перегрузка для массивов из PatchLibrary: Cave(SIG_X, PATCH_X)

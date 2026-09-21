@@ -46,6 +46,11 @@ public:
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize,
 	                          CaveMode mode = CaveMode::ReplaceOriginal,
 	                          bool preserveRegisters = true);
+
+	// Патч текстом ассемблера — собирается при применении, под разрядность цели.
+	CheatOption* AddCavePatchAsm(LPCWSTR signature, std::string asmText,
+	                             CaveMode mode = CaveMode::ReplaceOriginal,
+	                             bool preserveRegisters = true);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value, bool absolute = false);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value, bool absolute = false);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value, bool absolute = false);

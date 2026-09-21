@@ -76,6 +76,14 @@ CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T p
     return this;
 }
 
+CheatOption* CheatOption::AddCavePatchAsm(LPCWSTR signature, std::string asmText,
+                                          CaveMode mode, bool preserveRegisters)
+{
+    patches.push_back(std::make_unique<CavePatch>(
+        this, signature, std::move(asmText), mode, preserveRegisters));
+    return this;
+}
+
 CheatOption* CheatOption::AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value, bool absolute)
 {
     LPCWSTR processName = cheatProcess->GetProcessName();

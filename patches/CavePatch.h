@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 #include "patches/Patch.h"
 
 // Что делать с инструкциями, на место которых встал прыжок.
@@ -20,6 +22,11 @@ class CavePatch : public Patch
     PBYTE patchBytes = nullptr;
     BYTE originalSize = 0;
     int patchOffset = 0;
+
+    // Текст ассемблера, если патч описан им, а не байтами. Собирается
+    // при ПРИМЕНЕНИИ, а не здесь: разрядность цели известна только когда
+    // процесс открыт, а от неё зависит кодировка.
+    std::string patchAsm;
 
     CaveMode mode = CaveMode::ReplaceOriginal;
 
@@ -43,6 +50,17 @@ public:
     ~CavePatch()
     {
         delete[] patchBytes;
+    }
+
+    // Патч, описанный текстом ассемблера: "mov [rbx+800], 1000"
+    CavePatch(CheatOption* parentInstance, LPCWSTR signature, std::string asmText,
+              CaveMode caveMode = CaveMode::ReplaceOriginal,
+              bool preserveClobberedRegisters = true)
+        : Patch(parentInstance, signature, 0)
+        , patchAsm(std::move(asmText))
+        , mode(caveMode)
+        , preserveRegisters(preserveClobberedRegisters)
+    {
     }
 
     static PBYTE CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize);

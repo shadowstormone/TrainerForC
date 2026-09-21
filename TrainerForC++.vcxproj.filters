@@ -31,6 +31,12 @@
     <Filter Include="libs">
       <UniqueIdentifier>{aa11bb22-0000-4000-8000-000000000001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="libs\asmjit">
+      <UniqueIdentifier>{aa11bb22-0000-4000-8000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs\asmtk">
+      <UniqueIdentifier>{aa11bb22-0000-4000-8000-000000000005}</UniqueIdentifier>
+    </Filter>
     <Filter Include="libs\zydis">
       <UniqueIdentifier>{aa11bb22-0000-4000-8000-000000000002}</UniqueIdentifier>
     </Filter>
@@ -44,6 +50,216 @@
     </ClCompile>
     <ClCompile Include="app/Application.cpp">
       <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\arch_traits.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\assembler.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\builder.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\code_holder.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\code_holder_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\code_writer.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\compiler.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\const_pool.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\const_pool_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\cpu_info.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\debug_utils.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\emit_helper.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\emitter.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\emitter_utils.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\environment.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\error.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\error_handler.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\formatter.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\func.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\func_args_context.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\func_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\inst.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\inst_db.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\jit_allocator.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\jit_allocator_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\jit_runtime.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\logger.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\operand_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\os_utils.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\pauth.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\ra_local.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\ra_pass.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\ra_stack.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\string.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\string_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\target.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\type.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\virt_mem.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\core\virt_mem_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_assembler.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_builder.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_compiler.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_emit_helper.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_formatter.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_func.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_inst_api.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_inst_db.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_inst_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_operand_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\x86\x86_ra_pass.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\algorithm_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_bit_set.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_bit_set_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_hash.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_hash_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_list_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_tree_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_vector.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\arena_vector_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\bit_set_utils_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\commons_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\string_index_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\axl\string_utils_test.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\ujit\uni_compiler_a64.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\ujit\uni_compiler_x86.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmjit\asmjit\ujit\vec_const_table.cpp">
+      <Filter>libs\asmjit</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmtk\asmtk\asmparser.cpp">
+      <Filter>libs\asmtk</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\asmtk\asmtk\asmtokenizer.cpp">
+      <Filter>libs\asmtk</Filter>
     </ClCompile>
     <ClCompile Include="libs\zycore\src\API\Memory.c">
       <Filter>libs\zycore</Filter>
@@ -147,6 +363,9 @@
     <ClCompile Include="core/Relocator.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="core/Assembler.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
     <ClCompile Include="core/Memory_Functions.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -225,6 +444,9 @@
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="core/Relocator.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="core/Assembler.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="core/Memory_Functions.h">

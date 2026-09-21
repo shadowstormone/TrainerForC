@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "cheats/CheatDefinition.h"
+#include "core/Assembler.h"
 #include "core/Relocator.h"
 #include "patches/Patch.h"
 
@@ -299,4 +300,89 @@ TEST(Measure, CountsWholeInstructionsWithoutRelocating)
 
     ASSERT_TRUE(Relocator::Measure(code, sizeof(code), true, 7, bytes, error)) << error;
     EXPECT_EQ(bytes, 12u); // семь байт -> нужна и вторая инструкция целиком
+}
+
+// ===================== Текстовый ассемблер =====================
+
+namespace
+{
+    std::string Hex(const std::vector<std::uint8_t>& b)
+    {
+        static const char* d = "0123456789ABCDEF";
+        std::string s;
+        for (std::uint8_t x : b) { s += d[x >> 4]; s += d[x & 0xF]; s += ' '; }
+        if (!s.empty()) s.pop_back();
+        return s;
+    }
+}
+
+TEST(Assembler, MatchesHandWrittenBytesFromRegistry)
+{
+    // Ровно вторая инструкция патча из реестра, написанная руками как
+    // 48 89 B3 00 08 00 00
+    const auto r = Assembler::Assemble("mov [rbx+0x800], rsi", true);
+
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_EQ(Hex(r.bytes), "48 89 B3 00 08 00 00");
+}
+
+TEST(Assembler, KnownSimpleEncodings)
+{
+    auto asm64 = [](const char* t) { return Assembler::Assemble(t, true); };
+
+    EXPECT_EQ(Hex(asm64("nop").bytes), "90");
+    EXPECT_EQ(Hex(asm64("ret").bytes), "C3");
+    EXPECT_EQ(Hex(asm64("mov eax, 1").bytes), "B8 01 00 00 00");
+    EXPECT_EQ(Hex(asm64("push rsi").bytes), "56");
+    EXPECT_EQ(Hex(asm64("pop rsi").bytes), "5E");
+    EXPECT_EQ(Hex(asm64("push r9").bytes), "41 51"); // REX.B для r8-r15
+}
+
+TEST(Assembler, SameSourceGivesDifferentBytesPer32And64)
+{
+    // В 32-битном режиме REX-префикса нет
+    const auto a32 = Assembler::Assemble("mov [ebx+0x800], esi", false);
+    const auto a64 = Assembler::Assemble("mov [rbx+0x800], rsi", true);
+
+    ASSERT_TRUE(a32.ok) << a32.error;
+    ASSERT_TRUE(a64.ok) << a64.error;
+
+    EXPECT_EQ(Hex(a32.bytes), "89 B3 00 08 00 00");
+    EXPECT_EQ(Hex(a64.bytes), "48 89 B3 00 08 00 00");
+}
+
+TEST(Assembler, MultipleInstructions)
+{
+    const auto r = Assembler::Assemble("mov rsi, 1000\nmov [rbx+0x800], rsi", true);
+    ASSERT_TRUE(r.ok) << r.error;
+
+    // Что бы ассемблер ни выбрал для загрузки константы, rsi он портит —
+    // и кейв обязан его спасти.
+    const auto regs = Relocator::FindClobberedGpRegisters(r.bytes.data(), r.bytes.size(), true);
+    ASSERT_EQ(regs.size(), 1u);
+    EXPECT_EQ(regs[0], 6u); // rsi
+}
+
+TEST(Assembler, AssembledCodeIsDecodableByZydis)
+{
+    // Сквозная проверка: что собрал AsmJit, то разбирает Zydis.
+    // Она же ловит возможный разрыв версий AsmTK и AsmJit.
+    const auto r = Assembler::Assemble("mov [rbx+0x800], rsi\nnop\nret", true);
+    ASSERT_TRUE(r.ok) << r.error;
+
+    std::size_t measured = 0;
+    std::string error;
+    ASSERT_TRUE(Relocator::Measure(r.bytes.data(), r.bytes.size(), true,
+                                   r.bytes.size(), measured, error)) << error;
+
+    // Границы сошлись: ни одного лишнего или обрезанного байта
+    EXPECT_EQ(measured, r.bytes.size());
+}
+
+TEST(Assembler, ReportsBadSourceInsteadOfSilentlyEmittingGarbage)
+{
+    const auto r = Assembler::Assemble("this is not assembly", true);
+
+    EXPECT_FALSE(r.ok);
+    EXPECT_FALSE(r.error.empty());
 }
