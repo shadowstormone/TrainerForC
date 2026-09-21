@@ -78,3 +78,53 @@ bool UIControls::AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& siz
 
     return clicked;
 }
+bool UIControls::ValueStepper(const char* id, int* value, int step, int minValue, int maxValue, float width)
+{
+    if (!value) return false;
+
+    ImGui::PushID(id);
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const float arrow = ImGui::GetFrameHeight();           // стрелки квадратные
+    const float fieldWidth = width - arrow * 2.0f - style.ItemSpacing.x * 2.0f;
+
+    bool changed = false;
+
+    // Удержание стрелки повторяет шаг: набирать большое значение по одному
+    // щелчку невозможно.
+    ImGui::PushButtonRepeat(true);
+
+    if (ImGui::Button("<", ImVec2(arrow, arrow)))
+    {
+        *value -= step;
+        changed = true;
+    }
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(fieldWidth > 0.0f ? fieldWidth : 1.0f);
+
+    // Шаги у InputInt отключены (0, 0): свои стрелки уже есть, а встроенные
+    // кнопки "-"/"+" добавили бы вторую пару.
+    if (ImGui::InputInt("##value", value, 0, 0))
+    {
+        changed = true;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(">", ImVec2(arrow, arrow)))
+    {
+        *value += step;
+        changed = true;
+    }
+
+    ImGui::PopButtonRepeat();
+    ImGui::PopID();
+
+    if (changed)
+    {
+        *value = Utils::Clamp(*value, minValue, maxValue);
+    }
+
+    return changed;
+}

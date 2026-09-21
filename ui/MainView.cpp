@@ -250,172 +250,80 @@ void MainView::RenderToggles()
 
 void MainView::RenderInputFields()
 {
+    // Колонки те же, что у читов: строки с полями должны читаться как
+    // продолжение таблицы, а не как отдельная панель внизу.
+    float toggleX = 0.0f;
+    float nameX = 0.0f;
+    ComputeColumns(toggleX, nameX);
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const float spacing = style.ItemSpacing.x;
+    const float buttonWidth = ImGui::CalcTextSize("Write").x + style.FramePadding.x * 2.0f;
+    const float stepperWidth = Layout::INPUT_WIDTH;
+
+    const float buttonX = Layout::ControlX(buttonWidth);
+    const float stepperX = buttonX - spacing - stepperWidth;
+
     for (const InputFieldView& field : _valueFields)
     {
-        const std::string& buttonName = field.label;
+        const std::string& name = field.label;
 
-        // Инициализация значения, если его нет
-        if (_inputValues.find(buttonName) == _inputValues.end())
-        {
-            _inputValues[buttonName] = field.defaultValue;
-        }
-
-        // Кнопка прижата к правому краю, поле ввода занимает всё место
-        // между колонкой подписей и кнопкой — то есть тянется вместе с
-        // окном, а не сидит на фиксированной ширине.
-        const float spacing = ImGui::GetStyle().ItemSpacing.x;
-        const float buttonWidth = ImGui::CalcTextSize("Write").x
-                                + ImGui::GetStyle().FramePadding.x * 2.0f;
-        const float fieldWidth = Layout::INPUT_WIDTH;
-
-        const float buttonX = Layout::ControlX(buttonWidth);
-        const float fieldX  = buttonX - spacing - fieldWidth;
-
-        // Подпись начинается там же, где названия читов выше: группы
-        // читаются как одна таблица, а не как две независимые панели.
-        float toggleX = 0.0f;
-        float nameX = 0.0f;
-        ComputeColumns(toggleX, nameX);
+        // try_emplace вместо find/вставки: значение заводится один раз и
+        // дальше правится по ссылке.
+        int& value = _inputValues.try_emplace(name, field.defaultValue).first->second;
 
         ImGui::SetCursorPosX(nameX);
-        Layout::RowLabel(buttonName,
-                         fieldX - nameX - spacing,
-                         ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-        ImGui::SameLine(fieldX);
+        Layout::RowLabel(name, stepperX - nameX - spacing, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-        // Подготовка буфера ввода
-        char inputBuffer[32];
-        bool isFieldEmpty = _inputValues[buttonName] == 1 && !_inputFieldFocused[buttonName];
+        ImGui::SameLine(stepperX);
+        UIControls::ValueStepper(("##stepper_" + name).c_str(), &value, 1, 1, INT_MAX, stepperWidth);
 
-        if (isFieldEmpty)
+        ImGui::SameLine(buttonX);
+
+        if (!ImGui::Button(("Write##" + name).c_str())) continue;
+
+        if (!_process->isProcessRunning())
         {
-            strcpy_s(inputBuffer, "1"); // Плейсхолдер
+            _popupType = "Error";
+            _popupMessage = "Процесс игры не запущен!";
+            ImGui::OpenPopup("ErrorPopup");
+            continue;
+        }
+
+        // Пишем напрямую через MemoryAccess: отдельный патч ради
+        // одноразовой записи из поля ввода не нужен.
+        MemoryAccess mem(_process->GetProcessID());
+        int valueToWrite = value;
+        SIZE_T written = 0;
+
+        // Абсолютный адрес берём как есть, иначе идём цепочкой от базы
+        // модуля — та же семантика, что у читов.
+        const uintptr_t address =
+            !mem.IsValid()   ? 0
+            : field.absolute ? (field.offsets.empty() ? 0 : field.offsets.back())
+                             : mem.ResolveChain(mem.ProcessBase(), field.offsets);
+
+        const bool ok = address != 0
+            && WriteProcessMemory(mem.Handle(), reinterpret_cast<LPVOID>(address),
+                                  &valueToWrite, sizeof(valueToWrite), &written)
+            && written == sizeof(valueToWrite);
+
+        if (ok)
+        {
+            Log::Info(std::format("{}: записано {} по адресу 0x{:X}", name, valueToWrite, address));
+            AudioService::Instance().Play(Sound::CheatEnabled);
+
+            _popupType = "Success";
+            _popupMessage = "Значение " + std::to_string(valueToWrite) + " записано в память";
+            ImGui::OpenPopup("SuccessPopup");
         }
         else
         {
-            sprintf_s(inputBuffer, "%d", _inputValues[buttonName]);
-        }
+            Log::Error(name + ": не удалось записать значение");
 
-        ImGui::SetNextItemWidth(fieldWidth);
-
-        // Серый цвет для плейсхолдера
-        if (isFieldEmpty)
-        {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-        }
-
-        // Перед InputText проверяем, нужно ли очистить поле
-        if (ImGui::IsItemClicked() && isFieldEmpty)
-        {
-            inputBuffer[0] = '\0';
-        }
-
-        if (ImGui::InputText(("##ValueInput_" + buttonName).c_str(),
-            inputBuffer,
-            IM_ARRAYSIZE(inputBuffer),
-            ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_AutoSelectAll))
-        {
-            if (inputBuffer == NULL || strlen(inputBuffer) == 0)
-            {
-                // Оставляем поле пустым при редактировании
-                _inputValues[buttonName] = 1;
-            }
-            else
-            {
-                long long newValue = atoll(inputBuffer);
-                if (newValue <= 0)
-                {
-                    _inputValues[buttonName] = 1;
-                }
-                else if (newValue > INT_MAX)
-                {
-                    _inputValues[buttonName] = INT_MAX;
-                }
-                else
-                {
-                    _inputValues[buttonName] = static_cast<int>(newValue);
-                }
-            }
-        }
-
-        // Обработка фокуса
-        if (ImGui::IsItemActivated())
-        {
-            _inputFieldFocused[buttonName] = true;
-            // Очищаем поле при первом клике
-            if (isFieldEmpty)
-            {
-                memset(inputBuffer, 0, sizeof(inputBuffer));
-                ImGui::SetKeyboardFocusHere(-1);
-            }
-        }
-
-        if (ImGui::IsItemDeactivated())
-        {
-            _inputFieldFocused[buttonName] = false;
-            // Если поле пустое при потере фокуса, возвращаем 1
-            if (strlen(inputBuffer) == 0)
-            {
-                _inputValues[buttonName] = 1;
-            }
-        }
-
-        if (isFieldEmpty)
-        {
-            ImGui::PopStyleColor();
-        }
-
-        ImGui::SameLine();
-
-        // Кнопка записи
-        if (ImGui::Button(("Write##" + buttonName).c_str()))
-        {
-            if (!_process->isProcessRunning() == true)
-            {
-#ifdef _DEBUG
-                _popupType = "Error";
-                _popupMessage = "Процесс игры не запущен!";
-                ImGui::OpenPopup("ErrorPopup");
-#endif // _DEBUG
-            }
-            else
-            {
-                // Пишем напрямую через MemoryAccess: отдельный патч ради
-                // одноразовой записи из поля ввода не нужен.
-                MemoryAccess mem(_process->GetProcessID());
-                int valueToWrite = _inputValues[buttonName];
-                SIZE_T written = 0;
-
-                // Абсолютный адрес берём как есть, иначе идём цепочкой
-                // от базы модуля — та же семантика, что у читов.
-                const uintptr_t address =
-                    !mem.IsValid()      ? 0
-                    : field.absolute    ? (field.offsets.empty() ? 0 : field.offsets.back())
-                                        : mem.ResolveChain(mem.ProcessBase(), field.offsets);
-
-                const bool ok = address != 0
-                    && WriteProcessMemory(mem.Handle(), reinterpret_cast<LPVOID>(address),
-                                          &valueToWrite, sizeof(valueToWrite), &written)
-                    && written == sizeof(valueToWrite);
-
-                if (ok)
-                {
-                    AudioService::Instance().Play(Sound::CheatEnabled);
-#ifdef _DEBUG
-                    _popupType = "Success";
-                    _popupMessage = "Значение " + std::to_string(_inputValues[buttonName]) + " успешно записанно в память!";
-                    ImGui::OpenPopup("SuccessPopup");
-#endif // _DEBUG
-                }
-                else
-                {
-#ifdef _DEBUG
-                    _popupType = "Error";
-                    _popupMessage = "Ошибка записи значения в память!";
-                    ImGui::OpenPopup("ErrorPopup");
-#endif // _DEBUG
-                }
-            }
+            _popupType = "Error";
+            _popupMessage = "Ошибка записи значения в память";
+            ImGui::OpenPopup("ErrorPopup");
         }
     }
 }
@@ -576,7 +484,6 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
                           ImGuiWindowFlags_NoBackground);
 
         RenderToggles();
-        Layout::GroupGap();
         RenderInputFields();
 
         ImGui::EndChild();

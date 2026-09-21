@@ -6,6 +6,13 @@
 
 namespace UIControls
 {
+    // Числовой регулятор: < значение >
+    //
+    // Стрелки меняют значение шагом step и повторяются при удержании,
+    // само поле остаётся редактируемым — вводить 999999 стрелками никто
+    // не станет.
+    bool ValueStepper(const char* id, int* value, int step, int minValue, int maxValue, float width);
+
     // Функция рендера переключателя с анимацией
     bool AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size = ImVec2(38, 18), float animationSpeed = 0.1f);
 

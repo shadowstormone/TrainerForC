@@ -54,7 +54,6 @@ class MainView
     float _runningFade = 0.0f;
 
     std::map<std::string, int> _inputValues;
-    std::map<std::string, bool> _inputFieldFocused; // Для отслеживания фокуса каждого поля
 
     // Уведомления
     std::string _popupMessage;
