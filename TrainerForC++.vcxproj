@@ -694,9 +694,15 @@
     <ClCompile Include="core/Relocator.cpp" />
     <ClCompile Include="core/Assembler.cpp" />
     <ClCompile Include="patches/NopPatch.cpp" />
-    <ClCompile Include="tests/Errors_test.cpp" />
-    <ClCompile Include="tests/CheatRegistry_test.cpp" />
-    <ClCompile Include="tests/PatchAuthoring_test.cpp" />
+    <ClCompile Include="tests/Errors_test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Release'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tests/CheatRegistry_test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Release'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tests/PatchAuthoring_test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Release'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="patches/WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -761,7 +767,7 @@
     <CopyFileToFolders Include="ResourceExtern\gmock.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

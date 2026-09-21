@@ -41,6 +41,7 @@ bool CheatOption::Enable(int pid)
     if (!applied)
     {
         Log::Error("Не включилось: " + Utils::WStringToUtf8(GetDescription()));
+        AudioService::Instance().Play(Sound::CheatFailed);
         return false;
     }
 

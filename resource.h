@@ -5,6 +5,7 @@
 #define VS_VERSION_INFO                 1
 #define IDR_WAVE1                       107
 #define IDR_WAVE2                       108
+#define IDR_WAVE3                       109
 #define IDI_ICON2                       110
 #define IDI_ICON3                       112
 #define IDB_PNG1                        135

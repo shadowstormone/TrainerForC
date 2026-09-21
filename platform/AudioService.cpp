@@ -23,6 +23,7 @@ namespace
     constexpr SoundResource kSoundResources[] = {
         { Sound::CheatEnabled,  IDR_WAVE1 },
         { Sound::CheatDisabled, IDR_WAVE2 },
+        { Sound::CheatFailed,   IDR_WAVE3 },
     };
 
     // Разобранный WAV: формат + сырые сэмплы.

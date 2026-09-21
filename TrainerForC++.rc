@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Русский (Россия) resources
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -125,7 +125,7 @@ IDB_PNG2                PNG                     "ResourceExtern\\false.png"
 
 IDR_RCDATA1             RCDATA                  "ResourceExtern\\FRIZQT.ttf"
 
-#endif    // Русский (Россия) resources
+#endif    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

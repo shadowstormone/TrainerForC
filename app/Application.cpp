@@ -30,10 +30,17 @@ bool Application::Initialize(const wchar_t* targetProcessName)
     _console = std::make_unique<Console>();
     Log::SetSink(_console.get());
 
+#ifdef _DEBUG
     // Второй приёмник — файл рядом с exe. Консоль по умолчанию скрыта,
     // а разбираться приходится как раз тогда, когда что-то не сработало.
+    //
+    // Только в отладочной сборке: готовому трейнеру незачем оставлять
+    // файлы рядом с собой. Обратная сторона — разбирать жалобу на релиз
+    // придётся без лога.
     _fileLog = std::make_unique<FileLogger>();
     Log::AddSink(_fileLog.get());
+#endif // _DEBUG
+
     Log::Info("Трейнер запущен");
 
     _process = std::make_unique<Cheat>(targetProcessName);

@@ -1,16 +1,24 @@
 #pragma once
-#include <gtest/gtest.h>
 #include <Windows.h>
-
-#include <string>
-#include <vector>
-
-#include "platform/Utils.h" // WStringToUtf8
 
 constexpr auto W_WIDTH = 400;
 constexpr auto W_HEIGHT = 444;
 
 extern LPCWSTR WindowTitle; // Объявление, а не определение
+
+// Тесты — только в отладочной сборке.
+//
+// Иначе релизный трейнер тянул бы за собой gtest и gmock: их библиотеки
+// подставляет автолинковка vcpkg, и рядом с exe приходилось держать
+// gmock.dll — при том, что тесты в релизе не запускаются никогда.
+#ifdef _DEBUG
+
+#include <gtest/gtest.h>
+
+#include <string>
+#include <vector>
+
+#include "platform/Utils.h" // WStringToUtf8
 
 // Запуск тестов. Возвращает код выхода gtest (0 — все тесты прошли),
 // чтобы результат был виден снаружи: приложение собрано как Windows-
@@ -41,3 +49,5 @@ inline int RunTests()
 	::testing::InitGoogleTest(&argc, argv.data());
 	return RUN_ALL_TESTS();
 }
+
+#endif // _DEBUG

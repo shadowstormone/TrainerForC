@@ -7,6 +7,10 @@ enum class Sound
 {
     CheatEnabled,
     CheatDisabled,
+
+    // Чит не применился. Раньше отказ был беззвучным и выглядел как
+    // "ничего не произошло".
+    CheatFailed,
 };
 
 // Звуковой сервис поверх XAudio2.
