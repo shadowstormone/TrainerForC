@@ -5,6 +5,7 @@
 #include "core/MemoryAccess.h"
 #include "cheats/CheatOption.h"
 #include "platform/Logger.h"
+#include "platform/Utils.h"
 #include "patches/NopPatch.h"
 #include "patches/CavePatch.h"
 #include "platform/AudioService.h"
@@ -37,8 +38,13 @@ bool CheatOption::Enable(int pid)
         }
     }
 
-    if (!applied) return false;
+    if (!applied)
+    {
+        Log::Error("Не включилось: " + Utils::WStringToUtf8(GetDescription()));
+        return false;
+    }
 
+    Log::Info("Включено: " + Utils::WStringToUtf8(GetDescription()));
     AudioService::Instance().Play(Sound::CheatEnabled);
     return true;
 }
@@ -56,12 +62,14 @@ bool CheatOption::Disable(int pid)
         {
             if (!p->Restore(mem)) restored = false;
         }
-        catch (const std::exception&)
+        catch (const std::exception& e)
         {
+            Log::Error(std::string("Откат патча не удался: ") + e.what());
             restored = false;
         }
     }
 
+    Log::Info("Выключено: " + Utils::WStringToUtf8(GetDescription()));
     AudioService::Instance().Play(Sound::CheatDisabled);
     return restored;
 }

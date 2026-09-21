@@ -265,3 +265,49 @@ std::vector<std::uint8_t> Relocator::FindClobberedGpRegisters(const std::uint8_t
 
     return clobbered;
 }
+
+std::vector<std::string> Relocator::Disassemble(const std::uint8_t* code,
+                                                std::size_t size,
+                                                bool is64Bit,
+                                                std::uintptr_t address)
+{
+    std::vector<std::string> lines;
+
+    if (code == nullptr || size == 0) return lines;
+
+    ZydisDecoder decoder;
+    if (!ZYAN_SUCCESS(ZydisDecoderInit(
+            &decoder,
+            is64Bit ? ZYDIS_MACHINE_MODE_LONG_64 : ZYDIS_MACHINE_MODE_LEGACY_32,
+            is64Bit ? ZYDIS_STACK_WIDTH_64 : ZYDIS_STACK_WIDTH_32)))
+    {
+        return lines;
+    }
+
+    ZydisFormatter formatter;
+    ZydisFormatterInit(&formatter, ZYDIS_FORMATTER_STYLE_INTEL);
+
+    std::size_t offset = 0;
+    while (offset < size)
+    {
+        ZydisDecodedInstruction insn;
+        ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+
+        if (!ZYAN_SUCCESS(ZydisDecoderDecodeFull(
+                &decoder, code + offset, size - offset, &insn, operands)))
+        {
+            lines.push_back(std::format("{:04X}: (не разобрано)", offset));
+            break;
+        }
+
+        char text[256] = {};
+        ZydisFormatterFormatInstruction(&formatter, &insn, operands,
+                                        insn.operand_count_visible, text, sizeof(text),
+                                        static_cast<ZyanU64>(address) + offset, ZYAN_NULL);
+
+        lines.push_back(std::format("{:04X}: {}", offset, text));
+        offset += insn.length;
+    }
+
+    return lines;
+}

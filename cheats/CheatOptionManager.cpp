@@ -113,3 +113,31 @@ CheatOption* CheatOptionManager::GetOption(std::size_t index) const
     if (index >= _options.size()) return nullptr;
     return _options[index].get();
 }
+
+int CheatOptionManager::DisableAll()
+{
+    if (!_cheatProcess) return 0;
+
+    const int processId = _cheatProcess->GetProcessID();
+    if (processId == 0) return 0;
+
+    int restored = 0;
+
+    for (const std::unique_ptr<CheatOption>& option : _options)
+    {
+        if (!option || !option->IsEnabled()) continue;
+
+        // Ошибка отката одной опции не должна мешать откатить остальные:
+        // выйти, оставив игру частично пропатченной, хуже всего.
+        try
+        {
+            if (option->Disable(processId)) ++restored;
+        }
+        catch (const std::exception& e)
+        {
+            Log::Error(std::string("Не удалось откатить опцию: ") + e.what());
+        }
+    }
+
+    return restored;
+}

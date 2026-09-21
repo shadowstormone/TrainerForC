@@ -64,4 +64,15 @@ public:
     static std::vector<std::uint8_t> FindClobberedGpRegisters(const std::uint8_t* code,
                                                               std::size_t size,
                                                               bool is64Bit);
+
+    // Текстовое представление инструкций.
+    //
+    // Нужно, чтобы патч можно было проверить глазами: редактор не
+    // подсвечивает ассемблер внутри строкового литерала, зато собранный
+    // код всегда можно показать обратно — и увидеть, что получилось
+    // на самом деле.
+    static std::vector<std::string> Disassemble(const std::uint8_t* code,
+                                                std::size_t size,
+                                                bool is64Bit,
+                                                std::uintptr_t address = 0);
 };

@@ -7,6 +7,8 @@
 #include "platform/FileLogger.h"
 #include "platform/Logger.h"
 #include "platform/Utils.h"
+
+#include <format>
 #include "ui/ImGuiConsole.h"
 #include "ui/UI.h"
 
@@ -73,9 +75,30 @@ bool Application::Initialize(const wchar_t* targetProcessName)
 int Application::Run()
 {
     _process->Start();
+
+    // Откат — через страж, чтобы он сработал и при выходе по исключению.
+    // Раньше здесь звался Cheat::DisableAllFunctionMem, который обходил
+    // список Cheat::options — а он ВСЕГДА пуст: метод AddOption, который
+    // его наполняет, не вызывается нигде. То есть при закрытии трейнера
+    // игра оставалась пропатченной.
+    struct RestoreOnExit
+    {
+        CheatOptionManager* cheats;
+
+        ~RestoreOnExit()
+        {
+            if (!cheats) return;
+
+            const int restored = cheats->DisableAll();
+            if (restored > 0)
+            {
+                Log::Info(std::format("Откачено опций перед выходом: {}", restored));
+            }
+        }
+    } restoreGuard{ _cheats.get() };
+
     UI::Render(*_view, *_console);
     _process->Stop();
 
-    _process->DisableAllFunctionMem();
     return 0;
 }

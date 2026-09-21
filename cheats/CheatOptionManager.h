@@ -37,6 +37,12 @@ public:
     // Все опции (сырые указатели) в порядке реестра
     std::vector<CheatOption*> GetAllOptions() const;
 
+    // Выключает все включённые опции и возвращает память игры как было.
+    // Вызывается при закрытии трейнера: оставить игру пропатченной после
+    // выхода — худшее, что может сделать трейнер.
+    // Возвращает, сколько опций пришлось откатить.
+    int DisableAll();
+
     // Обработка переключения (вызывается Drawing)
     void HandleToggle(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);
 

@@ -14,7 +14,9 @@
 #include <utility>
 
 #include "core/Cheat.h"
+#include "core/Assembler.h"
 #include "core/MemoryAccess.h"
+#include "core/Relocator.h"
 #include "platform/Logger.h"
 
 /**
@@ -289,6 +291,43 @@ private:
                 else
                 {
                     console->addLog("WARNING", "Процесс не найден. Запустите игру.");
+                }
+            });
+
+        AddCommand("asm", "Собрать ассемблер и показать байты: asm mov qword ptr [rbx+8], 1", [](Console* console, const std::vector<std::string>& args)
+            {
+                if (args.size() < 2) { console->addLog("ERROR", "Нужен текст ассемблера"); return; }
+
+                // Склеиваем обратно: разбор аргументов разбил строку по пробелам.
+                std::string text;
+                for (std::size_t i = 1; i < args.size(); ++i)
+                {
+                    if (!text.empty()) text += " ";
+                    text += args[i];
+                }
+
+                // Разрядность берём у цели, если она открыта: одна и та же
+                // мнемоника кодируется в x86 и x64 по-разному.
+                bool is64 = true;
+                if (Cheat* proc = console->GetProcess())
+                {
+                    MemoryAccess mem(proc->GetProcessID());
+                    if (mem.IsValid()) is64 = mem.IsTargetX64();
+                }
+
+                const AssembleResult assembled = Assembler::Assemble(text, is64);
+                if (!assembled.ok) { console->addLog("ERROR", assembled.error); return; }
+
+                std::string hex;
+                for (std::uint8_t b : assembled.bytes) hex += std::format("{:02X} ", b);
+                console->addLog("INFO", std::format("{} байт: {}", assembled.bytes.size(), hex));
+
+                // Показываем обратно разобранный код: видно, что получилось
+                // на самом деле, а не что хотелось написать.
+                for (const std::string& line :
+                     Relocator::Disassemble(assembled.bytes.data(), assembled.bytes.size(), is64))
+                {
+                    console->addLog("INFO", line);
                 }
             });
 
