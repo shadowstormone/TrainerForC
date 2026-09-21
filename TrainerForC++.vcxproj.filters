@@ -387,6 +387,9 @@
     <ClCompile Include="cheats/CheatRegistry.cpp">
       <Filter>cheats</Filter>
     </ClCompile>
+    <ClCompile Include="cheats/ValueFieldRegistry.cpp">
+      <Filter>cheats</Filter>
+    </ClCompile>
     <ClCompile Include="cheats/CheatFactory.cpp">
       <Filter>cheats</Filter>
     </ClCompile>
@@ -488,6 +491,9 @@
     <ClInclude Include="cheats/CheatRegistry.h">
       <Filter>cheats</Filter>
     </ClInclude>
+    <ClInclude Include="cheats/ValueFieldRegistry.h">
+      <Filter>cheats</Filter>
+    </ClInclude>
     <ClInclude Include="cheats/CheatFactory.h">
       <Filter>cheats</Filter>
     </ClInclude>
@@ -578,8 +584,5 @@
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="ResourceExtern\gmock.dll">
-      <Filter>ResourceExtern</Filter>
-    </CopyFileToFolders>
   </ItemGroup>
 </Project>

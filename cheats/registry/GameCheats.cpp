@@ -9,6 +9,7 @@
 // регистры, которые патч затирает.
 
 #include "cheats/CheatRegistry.h"
+#include "cheats/ValueFieldRegistry.h"
 #include "patches/PatchLibrary.h"
 #include "platform/VKeys.h"
 
@@ -46,3 +47,10 @@ REGISTER_CHEAT({
     { VKeys::KEY_NUMPAD4 },
     { Nop(PatchLibrary::SIG_CHEAT_TEST_3, 6) },
 })
+
+// --- Поля ввода значений ---
+//
+// Описываются тем же Address, что и читы: база модуля + 0x240600 ->
+// разыменовать -> + 0x4B4.
+REGISTER_VALUE_FIELD(ValueField(L"Set HP", Address::Module(0x00240600).Deref(0x4B4)))
+REGISTER_VALUE_FIELD(ValueField(L"Set MP", Address::Module(0x00240600).Deref(0x4B4)))

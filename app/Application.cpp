@@ -1,6 +1,7 @@
 #include "app/Application.h"
 
 #include "cheats/CheatOptionManager.h"
+#include "cheats/ValueFieldRegistry.h"
 #include "core/Cheat.h"
 #include "platform/AudioService.h"
 #include "platform/FileLogger.h"
@@ -38,19 +39,16 @@ bool Application::Initialize(const wchar_t* targetProcessName)
     _cheats = std::make_unique<CheatOptionManager>(_process.get());
     _cheats->LoadFromRegistry();
 
-    // Поля ввода значений (кнопка + цепочка оффсетов).
-    _offsets = {
-        { "Set HP", { "Set HP", { 0x00240600, 0x4B4 } } },
-        { "Set MP", { "Set MP", { 0x00240600, 0x4B4 } } },
-    };
-
     _view = std::make_unique<MainView>();
     _view->SetToggleHandler(
         [this](const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState)
         {
             _cheats->HandleToggle(toggleId, optionName, currentState, previousState);
         });
-    _view->Initialize(_process.get(), _offsets, _cheats->GetAllOptions());
+    // Поля ввода описаны в том же реестре, что и читы.
+    _view->Initialize(_process.get(),
+                      ValueFieldRegistry::Instance().All(),
+                      _cheats->GetAllOptions());
 
     // Консоль больше не открывается сама: она перекрывала всю панель.
     // Вызывается клавишей `

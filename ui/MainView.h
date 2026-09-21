@@ -21,10 +21,16 @@ constexpr auto HEIGHT = 555;
 
 extern bool showConsole;
 
-struct FunctionOffset
+struct ValueFieldDefinition;
+
+// Подготовленное к отрисовке поле ввода: подпись уже в UTF-8, чтобы не
+// перекодировать её каждый кадр.
+struct InputFieldView
 {
-    std::string buttonName;                 // Название кнопки
-    std::vector<uintptr_t> offsets;         // Оффсеты
+    std::string label;
+    std::vector<uintptr_t> offsets;
+    bool absolute = false;
+    int defaultValue = 1;
 };
 
 // Содержимое главного окна: полоса заголовка, переключатели читов,
@@ -40,7 +46,7 @@ class MainView
 
     Cheat* _process = nullptr;
     std::vector<CheatOption*> _options;
-    std::unordered_map<std::string, FunctionOffset> _offsetFunctions;
+    std::vector<InputFieldView> _valueFields;
 
     std::function<void(const std::string&, const std::string&, bool, bool)> _toggleHandler;
 
@@ -77,8 +83,11 @@ public:
     MainView(const MainView&) = delete;
     MainView& operator=(const MainView&) = delete;
 
+    // Поля ввода приходят из ValueFieldRegistry, читы — из CheatRegistry:
+    // всё содержимое панели описано в cheats/registry/, а не собирается
+    // по кусочкам при старте программы.
     void Initialize(Cheat* process,
-                    const std::unordered_map<std::string, FunctionOffset>& offsets,
+                    const std::vector<ValueFieldDefinition>& valueFields,
                     const std::vector<CheatOption*>& options);
 
     // Окно, которым управляют кнопки заголовка (свернуть/закрыть)

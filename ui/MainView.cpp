@@ -1,6 +1,7 @@
 #include "ui/MainView.h"
 
 #include "ui/Layout.h"
+#include "cheats/ValueFieldRegistry.h"
 #include "platform/KeyNames.h"
 
 #include <climits>  // Для INT_MAX
@@ -41,13 +42,25 @@ static void ImGuiDebugConsoleActivation()
 // ---------------- MainView ----------------
 
 void MainView::Initialize(Cheat* process,
-                          const std::unordered_map<std::string, FunctionOffset>& offsets,
+                          const std::vector<ValueFieldDefinition>& valueFields,
                           const std::vector<CheatOption*>& options)
 {
     _process = process;
-    _offsetFunctions = offsets;
     _options = options;
 
+    _valueFields.clear();
+    _valueFields.reserve(valueFields.size());
+
+    for (const ValueFieldDefinition& field : valueFields)
+    {
+        InputFieldView view;
+        view.label = Utils::WStringToUtf8(field.name);
+        view.offsets = field.offsets;
+        view.absolute = field.absoluteAddress;
+        view.defaultValue = field.defaultValue;
+
+        _valueFields.push_back(std::move(view));
+    }
 }
 
 bool MainView::IsCaptionPoint(POINT clientPoint) const
@@ -226,12 +239,14 @@ void MainView::RenderToggles()
 
 void MainView::RenderInputFields()
 {
-    for (const auto& [buttonName, functionOffset] : _offsetFunctions)
+    for (const InputFieldView& field : _valueFields)
     {
+        const std::string& buttonName = field.label;
+
         // Инициализация значения, если его нет
         if (_inputValues.find(buttonName) == _inputValues.end())
         {
-            _inputValues[buttonName] = 1;
+            _inputValues[buttonName] = field.defaultValue;
         }
 
         // Кнопка прижата к правому краю, поле ввода занимает всё место
@@ -360,9 +375,12 @@ void MainView::RenderInputFields()
                 int valueToWrite = _inputValues[buttonName];
                 SIZE_T written = 0;
 
-                const uintptr_t address = mem.IsValid()
-                    ? mem.ResolveChain(mem.ProcessBase(), functionOffset.offsets)
-                    : 0;
+                // Абсолютный адрес берём как есть, иначе идём цепочкой
+                // от базы модуля — та же семантика, что у читов.
+                const uintptr_t address =
+                    !mem.IsValid()      ? 0
+                    : field.absolute    ? (field.offsets.empty() ? 0 : field.offsets.back())
+                                        : mem.ResolveChain(mem.ProcessBase(), field.offsets);
 
                 const bool ok = address != 0
                     && WriteProcessMemory(mem.Handle(), reinterpret_cast<LPVOID>(address),

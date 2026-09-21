@@ -167,6 +167,7 @@
     <ClCompile Include="cheats/CheatOption.cpp" />
     <ClCompile Include="cheats/CheatOptionManager.cpp" />
     <ClCompile Include="cheats/CheatRegistry.cpp" />
+    <ClCompile Include="cheats/ValueFieldRegistry.cpp" />
     <ClCompile Include="cheats/CheatFactory.cpp" />
     <ClCompile Include="cheats/registry/GameCheats.cpp" />
     <ClCompile Include="ui/MainView.cpp" />
@@ -705,6 +706,7 @@
     <ClInclude Include="cheats/CheatOptionManager.h" />
     <ClInclude Include="cheats/CheatDefinition.h" />
     <ClInclude Include="cheats/CheatRegistry.h" />
+    <ClInclude Include="cheats/ValueFieldRegistry.h" />
     <ClInclude Include="cheats/CheatFactory.h" />
     <ClInclude Include="ui/MainView.h" />
     <ClInclude Include="ui/ImGuiConsole.h" />
