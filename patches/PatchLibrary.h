@@ -1,20 +1,16 @@
 #pragma once
-#include <array>
-#include <cstdint>
 #include <string_view>
-#include <cstddef>
 
-// Префикс SIG_ для оригинальной сигнатуры (AOB), PATCH_ для новых байт, SIZE_ для длины записи.
+// Именованные AOB-сигнатуры.
+//
+// Байты патча здесь больше не лежат: они пишутся прямо в описании чита
+// строкой, как копируются из Cheat Engine, и длину считать руками не нужно.
 namespace PatchLibrary
 {
 
-	// Пример для CHEAT_TEST_3 (аналог твоего примера)
-	inline constexpr std::string_view SIG_CHEAT_TEST_3 = "0x29, 0x83, 0xB4, 0x04, 0x00, 0x00";
-
-	// новые байты — те, что будут записаны (patch)
-	inline constexpr std::array<uint8_t, 10> PATCH_CHEAT_TEST_3 = { 0xC7, 0x83, 0xB4, 0x04, 0x00, 0x00, 0xE8, 0x03, 0x00, 0x00 };
-	
-	// явный размер записи в байтах (выравнивание)
-	inline constexpr size_t SIZE_CHEAT_TEST_3 = 10;
+	// sub [rbx+disp32], edx / mov ecx, [rbx+disp32] / mov r9d, 0xFF / lea r8, [rbp-0x108]
+	// ?? — байты, которые меняются от сборки к сборке (disp32).
+	inline constexpr std::string_view SIG_CHEAT_TEST_3 =
+		"29 93 ?? ?? ?? ?? 8B 8B ?? ?? ?? ?? 41 B9 FF 00 00 00 4C 8D 85 F8 FE FF FF";
 
 } // namespace PatchLibrary

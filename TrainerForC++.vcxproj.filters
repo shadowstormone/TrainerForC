@@ -105,6 +105,9 @@
     <ClCompile Include="tests/CheatRegistry_test.cpp">
       <Filter>tests</Filter>
     </ClCompile>
+    <ClCompile Include="tests/PatchAuthoring_test.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app/main.h">

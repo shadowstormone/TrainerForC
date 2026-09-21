@@ -2,6 +2,11 @@
 #include <gtest/gtest.h>
 #include <Windows.h>
 
+#include <string>
+#include <vector>
+
+#include "platform/Utils.h" // WStringToUtf8
+
 constexpr auto W_WIDTH = 400;
 constexpr auto W_HEIGHT = 444;
 
@@ -12,8 +17,27 @@ extern LPCWSTR WindowTitle; // Объявление, а не определен�
 // подсистема и консольного вывода не имеет.
 inline int RunTests()
 {
-	int argc = 0;
-	char** argv = nullptr;
-	::testing::InitGoogleTest(&argc, argv);
+	// Прокидываем настоящую командную строку. Раньше сюда передавались
+	// argc=0 и argv=nullptr, поэтому флаги gtest (--gtest_filter,
+	// --gtest_output=xml:...) молча игнорировались — а без консольного
+	// вывода это единственный способ узнать, КАКОЙ тест упал.
+	std::vector<std::string> storage;
+	storage.reserve(static_cast<std::size_t>(__argc));
+
+	for (int i = 0; i < __argc; ++i)
+	{
+		storage.push_back(Utils::WStringToUtf8(__wargv[i]));
+	}
+
+	std::vector<char*> argv;
+	argv.reserve(storage.size() + 1);
+	for (std::string& arg : storage)
+	{
+		argv.push_back(arg.data());
+	}
+	argv.push_back(nullptr);
+
+	int argc = static_cast<int>(storage.size());
+	::testing::InitGoogleTest(&argc, argv.data());
 	return RUN_ALL_TESTS();
 }

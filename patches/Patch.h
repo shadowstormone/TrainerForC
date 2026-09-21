@@ -7,6 +7,8 @@
 #include <cstdint>
 #include "core/MemoryAccess.h"
 #include "patches/IPatch.h"
+#include "platform/Logger.h"
+#include "platform/Utils.h"
 
 class CheatOption;	// Предварительное объявление класса CheatOption
 
@@ -31,27 +33,62 @@ protected:
 	float fvalue = 0;
 	double dvalue = 0;
 
+	// Разбирает AOB-сигнатуру в байты + маску.
+	//
+	// Понимает оба стиля записи, чтобы можно было вставлять как есть:
+	//   из Cheat Engine:  "29 93 ?? ?? ?? ?? 8B 8B"
+	//   и прежний:        "0x29, 0x93, 0x**, 0x**"
+	// Джокер — любое из: ?  ??  *  **  xx  XX
+	//
+	// Раньше "0x**" не подходил ни под один случай джокера, уходил в разбор
+	// числа, wcstoul возвращал 0 и маска ставилась 'x' — то есть сигнатура
+	// требовала в этом месте байт 0x00 и никогда не находилась.
 	void convertPattern(LPCWSTR sign)
 	{
-		std::wstring signature(sign);
-		std::wstringstream wss(signature);
-		std::vector<std::wstring> tokens{ std::istream_iterator<std::wstring, wchar_t>(wss),{} };
-
 		pattern.clear();
 		mask.clear();
 
-		for (const std::wstring& str : tokens)
+		std::wstring text(sign ? sign : L"");
+		for (wchar_t& c : text)
 		{
-			if (str.size() == 1 || str._Equal(L"xx") || str._Equal(L"XX"))
+			if (c == L',' || iswspace(c)) c = L' ';
+		}
+
+		std::wstringstream wss(text);
+		std::wstring tok;
+
+		while (wss >> tok)
+		{
+			// Префикс 0x необязателен.
+			if (tok.size() > 2 && tok[0] == L'0' && (tok[1] == L'x' || tok[1] == L'X'))
+			{
+				tok.erase(0, 2);
+			}
+			if (tok.empty()) continue;
+
+			if (tok.find_first_of(L"?*") != std::wstring::npos || tok == L"xx" || tok == L"XX")
 			{
 				mask += L'?';
 				pattern.push_back(0);
+				continue;
 			}
-			else
+
+			wchar_t* end = nullptr;
+			const unsigned long parsed = wcstoul(tok.c_str(), &end, 16);
+
+			if (end == tok.c_str() || *end != 0 || parsed > 0xFF)
 			{
-				mask += L'x';
-				pattern.push_back(static_cast<uint8_t>(wcstoul(str.c_str(), nullptr, 16)));
+				// Непонятный токен. Берём его как джокер, а не как 0x00:
+				// ложное совпадение хуже пропуска. И говорим об этом вслух.
+				Log::Error("Непонятный байт в сигнатуре — считаю его джокером: "
+						   + Utils::WStringToUtf8(tok.c_str()));
+				mask += L'?';
+				pattern.push_back(0);
+				continue;
 			}
+
+			mask += L'x';
+			pattern.push_back(static_cast<uint8_t>(parsed));
 		}
 	}
 

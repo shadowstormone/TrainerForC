@@ -185,6 +185,7 @@
     <ClCompile Include="patches/NopPatch.cpp" />
     <ClCompile Include="tests/Errors_test.cpp" />
     <ClCompile Include="tests/CheatRegistry_test.cpp" />
+    <ClCompile Include="tests/PatchAuthoring_test.cpp" />
     <ClCompile Include="patches/WriteAddressPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
