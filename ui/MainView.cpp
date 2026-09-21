@@ -1,5 +1,7 @@
 #include "ui/MainView.h"
 
+#include "ui/Layout.h"
+
 #include <climits>  // Для INT_MAX
 
 #include "core/MemoryAccess.h"
@@ -140,43 +142,6 @@ void MainView::RenderAuthorLink(const char* text, const char* url, float offsetR
     }
 }
 
-namespace
-{
-    // Убирает с конца один символ UTF-8 целиком, а не байт: иначе
-    // кириллица распадается на мусор.
-    void PopUtf8Char(std::string& text)
-    {
-        if (text.empty()) return;
-
-        size_t i = text.size() - 1;
-        while (i > 0 && (static_cast<unsigned char>(text[i]) & 0xC0) == 0x80) --i;
-        text.erase(i);
-    }
-
-    // Укорачивает подпись многоточием, чтобы она не залезала на элемент
-    // справа. Раньше длинное имя чита просто рисовалось поверх тумблера.
-    std::string FitText(const std::string& text, float maxWidth)
-    {
-        if (maxWidth <= 0.0f) return std::string();
-        if (ImGui::CalcTextSize(text.c_str()).x <= maxWidth) return text;
-
-        std::string shortened = text;
-        while (!shortened.empty()
-               && ImGui::CalcTextSize((shortened + "...").c_str()).x > maxWidth)
-        {
-            PopUtf8Char(shortened);
-        }
-
-        return shortened + "...";
-    }
-
-    // X, с которого начинается колонка управляющих элементов: она прижата
-    // к правому краю окна, поэтому не зависит от длины подписей.
-    float ControlColumnX(float controlWidth)
-    {
-        return ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x - controlWidth;
-    }
-}
 
 void MainView::RenderToggles()
 {
@@ -190,21 +155,14 @@ void MainView::RenderToggles()
         // Проверяем, запущен ли процесс игры
         bool isGameRunning = _process->GetProcessID() != 0;
 
-        // Колонка переключателей прижата к правому краю окна, а подпись
-        // обрезается по оставшемуся месту: длинное имя чита больше не
-        // наезжает на тумблер.
-        const float toggleX = ControlColumnX(UIControls::Constants::TOGGLE_WIDTH);
-        const std::string label = FitText(name, toggleX - ImGui::GetCursorPosX() - 10.0f);
+        // Подпись занимает свою колонку, переключатель прижат к правому
+        // краю. Обе величины считаются от ширины окна.
+        Layout::RowLabel(name,
+                         Layout::LabelWidthFor(Layout::TOGGLE_WIDTH),
+                         option->IsEnabled() ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f)
+                                             : ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-        ImGui::TextColored(option->IsEnabled() ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%s", label.c_str());
-
-        // Полное имя — в подсказке, если подпись пришлось укоротить.
-        if (label != name && ImGui::IsItemHovered())
-        {
-            ImGui::SetTooltip("%s", name.c_str());
-        }
-
-        ImGui::SameLine(toggleX);
+        ImGui::SameLine(Layout::ControlX(Layout::TOGGLE_WIDTH));
 
         // Делаем элементы неактивными если игра не запущена
         if (!isGameRunning)
@@ -243,16 +201,20 @@ void MainView::RenderInputFields()
             _inputValues[buttonName] = 1;
         }
 
-        // Кнопка Write стоит в той же правой колонке, что и переключатели,
-        // а поле ввода — вплотную слева от неё. Раньше и поле, и кнопка
-        // сидели на жёстких отступах и разъезжались с остальной панелью.
+        // Кнопка прижата к правому краю, поле ввода занимает всё место
+        // между колонкой подписей и кнопкой — то есть тянется вместе с
+        // окном, а не сидит на фиксированной ширине.
+        const float spacing = ImGui::GetStyle().ItemSpacing.x;
         const float buttonWidth = ImGui::CalcTextSize("Write").x
                                 + ImGui::GetStyle().FramePadding.x * 2.0f;
-        const float buttonX = ControlColumnX(buttonWidth);
-        const float fieldX  = buttonX - ImGui::GetStyle().ItemSpacing.x
-                            - static_cast<float>(UIControls::Constants::INPUT_WIDTH);
+        const float fieldWidth = Layout::INPUT_WIDTH;
 
-        ImGui::Text("%s", FitText(buttonName, fieldX - ImGui::GetCursorPosX() - 10.0f).c_str());
+        const float buttonX = Layout::ControlX(buttonWidth);
+        const float fieldX  = buttonX - spacing - fieldWidth;
+
+        Layout::RowLabel(buttonName,
+                         Layout::LabelWidthFor(fieldWidth + spacing + buttonWidth),
+                         ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
         ImGui::SameLine(fieldX);
 
         // Подготовка буфера ввода
@@ -268,7 +230,7 @@ void MainView::RenderInputFields()
             sprintf_s(inputBuffer, "%d", _inputValues[buttonName]);
         }
 
-        ImGui::SetNextItemWidth(static_cast<float>(UIControls::Constants::INPUT_WIDTH));
+        ImGui::SetNextItemWidth(fieldWidth);
 
         // Серый цвет для плейсхолдера
         if (isFieldEmpty)
@@ -510,6 +472,7 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
 
         RenderToggles();
         ImGui::Separator();
+        Layout::GroupGap();
         RenderInputFields();
         ImGui::Separator();
 

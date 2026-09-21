@@ -500,6 +500,9 @@
     <ClInclude Include="ui/UIControls.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="ui/Layout.h">
+      <Filter>ui</Filter>
+    </ClInclude>
     <ClInclude Include="ui/ImGuiConsole.h">
       <Filter>ui</Filter>
     </ClInclude>

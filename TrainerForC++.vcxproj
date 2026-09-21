@@ -726,6 +726,7 @@
     <ClInclude Include="platform/Logger.h" />
     <ClInclude Include="platform/FileLogger.h" />
     <ClInclude Include="ui/UIControls.h" />
+    <ClInclude Include="ui/Layout.h" />
     <ClInclude Include="platform/VKeys.h" />
     <ClInclude Include="patches/WriteAddressPatch.h" />
   </ItemGroup>

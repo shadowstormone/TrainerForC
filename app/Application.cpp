@@ -52,9 +52,8 @@ bool Application::Initialize(const wchar_t* targetProcessName)
         });
     _view->Initialize(_process.get(), _offsets, _cheats->GetAllOptions());
 
-#ifdef _DEBUG
-    _process->ImGuiOpenConsole();
-#endif // _DEBUG
+    // Консоль больше не открывается сама: она перекрывала всю панель.
+    // Вызывается клавишей `
 
     return true;
 }

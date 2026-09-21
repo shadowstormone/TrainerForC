@@ -359,7 +359,11 @@ public:
      */
     void draw(const char* title, bool* p_open = NULL)
     {
-        ImGui::SetNextWindowSize(ImVec2(900, 800), ImGuiCond_FirstUseEver);
+        // Размер задаётся от окна, а не константой: раньше здесь стояло
+        // 900x800 при окне 500x555, и консоль вылезала за оба края.
+        const ImVec2 viewport = ImGui::GetMainViewport()->Size;
+        ImGui::SetNextWindowSize(ImVec2(viewport.x * 0.9f, viewport.y * 0.6f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSizeConstraints(ImVec2(200.0f, 120.0f), viewport);
         if (!ImGui::Begin(title, p_open))
         {
             ImGui::End();
