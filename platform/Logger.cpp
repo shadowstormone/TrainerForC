@@ -1,18 +1,29 @@
 #include "platform/Logger.h"
 
+#include <vector>
+
 namespace
 {
-    ILogger* g_sink = nullptr;
+    std::vector<ILogger*> g_sinks;
 
     void Write(const char* level, const std::string& message)
     {
-        if (g_sink) g_sink->Log(level, message);
+        for (ILogger* sink : g_sinks)
+        {
+            if (sink) sink->Log(level, message);
+        }
     }
 }
 
 void Log::SetSink(ILogger* sink)
 {
-    g_sink = sink;
+    g_sinks.clear();
+    if (sink) g_sinks.push_back(sink);
+}
+
+void Log::AddSink(ILogger* sink)
+{
+    if (sink) g_sinks.push_back(sink);
 }
 
 void Log::Info(const std::string& message)  { Write("INFO", message); }

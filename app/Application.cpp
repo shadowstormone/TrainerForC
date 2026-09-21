@@ -3,6 +3,7 @@
 #include "cheats/CheatOptionManager.h"
 #include "core/Cheat.h"
 #include "platform/AudioService.h"
+#include "platform/FileLogger.h"
 #include "platform/Logger.h"
 #include "ui/ImGuiConsole.h"
 #include "ui/UI.h"
@@ -24,6 +25,12 @@ bool Application::Initialize(const wchar_t* targetProcessName)
     // Консоль нужна первой: остальные части уже пишут в неё при создании.
     _console = std::make_unique<Console>();
     Log::SetSink(_console.get());
+
+    // Второй приёмник — файл рядом с exe. Консоль по умолчанию скрыта,
+    // а разбираться приходится как раз тогда, когда что-то не сработало.
+    _fileLog = std::make_unique<FileLogger>();
+    Log::AddSink(_fileLog.get());
+    Log::Info("Трейнер запущен");
 
     _process = std::make_unique<Cheat>(targetProcessName);
     _console->SetProcess(_process.get()); // для команд GetPID/status

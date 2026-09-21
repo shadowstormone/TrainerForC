@@ -47,11 +47,18 @@ public:
     // --- Чтение и запись ---
     LPVOID    Read(LPVOID address, SIZE_T amount) const;
     uintptr_t ReadPointer(uintptr_t address) const;
-    int       Write(LPVOID address, LPVOID source, SIZE_T amount) const;
-    int       WriteInt(uintptr_t address, int value) const;
+
+    // true — записано полностью. Именно bool, а не код возврата:
+    // нижележащие функции отдают 0 при УСПЕХЕ, и на этом уже один раз
+    // сломались кейвы — успех принимался за провал.
+    bool      Write(LPVOID address, LPVOID source, SIZE_T amount) const;
+    bool      WriteInt(uintptr_t address, int value) const;
 
     // --- Память и поиск ---
     LPVOID Alloc(LPVOID startAddress, SIZE_T amount) const;
+
+    // true — память освобождена.
+    bool   Free(LPVOID address, SIZE_T amount) const;
 
     // Выделяет память ПОБЛИЗОСТИ от target — в пределах ±2 ГБ, чтобы до неё
     // доставал короткий 5-байтный прыжок. VirtualAllocEx с nullptr кладёт
@@ -60,7 +67,6 @@ public:
     // и выше шанс, что среди них попадётся непереносимая.
     // Если рядом места нет — выделяет где получится (не nullptr).
     LPVOID AllocNear(std::uintptr_t target, SIZE_T amount) const;
-    int    Free(LPVOID address, SIZE_T amount) const;
     LPVOID ScanSignature(ULONG_PTR startAddress, SIZE_T scanSize, PBYTE pattern, std::wstring& mask) const;
 
     // Проходит цепочку "base + offsets[0] -> разыменовать -> ... " и

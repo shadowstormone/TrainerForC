@@ -16,5 +16,8 @@ namespace UIControls
         constexpr int MIN_VALUE = 1;
         constexpr float LABEL_WIDTH = 150.0f;
         constexpr float TEXT_WIDTH = 315.0f;
+
+        // Должна совпадать со значением по умолчанию у AnimatedToggleSwitch.
+        constexpr float TOGGLE_WIDTH = 50.0f;
     }
 }

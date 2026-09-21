@@ -18,7 +18,12 @@ public:
 // а не падает, как раньше делал gConsole->addLog() при null.
 namespace Log
 {
+    // Заменяет все приёмники одним. nullptr — отключить логирование.
     void SetSink(ILogger* sink);
+
+    // Добавляет ещё один приёмник: сообщения уходят во все сразу.
+    // Так консоль и файл получают одно и то же.
+    void AddSink(ILogger* sink);
 
     void Info(const std::string& message);
     void Error(const std::string& message);

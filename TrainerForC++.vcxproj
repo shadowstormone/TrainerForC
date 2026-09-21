@@ -178,6 +178,7 @@
     <ClCompile Include="platform/AudioService.cpp" />
     <ClCompile Include="platform/Hotkey.cpp" />
     <ClCompile Include="platform/Logger.cpp" />
+    <ClCompile Include="platform/FileLogger.cpp" />
     <ClCompile Include="app/main.cpp" />
     <ClCompile Include="app/Application.cpp" />
     <ClCompile Include="libs\asmjit\asmjit\core\arch_traits.cpp">
@@ -723,6 +724,7 @@
     <ClInclude Include="platform/AudioService.h" />
     <ClInclude Include="platform/Hotkey.h" />
     <ClInclude Include="platform/Logger.h" />
+    <ClInclude Include="platform/FileLogger.h" />
     <ClInclude Include="ui/UIControls.h" />
     <ClInclude Include="platform/VKeys.h" />
     <ClInclude Include="patches/WriteAddressPatch.h" />

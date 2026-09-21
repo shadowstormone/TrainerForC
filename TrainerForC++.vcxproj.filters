@@ -420,6 +420,9 @@
     <ClCompile Include="platform/Logger.cpp">
       <Filter>platform</Filter>
     </ClCompile>
+    <ClCompile Include="platform/FileLogger.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
     <ClCompile Include="tests/Errors_test.cpp">
       <Filter>tests</Filter>
     </ClCompile>
@@ -513,6 +516,9 @@
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="platform/Logger.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform/FileLogger.h">
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="platform/VKeys.h">

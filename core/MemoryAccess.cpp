@@ -58,14 +58,14 @@ uintptr_t MemoryAccess::ReadPointer(uintptr_t address) const
     return static_cast<uintptr_t>(raw);
 }
 
-int MemoryAccess::Write(LPVOID address, LPVOID source, SIZE_T amount) const
+bool MemoryAccess::Write(LPVOID address, LPVOID source, SIZE_T amount) const
 {
-    return WriteMem(m_handle, address, source, amount);
+    return WriteMem(m_handle, address, source, amount) == 0;
 }
 
-int MemoryAccess::WriteInt(uintptr_t address, int value) const
+bool MemoryAccess::WriteInt(uintptr_t address, int value) const
 {
-    return WriteMem(m_handle, address, value);
+    return WriteMem(m_handle, address, value) == 0;
 }
 
 LPVOID MemoryAccess::Alloc(LPVOID startAddress, SIZE_T amount) const
@@ -73,9 +73,9 @@ LPVOID MemoryAccess::Alloc(LPVOID startAddress, SIZE_T amount) const
     return AllocMem(m_handle, startAddress, amount);
 }
 
-int MemoryAccess::Free(LPVOID address, SIZE_T amount) const
+bool MemoryAccess::Free(LPVOID address, SIZE_T amount) const
 {
-    return FreeMem(m_handle, address, amount);
+    return FreeMem(m_handle, address, amount) == 0;
 }
 
 LPVOID MemoryAccess::ScanSignature(ULONG_PTR startAddress, SIZE_T scanSize, PBYTE pattern, std::wstring& mask) const

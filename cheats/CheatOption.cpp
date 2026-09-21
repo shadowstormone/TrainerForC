@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "core/MemoryAccess.h"
 #include "cheats/CheatOption.h"
+#include "platform/Logger.h"
 #include "patches/NopPatch.h"
 #include "patches/CavePatch.h"
 #include "platform/AudioService.h"
@@ -27,8 +28,11 @@ bool CheatOption::Enable(int pid)
         {
             if (!p->Apply(mem)) applied = false;
         }
-        catch (const std::exception&)
+        catch (const std::exception& e)
         {
+            // Раньше текст исключения терялся здесь целиком, и наружу
+            // выходило молчаливое "ничего не включилось".
+            Log::Error(std::string("Патч не применён: ") + e.what());
             applied = false;
         }
     }

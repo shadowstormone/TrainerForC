@@ -8,6 +8,7 @@
 class Cheat;
 class CheatOptionManager;
 class Console;
+class FileLogger;
 
 // Владеет всем, что живёт столько же, сколько программа, и связывает части
 // между собой: процесс-цель, менеджер читов, содержимое окна и консоль.
@@ -18,6 +19,7 @@ class Console;
 class Application
 {
     std::unique_ptr<Console> _console;
+    std::unique_ptr<FileLogger> _fileLog;
     std::unique_ptr<Cheat> _process;
     std::unique_ptr<CheatOptionManager> _cheats;
     std::unique_ptr<MainView> _view;
