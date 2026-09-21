@@ -386,3 +386,32 @@ TEST(Assembler, ReportsBadSourceInsteadOfSilentlyEmittingGarbage)
     EXPECT_FALSE(r.ok);
     EXPECT_FALSE(r.error.empty());
 }
+
+TEST(Assembler, MemoryImmediateNeedsExplicitSize)
+{
+    // Без размера операнда ассемблер не знает, писать 4 байта или 8.
+    // Именно на этом молча ломался CaveKeepOriginal.
+    const auto ambiguous = Assembler::Assemble("mov [rbx+0x800], 1000", true);
+
+    EXPECT_FALSE(ambiguous.ok);
+    // Сообщение должно называть причину и показывать саму строку,
+    // иначе автор чита остаётся без подсказки.
+    EXPECT_NE(ambiguous.error.find("mov [rbx+0x800], 1000"), std::string::npos);
+
+    const auto sized = Assembler::Assemble("mov qword ptr [rbx+0x800], 1000", true);
+    ASSERT_TRUE(sized.ok) << sized.error;
+    EXPECT_FALSE(sized.bytes.empty());
+}
+
+TEST(Assembler, DwordAndQwordGiveDifferentBytes)
+{
+    const auto asDword = Assembler::Assemble("mov dword ptr [rbx+0x800], 1000", true);
+    const auto asQword = Assembler::Assemble("mov qword ptr [rbx+0x800], 1000", true);
+
+    ASSERT_TRUE(asDword.ok) << asDword.error;
+    ASSERT_TRUE(asQword.ok) << asQword.error;
+
+    // У qword-формы есть REX.W, у dword-формы его нет.
+    EXPECT_NE(asDword.bytes, asQword.bytes);
+    EXPECT_EQ(asQword.bytes.front(), 0x48);
+}

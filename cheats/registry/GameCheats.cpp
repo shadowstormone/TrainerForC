@@ -36,10 +36,13 @@ REGISTER_CHEAT({
 // То же место, но оригинальная инструкция СОХРАНЯЕТСЯ: она переносится
 // в кейв и выполняется после патча. Нужно, когда игре всё ещё нужно то,
 // что она делала, — настоящий хук, а не подмена.
+//
+// Размер операнда обязателен: "mov [rbx+0x800], 1000" неоднозначен —
+// ассемблер не знает, писать 4 байта или 8.
 REGISTER_CHEAT({
     L"Cave с сохранением оригинала",
     { VKeys::KEY_NUMPAD3 },
-    { CaveKeepOriginal(PatchLibrary::SIG_CHEAT_TEST_3, Asm("mov [rbx+0x800], 1000")) },
+    { CaveKeepOriginal(PatchLibrary::SIG_CHEAT_TEST_3, Asm("mov qword ptr [rbx+0x800], 1000")) },
 })
 
 REGISTER_CHEAT({

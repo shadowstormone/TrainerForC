@@ -1,5 +1,7 @@
 #include "core/Assembler.h"
 
+#include <format>
+
 #include <asmjit/core.h>
 #include <asmjit/x86.h>
 #include <asmtk/asmtk.h>
@@ -32,11 +34,14 @@ AssembleResult Assembler::Assemble(std::string_view text,
     // AsmTK ждёт нуль-терминированную строку.
     const std::string source(text);
 
-    if (parser.parse(source.c_str()) != asmjit::Error::kOk)
+    if (const asmjit::Error parsed = parser.parse(source.c_str()); parsed != asmjit::Error::kOk)
     {
-        // Текст разобрать не удалось — почти всегда опечатка в мнемонике
-        // или в операнде.
-        result.error = "не удалось разобрать ассемблер: " + source;
+        // Говорим, ЧТО именно не понравилось. Самая частая причина —
+        // не указан размер операнда: "mov [rbx+0x800], 1000" неоднозначен,
+        // ассемблер не знает, писать 4 байта или 8. Нужно писать
+        // "mov qword ptr [rbx+0x800], 1000" (или dword).
+        result.error = std::format("{} — в строке: {}",
+                                   asmjit::stringify_error(parsed), source);
         return result;
     }
 
