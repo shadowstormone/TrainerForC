@@ -31,6 +31,9 @@
     <Filter Include="ResourceExtern">
       <UniqueIdentifier>{c69663be-056c-41a5-b6e0-9c46a023cc7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="libs">
+      <UniqueIdentifier>{aa11bb22-0000-4000-8000-000000000001}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app/main.cpp">
@@ -38,6 +41,99 @@
     </ClCompile>
     <ClCompile Include="app/Application.cpp">
       <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\API\Memory.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\API\Process.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\API\Synchronization.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\API\Terminal.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\API\Thread.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\Allocator.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\ArgParse.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\Bitset.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\Format.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\List.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\String.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\Vector.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zycore\src\Zycore.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Decoder.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\DecoderData.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Disassembler.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Encoder.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\EncoderData.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Formatter.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\FormatterATT.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\FormatterBase.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\FormatterBuffer.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\FormatterIntel.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\MetaInfo.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Mnemonic.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Register.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Segment.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\SharedData.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\String.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Utils.c">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\zydis\src\Zydis.c">
+      <Filter>libs</Filter>
     </ClCompile>
     <ClCompile Include="core/Cheat.cpp">
       <Filter>core</Filter>
