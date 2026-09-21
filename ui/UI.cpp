@@ -8,6 +8,8 @@
 #include "resource.h"
 #include "platform/Logger.h"
 #include "ui/UI.h"
+
+#include "ui/ConsoleWindow.h"
 #include "ui/D3DContext.h"
 #include "ui/ImGuiThemes.h"
 #include "ui/ImGuiConsole.h"
@@ -599,6 +601,17 @@ void UI::Render(MainView& view, Console& console)
 		ImGui_ImplWin32_Init(window.Handle()); // Инициализация ImGui для Win32
 		ImGui_ImplDX11_Init(d3d.Device(), d3d.Context()); // Инициализация ImGui для DirectX 11
 
+        // Отладочная консоль — в отдельном окне ОС, а не поверх панели.
+        // Стиль и шрифт отдаём её контексту: атлас у каждого контекста свой,
+        // с шрифтом по умолчанию кириллица не отрисуется.
+        ConsoleWindow consoleWindow;
+        consoleWindow.Create(console, instance,
+            [scale = displayInfo.scale](ImGuiIO& consoleIo)
+            {
+                SetModernDarkStyle();
+                FontManager::SetupFont(consoleIo, scale);
+            });
+
         // ImGui 1.92: шрифт по умолчанию задаётся через io.FontDefault в SetupFont;
         // ручное обновление контекста шрифта больше не требуется.
         (void)font;
@@ -613,7 +626,7 @@ void UI::Render(MainView& view, Console& console)
             MessageBoxA(nullptr, "Failed to load one or more textures.", "Texture Load Error", MB_OK | MB_ICONERROR);
         }
 
-		RenderLoop(window, d3d, view, console, io, textureManager); // Запуск основного цикла рендеринга
+		RenderLoop(window, d3d, view, consoleWindow, io, textureManager); // Запуск основного цикла рендеринга
 
         // Очистка ресурсов ImGui; окно и D3D освободят себя сами (RAII).
         ImGui_ImplDX11_Shutdown();
@@ -635,7 +648,7 @@ void UI::Render(MainView& view, Console& console)
  * @param io Объект ImGuiIO для управления вводом/выводом
  * @param textureManager Менеджер текстур
  */
-void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, Console& console, ImGuiIO& io, TextureManager& textureManager)
+void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWindow& consoleWindow, ImGuiIO& io, TextureManager& textureManager)
 {
     const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool done = false;
@@ -667,12 +680,6 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, Console& co
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        // Отрисовка элементов интерфейса
-        if (showConsole)
-        {
-            console.draw("Debug Console", &showConsole);
-        }
-
         ImGui::GetStyle().Alpha = fadeAnimation.getAlpha();
         view.Draw(textureManager.getSuccessIcon(), textureManager.getErrorIcon());
 
@@ -689,6 +696,14 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, Console& co
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
         d3d.Present(1);
+
+        // Клавиша ` переключает видимость отдельного окна консоли.
+        if (showConsole != consoleWindow.IsVisible())
+        {
+            consoleWindow.SetVisible(showConsole);
+        }
+
+        consoleWindow.Draw();
 
         // Увеличиваем счетчик кадров
         framesRendered++;

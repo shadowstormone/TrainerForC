@@ -396,6 +396,9 @@
     <ClCompile Include="ui/UI.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="ui/ConsoleWindow.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
     <ClCompile Include="ui/Window.cpp">
       <Filter>ui</Filter>
     </ClCompile>
@@ -489,6 +492,9 @@
       <Filter>cheats</Filter>
     </ClInclude>
     <ClInclude Include="ui/UI.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="ui/ConsoleWindow.h">
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="ui/Window.h">

@@ -171,6 +171,7 @@
     <ClCompile Include="cheats/registry/GameCheats.cpp" />
     <ClCompile Include="ui/MainView.cpp" />
     <ClCompile Include="ui/UI.cpp" />
+    <ClCompile Include="ui/ConsoleWindow.cpp" />
     <ClCompile Include="ui/Window.cpp" />
     <ClCompile Include="ui/D3DContext.cpp" />
     <ClCompile Include="ui/UIControls.cpp" />
@@ -719,6 +720,7 @@
     <ClInclude Include="patches/PatchLibrary.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ui/UI.h" />
+    <ClInclude Include="ui/ConsoleWindow.h" />
     <ClInclude Include="ui/Window.h" />
     <ClInclude Include="ui/D3DContext.h" />
     <ClInclude Include="platform/Utils.h" />

@@ -15,6 +15,9 @@ class Window;
 // Композиция UI: создаёт окно и контекст DirectX (оба — обычные объекты
 // с RAII) и крутит цикл отрисовки. Состояние больше не живёт в статических
 // полях и глобальном hwnd — им владеет Render().
+
+class Console;
+class ConsoleWindow;
 class UI
 {
 public:
@@ -30,7 +33,7 @@ public:
 
 private:
     // Private helper methods
-    static void RenderLoop(Window& window, D3DContext& d3d, MainView& view, Console& console, ImGuiIO& io, TextureManager& textureManager);
+    static void RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWindow& consoleWindow, ImGuiIO& io, TextureManager& textureManager);
 
     // Prevent instantiation
     UI() = delete;
@@ -41,7 +44,6 @@ private:
 
 // External dependencies (assumed to be defined elsewhere)
 extern bool showConsole;
-class Console;
 
 // Theme function (assumed to be defined elsewhere)
 void SetModernDarkStyle();

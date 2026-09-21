@@ -357,14 +357,32 @@ public:
      * @param title Заголовок окна.
      * @param p_open Указатель на булеву переменную, управляющую видимостью окна.
      */
-    void draw(const char* title, bool* p_open = NULL)
+    // fillWindow — консоль живёт в собственном окне ОС и занимает его
+    // целиком; отдельная плавающая рамка внутри была бы окном в окне.
+    void draw(const char* title, bool* p_open = NULL, bool fillWindow = false)
     {
-        // Размер задаётся от окна, а не константой: раньше здесь стояло
-        // 900x800 при окне 500x555, и консоль вылезала за оба края.
-        const ImVec2 viewport = ImGui::GetMainViewport()->Size;
-        ImGui::SetNextWindowSize(ImVec2(viewport.x * 0.9f, viewport.y * 0.6f), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSizeConstraints(ImVec2(200.0f, 120.0f), viewport);
-        if (!ImGui::Begin(title, p_open))
+        ImGuiWindowFlags flags = 0;
+
+        if (fillWindow)
+        {
+            const ImGuiViewport* vp = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(vp->Pos);
+            ImGui::SetNextWindowSize(vp->Size);
+
+            flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize
+                  | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+                  | ImGuiWindowFlags_NoBringToFrontOnFocus;
+        }
+        else
+        {
+            // Размер задаётся от окна, а не константой: раньше здесь стояло
+            // 900x800 при окне 500x555, и консоль вылезала за оба края.
+            const ImVec2 viewport = ImGui::GetMainViewport()->Size;
+            ImGui::SetNextWindowSize(ImVec2(viewport.x * 0.9f, viewport.y * 0.6f), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSizeConstraints(ImVec2(200.0f, 120.0f), viewport);
+        }
+
+        if (!ImGui::Begin(title, p_open, flags))
         {
             ImGui::End();
             return;
