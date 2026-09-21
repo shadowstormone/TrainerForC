@@ -1,6 +1,7 @@
 #include "ui/MainView.h"
 
 #include "ui/Layout.h"
+#include "platform/KeyNames.h"
 
 #include <climits>  // Для INT_MAX
 
@@ -143,28 +144,51 @@ void MainView::RenderAuthorLink(const char* text, const char* url, float offsetR
 }
 
 
-void MainView::RenderToggles()
+// X колонок таблицы. Считается в одном месте, чтобы нижняя группа
+// (поля ввода) стояла ровно под колонкой названий, а не сама по себе.
+void MainView::ComputeColumns(float& outToggleX, float& outNameX) const
 {
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+
+    // Ширина колонки клавиш — по самой длинной подписи, чтобы тумблеры
+    // стояли ровным столбцом независимо от того, какие клавиши назначены.
+    float hotkeyWidth = ImGui::CalcTextSize("Hotkeys").x;
     for (CheatOption* option : _options)
     {
-        std::string name = Utils::WStringToUtf8(option->GetDescription());
+        const std::string hotkey = KeyNames::Hotkey(option->GetKeys());
+        hotkeyWidth = (std::max)(hotkeyWidth, ImGui::CalcTextSize(hotkey.c_str()).x);
+    }
 
-        // Используем уникальный идентификатор для каждого переключателя
-        std::string toggleId = "##toggle_" + name;
+    outToggleX = Layout::ContentLeft() + hotkeyWidth + spacing * 2.0f;
+    outNameX   = outToggleX + Layout::TOGGLE_WIDTH + spacing * 2.0f;
+}
 
-        // Проверяем, запущен ли процесс игры
-        bool isGameRunning = _process->GetProcessID() != 0;
+void MainView::RenderToggles()
+{
+    const bool isGameRunning = _process->GetProcessID() != 0;
 
-        // Подпись занимает свою колонку, переключатель прижат к правому
-        // краю. Обе величины считаются от ширины окна.
-        Layout::RowLabel(name,
-                         Layout::LabelWidthFor(Layout::TOGGLE_WIDTH),
-                         option->IsEnabled() ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f)
-                                             : ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    float toggleX = 0.0f;
+    float nameX = 0.0f;
+    ComputeColumns(toggleX, nameX);
 
-        ImGui::SameLine(Layout::ControlX(Layout::TOGGLE_WIDTH));
+    // Шапка таблицы: клавиша — переключатель — название.
+    ImGui::TextDisabled("Hotkeys");
+    ImGui::SameLine(nameX);
+    ImGui::TextDisabled("Options");
+    ImGui::Separator();
 
-        // Делаем элементы неактивными если игра не запущена
+    for (CheatOption* option : _options)
+    {
+        const std::string name = Utils::WStringToUtf8(option->GetDescription());
+        const std::string toggleId = "##toggle_" + name;
+        const std::string hotkey = KeyNames::Hotkey(option->GetKeys());
+
+        // Клавиша — отдельная колонка, а не часть названия: подпись
+        // выводится из реально назначенных кодов и не может с ними разойтись.
+        ImGui::TextUnformatted(hotkey.c_str());
+
+        ImGui::SameLine(toggleX);
+
         if (!isGameRunning)
         {
             ImGui::BeginDisabled();
@@ -187,6 +211,15 @@ void MainView::RenderToggles()
         {
             ImGui::EndDisabled();
         }
+
+        // Название идёт справа от тумблера и растёт вправо — длинным именам
+        // больше не нужно тесниться, обрезка включается только если окно
+        // реально узкое.
+        ImGui::SameLine(nameX);
+        Layout::RowLabel(name,
+                         Layout::ContentRight() - nameX,
+                         option->IsEnabled() ? ImVec4(0.35f, 0.85f, 0.35f, 1.0f)
+                                             : ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
     }
 }
 
@@ -212,8 +245,15 @@ void MainView::RenderInputFields()
         const float buttonX = Layout::ControlX(buttonWidth);
         const float fieldX  = buttonX - spacing - fieldWidth;
 
+        // Подпись начинается там же, где названия читов выше: группы
+        // читаются как одна таблица, а не как две независимые панели.
+        float toggleX = 0.0f;
+        float nameX = 0.0f;
+        ComputeColumns(toggleX, nameX);
+
+        ImGui::SetCursorPosX(nameX);
         Layout::RowLabel(buttonName,
-                         Layout::LabelWidthFor(fieldWidth + spacing + buttonWidth),
+                         fieldX - nameX - spacing,
                          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
         ImGui::SameLine(fieldX);
 

@@ -179,6 +179,7 @@
     <ClCompile Include="platform/Hotkey.cpp" />
     <ClCompile Include="platform/Logger.cpp" />
     <ClCompile Include="platform/FileLogger.cpp" />
+    <ClCompile Include="platform/KeyNames.cpp" />
     <ClCompile Include="app/main.cpp" />
     <ClCompile Include="app/Application.cpp" />
     <ClCompile Include="libs\asmjit\asmjit\core\arch_traits.cpp">
@@ -725,6 +726,7 @@
     <ClInclude Include="platform/Hotkey.h" />
     <ClInclude Include="platform/Logger.h" />
     <ClInclude Include="platform/FileLogger.h" />
+    <ClInclude Include="platform/KeyNames.h" />
     <ClInclude Include="ui/UIControls.h" />
     <ClInclude Include="ui/Layout.h" />
     <ClInclude Include="platform/VKeys.h" />

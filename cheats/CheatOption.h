@@ -43,6 +43,9 @@ public:
 	}
 
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
+	// Клавиши, назначенные опции — по ним UI рисует подпись сочетания.
+	const std::vector<int>& GetKeys() const { return m_keys; }
+
 	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize,
 	                          CaveMode mode = CaveMode::ReplaceOriginal,
 	                          bool preserveRegisters = true);

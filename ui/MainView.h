@@ -59,6 +59,9 @@ class MainView
     float _titleButtonsMinX = 3.4e38f;
 
     void RenderTitleBar();
+    // Считает X колонок таблицы: переключателей и названий.
+    void ComputeColumns(float& outToggleX, float& outNameX) const;
+
     void RenderToggles();
     void RenderInputFields();
     void RenderProcessInfo();
