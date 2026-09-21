@@ -68,9 +68,11 @@ CheatOption* CheatOption::AddNopPatch(LPCWSTR signature, SIZE_T pSize)
     return this;
 }
 
-CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize)
+CheatOption* CheatOption::AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize,
+                                       CaveMode mode, bool preserveRegisters)
 {
-    patches.push_back(std::make_unique<CavePatch>(this, signature, pBytes, static_cast<int>(patchSize)));
+    patches.push_back(std::make_unique<CavePatch>(
+        this, signature, pBytes, static_cast<int>(patchSize), mode, preserveRegisters));
     return this;
 }
 

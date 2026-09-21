@@ -38,4 +38,30 @@ public:
                                      bool is64Bit,
                                      std::uintptr_t caveAddress,
                                      std::size_t minBytes);
+
+    // Сколько байт занимают ЦЕЛЫЕ инструкции, покрывающие minBytes.
+    //
+    // Нужно, когда украденные инструкции никуда не переносятся, а просто
+    // затираются: пересчитывать в них нечего, но знать границу обязательно —
+    // иначе прыжок обратно попадёт в середину следующей инструкции.
+    // Отдельно от Relocate, чтобы не отказывать в патче из-за инструкции,
+    // которую мы всё равно выбрасываем.
+    static bool Measure(const std::uint8_t* source,
+                        std::size_t sourceSize,
+                        bool is64Bit,
+                        std::size_t minBytes,
+                        std::size_t& outBytes,
+                        std::string& outError);
+
+    // Регистры общего назначения, в которые этот код ПИШЕТ.
+    //
+    // Возвращает их номера в кодировке инструкций (0-15: rax, rcx, rdx, rbx,
+    // rsp, rbp, rsi, rdi, r8..r15). rsp исключён — его трогать нельзя.
+    //
+    // По ним кейв оборачивается в push/pop: патч вроде
+    // "movabs rsi, 1000; mov [rbx+0x800], rsi" затирает rsi, а он в Windows
+    // x64 ABI callee-saved, то есть игра ждёт его целым.
+    static std::vector<std::uint8_t> FindClobberedGpRegisters(const std::uint8_t* code,
+                                                              std::size_t size,
+                                                              bool is64Bit);
 };

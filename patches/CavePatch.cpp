@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <memory>
+#include <format>
 #include <stdexcept>
 #include <vector>
 
@@ -16,6 +17,19 @@ namespace
     // Читаем с запасом: одна инструкция бывает до 15 байт, а украсть
     // приходится до нескольких.
     constexpr size_t PROBE_SIZE = 15 * 4;
+
+    // push reg / pop reg. Для r8-r15 нужен префикс REX.B.
+    void EmitPush(std::vector<BYTE>& out, BYTE id, bool is64Bit)
+    {
+        if (is64Bit && id >= 8) { out.push_back(0x41); out.push_back(static_cast<BYTE>(0x50 + (id - 8))); }
+        else                     { out.push_back(static_cast<BYTE>(0x50 + id)); }
+    }
+
+    void EmitPop(std::vector<BYTE>& out, BYTE id, bool is64Bit)
+    {
+        if (is64Bit && id >= 8) { out.push_back(0x41); out.push_back(static_cast<BYTE>(0x58 + (id - 8))); }
+        else                     { out.push_back(static_cast<BYTE>(0x58 + id)); }
+    }
 }
 
 PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
@@ -108,46 +122,113 @@ bool CavePatch::Apply(MemoryAccess& mem)
     BYTE jmpSize = 0;
     const std::unique_ptr<BYTE[]> jmpBytes(CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize));
 
+    // --- Пролог и эпилог: спасаем регистры, которые портит патч ---
+    //
+    // Их состав зависит только от самого патча, поэтому размеры известны
+    // заранее — а они нужны, чтобы знать, по какому адресу в кейве лягут
+    // перенесённые инструкции.
+    std::vector<BYTE> prologue;
+    std::vector<BYTE> epilogue;
+
+    if (preserveRegisters)
+    {
+        const auto clobbered = Relocator::FindClobberedGpRegisters(
+            patchBytes, static_cast<size_t>(patchSize), is64BitProcess);
+
+        for (const BYTE id : clobbered)
+        {
+            EmitPush(prologue, id, is64BitProcess);
+        }
+
+        // Снимаем в обратном порядке.
+        for (auto it = clobbered.rbegin(); it != clobbered.rend(); ++it)
+        {
+            EmitPop(epilogue, *it, is64BitProcess);
+        }
+
+        if (!clobbered.empty())
+        {
+            Log::Debug(std::format("Кейв сохраняет {} регистр(ов), которые портит патч",
+                                   clobbered.size()));
+        }
+    }
+
+    // Куда в кейве лягут перенесённые оригинальные инструкции.
+    const uintptr_t stolenAtCave = reinterpret_cast<uintptr_t>(allocatedAddress)
+                                 + prologue.size() + patchSize + epilogue.size();
+
     // Сколько ЦЕЛЫХ инструкций займёт прыжок — считает Zydis.
     // Раньше это делал длино-дизассемблер, который на непонятных байтах
     // возвращал 0: счётчик не двигался и цикл висел вечно.
-    const RelocationResult reloc = Relocator::Relocate(
-        reinterpret_cast<uintptr_t>(originalAddress),
-        originalBytes, PROBE_SIZE,
-        is64BitProcess,
-        reinterpret_cast<uintptr_t>(allocatedAddress),
-        jmpSize);
+    std::vector<BYTE> relocated;
+    size_t stolen = 0;
 
-    if (!reloc.ok)
+    if (mode == CaveMode::KeepOriginal)
+    {
+        const RelocationResult reloc = Relocator::Relocate(
+            reinterpret_cast<uintptr_t>(originalAddress),
+            originalBytes, PROBE_SIZE,
+            is64BitProcess, stolenAtCave, jmpSize);
+
+        if (!reloc.ok)
+        {
+            freeCave();
+            Log::Error("Патч невозможен: " + reloc.error);
+            return false;
+        }
+
+        relocated = reloc.bytes;
+        stolen = reloc.stolen;
+    }
+    else
+    {
+        // Инструкции выбрасываем — пересчитывать нечего, нужна только
+        // граница. Отдельный путь, чтобы не отказывать из-за инструкции,
+        // которую мы всё равно не переносим.
+        std::string error;
+        if (!Relocator::Measure(originalBytes, PROBE_SIZE, is64BitProcess, jmpSize, stolen, error))
+        {
+            freeCave();
+            Log::Error("Патч невозможен: " + error);
+            return false;
+        }
+    }
+
+    if (stolen == 0 || stolen > PROBE_SIZE || stolen > 0xFF)
     {
         freeCave();
-        Log::Error("Патч невозможен: " + reloc.error);
         return false;
     }
 
-    originalSize = static_cast<BYTE>(reloc.stolen);
+    originalSize = static_cast<BYTE>(stolen);
 
-    if (originalSize > PROBE_SIZE)
-    {
-        freeCave();
-        return false;
-    }
-
-    // --- Кейв: код пользователя, затем прыжок обратно ---
+    // --- Сборка кейва ---
     //
-    // Украденные инструкции сюда НЕ переносятся: патч заменяет их собой,
-    // как в [ENABLE]-скрипте Cheat Engine. Возврат идёт на адрес сразу
-    // за ними, поэтому красть нужно целые инструкции — иначе вернёмся
-    // в середину следующей.
+    //   push портящихся регистров
+    //   код патча
+    //   pop  их же
+    //   перенесённые оригинальные инструкции   (только в режиме KeepOriginal)
+    //   прыжок обратно — на адрес сразу за украденными байтами
+    std::vector<BYTE> cave;
+    cave.insert(cave.end(), prologue.begin(), prologue.end());
+    cave.insert(cave.end(), patchBytes, patchBytes + patchSize);
+    cave.insert(cave.end(), epilogue.begin(), epilogue.end());
+    cave.insert(cave.end(), relocated.begin(), relocated.end());
+
     BYTE backSize = 0;
     const std::unique_ptr<BYTE[]> backJmp(CalculateJumpBytes(
-        static_cast<PBYTE>(allocatedAddress) + patchSize,
+        static_cast<PBYTE>(allocatedAddress) + cave.size(),
         static_cast<PBYTE>(originalAddress) + originalSize,
         backSize));
 
-    std::vector<BYTE> cave(patchSize + backSize);
-    std::memcpy(cave.data(), patchBytes, patchSize);
-    std::memcpy(cave.data() + patchSize, backJmp.get(), backSize);
+    cave.insert(cave.end(), backJmp.get(), backJmp.get() + backSize);
+
+    if (cave.size() > CAVE_SIZE)
+    {
+        freeCave();
+        Log::Error("Кейв не помещается в выделенный блок");
+        return false;
+    }
 
     if (!mem.Write(allocatedAddress, cave.data(), cave.size()))
     {

@@ -7,6 +7,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <variant>
+
+#include "patches/CavePatch.h" // CaveMode
 #include <vector>
 
 // Описание патча — это ДАННЫЕ, а не объект. Конкретный Patch собирается
@@ -27,6 +29,11 @@ struct PatchSpec
     std::string signature;                 // AOB-сигнатура (utf-8)
     std::size_t length = 0;                // для Nop: сколько байт занопить
     std::vector<std::uint8_t> patchBytes;  // для Cave: сами байты; длина = size()
+
+    // Cave: что делать с инструкциями, которые затирает прыжок, и спасать ли
+    // регистры, в которые пишет патч.
+    CaveMode caveMode = CaveMode::ReplaceOriginal;
+    bool preserveRegisters = true;
 
     // WriteValue
     std::vector<std::uintptr_t> offsets;
@@ -132,6 +139,21 @@ inline PatchSpec Cave(std::string_view signature, std::vector<std::uint8_t> byte
 inline PatchSpec Cave(std::string_view signature, std::string_view patchHex)
 {
     return Cave(signature, ParseBytes(patchHex));
+}
+
+// Кейв, который СОХРАНЯЕТ оригинальные инструкции: они переносятся в кейв
+// и выполняются после кода патча. Нужно, когда игре всё ещё нужно то, что
+// они делали, — настоящий хук, а не подмена.
+inline PatchSpec CaveKeepOriginal(std::string_view signature, std::vector<std::uint8_t> bytes)
+{
+    PatchSpec s = Cave(signature, std::move(bytes));
+    s.caveMode = CaveMode::KeepOriginal;
+    return s;
+}
+
+inline PatchSpec CaveKeepOriginal(std::string_view signature, std::string_view patchHex)
+{
+    return CaveKeepOriginal(signature, ParseBytes(patchHex));
 }
 
 // Перегрузка для массивов из PatchLibrary: Cave(SIG_X, PATCH_X)

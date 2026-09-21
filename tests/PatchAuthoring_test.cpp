@@ -236,3 +236,67 @@ TEST(Relocator, ReportsGarbageInsteadOfLoopingForever)
     EXPECT_FALSE(r.ok);
     EXPECT_FALSE(r.error.empty());
 }
+
+// ===================== Регистры, которые портит патч =====================
+
+TEST(ClobberedRegisters, FindsRsiInRealPatch)
+{
+    // movabs rsi, 1000 ; mov [rbx+0x800], rsi
+    // rsi затирается, а он в Windows x64 ABI callee-saved: игра ждёт его целым.
+    const std::uint8_t patch[] = {
+        0x48, 0xBE, 0xE8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x48, 0x89, 0xB3, 0x00, 0x08, 0x00, 0x00,
+    };
+
+    const auto regs = Relocator::FindClobberedGpRegisters(patch, sizeof(patch), true);
+
+    ASSERT_EQ(regs.size(), 1u);
+    EXPECT_EQ(regs[0], 6u); // rsi
+}
+
+TEST(ClobberedRegisters, IgnoresRegistersOnlyRead)
+{
+    // mov [rbx+0x800], rsi — оба регистра только читаются
+    const std::uint8_t patch[] = { 0x48, 0x89, 0xB3, 0x00, 0x08, 0x00, 0x00 };
+
+    const auto regs = Relocator::FindClobberedGpRegisters(patch, sizeof(patch), true);
+    EXPECT_TRUE(regs.empty());
+}
+
+TEST(ClobberedRegisters, TreatsPartialRegisterAsWholeOne)
+{
+    // mov eax, 1 портит весь rax, а не только младшие 32 бита
+    const std::uint8_t patch[] = { 0xB8, 0x01, 0x00, 0x00, 0x00 };
+
+    const auto regs = Relocator::FindClobberedGpRegisters(patch, sizeof(patch), true);
+    ASSERT_EQ(regs.size(), 1u);
+    EXPECT_EQ(regs[0], 0u); // rax
+}
+
+TEST(ClobberedRegisters, FindsExtendedRegisters)
+{
+    // mov r9d, 0xFF -> r9 (id 9, для push нужен префикс REX.B)
+    const std::uint8_t patch[] = { 0x41, 0xB9, 0xFF, 0x00, 0x00, 0x00 };
+
+    const auto regs = Relocator::FindClobberedGpRegisters(patch, sizeof(patch), true);
+    ASSERT_EQ(regs.size(), 1u);
+    EXPECT_EQ(regs[0], 9u);
+}
+
+TEST(Measure, CountsWholeInstructionsWithoutRelocating)
+{
+    // sub [rbx+0x4B4], edx (6) + mov ecx,[rbx+0x4B4] (6)
+    const std::uint8_t code[] = {
+        0x29, 0x93, 0xB4, 0x04, 0x00, 0x00,
+        0x8B, 0x8B, 0xB4, 0x04, 0x00, 0x00,
+    };
+
+    std::size_t bytes = 0;
+    std::string error;
+
+    ASSERT_TRUE(Relocator::Measure(code, sizeof(code), true, 5, bytes, error)) << error;
+    EXPECT_EQ(bytes, 6u); // одной инструкции уже хватает на 5-байтный прыжок
+
+    ASSERT_TRUE(Relocator::Measure(code, sizeof(code), true, 7, bytes, error)) << error;
+    EXPECT_EQ(bytes, 12u); // семь байт -> нужна и вторая инструкция целиком
+}

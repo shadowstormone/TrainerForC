@@ -30,7 +30,8 @@ std::unique_ptr<CheatOption> CreateCheatFromDefinition(const CheatDefinition& de
             // Байты живут в определении чита, а оно — в реестре, то есть всё
             // время работы программы.
             auto* bytes = reinterpret_cast<PBYTE>(const_cast<std::uint8_t*>(spec.patchBytes.data()));
-            option->AddCavePatch(wsig.c_str(), bytes, static_cast<SIZE_T>(spec.patchBytes.size()));
+            option->AddCavePatch(wsig.c_str(), bytes, static_cast<SIZE_T>(spec.patchBytes.size()),
+                                 spec.caveMode, spec.preserveRegisters);
             break;
         }
 

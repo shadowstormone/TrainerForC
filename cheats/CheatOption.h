@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include "patches/IPatch.h"   // нужен полный тип для unique_ptr<IPatch>
+#include "patches/CavePatch.h" // CaveMode
 #include "core/Cheat.h"   // нужен для Cheat* в параметрах методов
 #include "platform/Hotkey.h"
 
@@ -42,7 +43,9 @@ public:
 	}
 
 	CheatOption* AddNopPatch(LPCWSTR signature, SIZE_T pSize);
-	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize);
+	CheatOption* AddCavePatch(LPCWSTR signature, PBYTE pBytes, SIZE_T patchSize,
+	                          CaveMode mode = CaveMode::ReplaceOriginal,
+	                          bool preserveRegisters = true);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, int value, bool absolute = false);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, float value, bool absolute = false);
 	CheatOption* AddWriteValuePatch(Cheat* cheatProcess, std::vector<uintptr_t> offsets, double value, bool absolute = false);

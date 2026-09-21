@@ -1,5 +1,6 @@
 #include "core/Relocator.h"
 
+#include <algorithm>
 #include <cstring>
 #include <format>
 
@@ -152,4 +153,115 @@ RelocationResult Relocator::Relocate(std::uintptr_t sourceAddress,
     result.stolen = offset;
     result.ok = true;
     return result;
+}
+
+bool Relocator::Measure(const std::uint8_t* source,
+                        std::size_t sourceSize,
+                        bool is64Bit,
+                        std::size_t minBytes,
+                        std::size_t& outBytes,
+                        std::string& outError)
+{
+    outBytes = 0;
+
+    if (source == nullptr || sourceSize == 0 || minBytes == 0)
+    {
+        outError = "нечего измерять";
+        return false;
+    }
+
+    ZydisDecoder decoder;
+    if (!ZYAN_SUCCESS(ZydisDecoderInit(
+            &decoder,
+            is64Bit ? ZYDIS_MACHINE_MODE_LONG_64 : ZYDIS_MACHINE_MODE_LEGACY_32,
+            is64Bit ? ZYDIS_STACK_WIDTH_64 : ZYDIS_STACK_WIDTH_32)))
+    {
+        outError = "не удалось инициализировать декодер";
+        return false;
+    }
+
+    std::size_t offset = 0;
+
+    while (offset < minBytes)
+    {
+        if (offset >= sourceSize)
+        {
+            outError = "прочитанных байт не хватило, чтобы набрать место под прыжок";
+            return false;
+        }
+
+        ZydisDecodedInstruction insn;
+        if (!ZYAN_SUCCESS(ZydisDecoderDecodeInstruction(
+                &decoder, nullptr, source + offset, sourceSize - offset, &insn)))
+        {
+            outError = std::format("не удалось разобрать инструкцию по смещению {}", offset);
+            return false;
+        }
+
+        offset += insn.length;
+    }
+
+    outBytes = offset;
+    return true;
+}
+
+std::vector<std::uint8_t> Relocator::FindClobberedGpRegisters(const std::uint8_t* code,
+                                                              std::size_t size,
+                                                              bool is64Bit)
+{
+    std::vector<std::uint8_t> clobbered;
+
+    if (code == nullptr || size == 0) return clobbered;
+
+    const ZydisMachineMode mode = is64Bit ? ZYDIS_MACHINE_MODE_LONG_64
+                                          : ZYDIS_MACHINE_MODE_LEGACY_32;
+
+    ZydisDecoder decoder;
+    if (!ZYAN_SUCCESS(ZydisDecoderInit(
+            &decoder, mode,
+            is64Bit ? ZYDIS_STACK_WIDTH_64 : ZYDIS_STACK_WIDTH_32)))
+    {
+        return clobbered;
+    }
+
+    const ZydisRegisterClass wanted = is64Bit ? ZYDIS_REGCLASS_GPR64 : ZYDIS_REGCLASS_GPR32;
+
+    std::size_t offset = 0;
+    while (offset < size)
+    {
+        ZydisDecodedInstruction insn;
+        ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+
+        if (!ZYAN_SUCCESS(ZydisDecoderDecodeFull(
+                &decoder, code + offset, size - offset, &insn, operands)))
+        {
+            break; // дальше не разбирается — что нашли, то нашли
+        }
+
+        for (ZyanU8 i = 0; i < insn.operand_count; ++i)
+        {
+            const ZydisDecodedOperand& op = operands[i];
+
+            if (op.type != ZYDIS_OPERAND_TYPE_REGISTER) continue;
+            if ((op.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) == 0) continue;
+
+            // eax и rax — один и тот же регистр: сохранять нужно целиком.
+            const ZydisRegister full = ZydisRegisterGetLargestEnclosing(mode, op.reg.value);
+            if (ZydisRegisterGetClass(full) != wanted) continue;
+
+            const ZyanI8 id = ZydisRegisterGetId(full);
+            if (id < 0) continue;
+            if (full == ZYDIS_REGISTER_RSP || full == ZYDIS_REGISTER_ESP) continue;
+
+            const auto asByte = static_cast<std::uint8_t>(id);
+            if (std::find(clobbered.begin(), clobbered.end(), asByte) == clobbered.end())
+            {
+                clobbered.push_back(asByte);
+            }
+        }
+
+        offset += insn.length;
+    }
+
+    return clobbered;
 }
