@@ -21,10 +21,11 @@ class ConsoleWindow;
 class UI
 {
 public:
-    // Размер окна. Окно теперь borderless, поэтому клиентская область
-    // равна всему окну и совпадает с размером интерфейса ImGui.
-    static constexpr int WIDTH = 500;
-    static constexpr int HEIGHT = 555;
+    // Размер окна живёт в ui/MainView.h (WIDTH/HEIGHT).
+    //
+    // Здесь были свои копии этих констант, и внутри UI::Render они
+    // ПЕРЕКРЫВАЛИ глобальные: правка размера в MainView.h ничего не меняла,
+    // потому что окно создавалось по забытому дубликату.
 
     // Main methods
     static void Render(MainView& view, Console& console);

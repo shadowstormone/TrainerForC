@@ -7,7 +7,7 @@
 namespace UIControls
 {
     // Функция рендера переключателя с анимацией
-    bool AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size = ImVec2(50, 25), float animationSpeed = 0.1f);
+    bool AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size = ImVec2(38, 18), float animationSpeed = 0.1f);
 
     // Константы для элементов интерфейса
     namespace Constants

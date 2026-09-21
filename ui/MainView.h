@@ -16,8 +16,8 @@
 #include "core/Cheat.h"
 #include "ui/ImGuiConsole.h"
 
-constexpr auto WIDTH = 500;
-constexpr auto HEIGHT = 555;
+constexpr auto WIDTH = 620;
+constexpr auto HEIGHT = 690;
 
 extern bool showConsole;
 

@@ -200,16 +200,12 @@ void MainView::RenderToggles()
     float nameX = 0.0f;
     ComputeColumns(toggleX, nameX);
 
-    int rowIndex = 0;
-
     for (CheatOption* option : _options)
     {
         const std::string name = Utils::WStringToUtf8(option->GetDescription());
         const std::string toggleId = "##toggle_" + name;
         const std::string hotkey = KeyNames::Hotkey(option->GetKeys());
 
-        // Фон строки — до отрисовки содержимого.
-        Layout::RowBackground(rowIndex++, option->IsEnabled());
 
         // Клавиша — отдельная колонка, а не часть названия: подпись
         // выводится из реально назначенных кодов и не может с ними разойтись.
@@ -254,13 +250,9 @@ void MainView::RenderToggles()
 
 void MainView::RenderInputFields()
 {
-    int rowIndex = 0;
-
     for (const InputFieldView& field : _valueFields)
     {
         const std::string& buttonName = field.label;
-
-        Layout::RowBackground(rowIndex++, false);
 
         // Инициализация значения, если его нет
         if (_inputValues.find(buttonName) == _inputValues.end())
@@ -454,14 +446,6 @@ void MainView::RenderProcessInfo()
         idle.z + (live.z - idle.z) * _runningFade,
         1.0f);
 
-    // Кружок-индикатор: состояние видно боковым зрением, не читая текст.
-    const ImVec2 dot = ImGui::GetCursorScreenPos();
-    const float radius = ImGui::GetTextLineHeight() * 0.22f;
-    ImGui::GetWindowDrawList()->AddCircleFilled(
-        ImVec2(dot.x + radius, dot.y + ImGui::GetTextLineHeight() * 0.5f),
-        radius, ImGui::GetColorU32(statusColor));
-
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + radius * 3.0f);
     ImGui::TextColored(statusColor, "%s %s",
         Utils::WStringToUtf8(processName).c_str(), isRunning ? "is running" : "is not running");
 

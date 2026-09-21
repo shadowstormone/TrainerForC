@@ -23,8 +23,11 @@ namespace Layout
 
     // Размеры переключателя. Должны совпадать со значением по умолчанию
     // у AnimatedToggleSwitch.
-    inline constexpr float TOGGLE_WIDTH = 50.0f;
-    inline constexpr float TOGGLE_HEIGHT = 25.0f;
+    //
+    // Высоту строки задаёт именно тумблер, а не текст: пока он был 25 px,
+    // строки не ужимались, сколько ни уменьшай шрифт.
+    inline constexpr float TOGGLE_WIDTH = 38.0f;
+    inline constexpr float TOGGLE_HEIGHT = 18.0f;
 
     inline float ContentLeft()
     {
@@ -126,45 +129,4 @@ namespace Layout
         return (std::max)(byToggle, byWidget);
     }
 
-    // Фон строки: чередование, подсветка включённого и наведения.
-    //
-    // Всё в одном месте намеренно — иначе три вида подсветки неизбежно
-    // разъедутся по цвету и высоте между разными таблицами.
-    //
-    // Рисуется ДО содержимого: фон поверх текста его бы закрыл.
-    // Переменные названы не min/max: Windows.h определяет их макросами.
-    inline void RowBackground(int index, bool enabled)
-    {
-        const ImGuiStyle& style = ImGui::GetStyle();
-        const ImVec2 origin = ImGui::GetCursorScreenPos();
-        const float padY = style.ItemSpacing.y * 0.5f;
-
-        const ImVec2 topLeft(origin.x - style.WindowPadding.x * 0.5f, origin.y - padY);
-        const ImVec2 bottomRight(topLeft.x + ContentWidth() + style.WindowPadding.x,
-                                 origin.y + RowHeight() + padY);
-
-        ImDrawList* draw = ImGui::GetWindowDrawList();
-        const float rounding = style.FrameRounding;
-
-        // Чередование: с двумя десятками строк глаз иначе теряет строку
-        // на полпути к правой колонке.
-        if (index % 2 == 1)
-        {
-            draw->AddRectFilled(topLeft, bottomRight,
-                                ImGui::GetColorU32(ImGuiCol_TableRowBgAlt, 0.5f), rounding);
-        }
-
-        // Включённый чит виден сразу, не вчитываясь в цвет подписи.
-        if (enabled)
-        {
-            draw->AddRectFilled(topLeft, bottomRight,
-                                ImGui::GetColorU32(ImVec4(0.20f, 0.65f, 0.30f, 0.18f)), rounding);
-        }
-
-        if (ImGui::IsMouseHoveringRect(topLeft, bottomRight))
-        {
-            draw->AddRectFilled(topLeft, bottomRight,
-                                ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.30f), rounding);
-        }
-    }
 }

@@ -110,7 +110,7 @@ static ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, I
 namespace UIConstants
 {
     constexpr float FADE_DURATION = 1.5f;           ///< Продолжительность анимации затухания в секундах
-    constexpr float DEFAULT_FONT_SIZE = 13.0f;      ///< Размер шрифта по умолчанию
+    constexpr float DEFAULT_FONT_SIZE = 11.0f;      ///< Размер шрифта по умолчанию
     constexpr UINT BUFFER_COUNT = 2;                ///< Количество буферов обмена
     constexpr UINT REFRESH_RATE = 60;               ///< Частота обновления экрана
 

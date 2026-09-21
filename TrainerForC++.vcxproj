@@ -80,7 +80,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMTK_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -99,7 +99,7 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMTK_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
@@ -120,7 +120,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMTK_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -143,7 +143,7 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;ASMJIT_STATIC;ASMTK_STATIC;ASMJIT_NO_AARCH64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)libs\stb;$(ProjectDir)libs\asmjit;$(ProjectDir)libs\asmtk;$(ProjectDir)libs\zydis\include;$(ProjectDir)libs\zydis\src;$(ProjectDir)libs\zycore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
