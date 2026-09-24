@@ -202,7 +202,20 @@ bool CheatOption::SetEnabled(bool enabled, DWORD pid)
         }
 
         MemoryAccess mem(pid);
-        const bool restored = !mem.IsValid() || RestoreAll(mem);
+        bool restored = true;
+
+        if (mem.IsValid())
+        {
+            restored = RestoreAll(mem);
+        }
+        else
+        {
+            // Процесса уже нет — откатывать некуда, но патчи должны забыть
+            // своё состояние, иначе в новом процессе считали бы себя
+            // уже применёнными.
+            for (const auto& patch : m_patches) patch->Reset();
+        }
+
         m_enabled = false;
 
         if (!restored) Log::Error("Выключено с ошибками: " + name);

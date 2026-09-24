@@ -522,3 +522,55 @@ TEST(LivePatch, BadAssemblerExplainsWhy)
     EXPECT_NE(option->LastError().find("ptr"), std::string::npos) << option->LastError();
     EXPECT_EQ(Call(code), 1) << "ничего не тронуто";
 }
+
+// --- Фоновый поток ---
+
+#include <atomic>
+
+#include "core/Cheat.h"
+
+TEST(CheatThread, PostedTasksRunOnWorkerAndStopDrainsQueue)
+{
+    Cheat process(L"no-such-game-for-tests.exe");
+
+    // Поток не запущен — задача выполняется сразу, а не теряется.
+    std::atomic<int> ran{ 0 };
+    process.Post([&] { ++ran; });
+    EXPECT_EQ(ran.load(), 1);
+
+    process.Start();
+
+    std::atomic<DWORD> worker{ 0 };
+    process.Post([&] { worker = GetCurrentThreadId(); ++ran; });
+
+    for (int i = 0; i < 100 && ran.load() < 2; ++i) Sleep(10);
+    EXPECT_EQ(ran.load(), 2);
+    EXPECT_NE(worker.load(), GetCurrentThreadId()) << "задача выполнялась в фоновом потоке";
+
+    // Stop дожидается потока и выполняет всё, что не успело выполниться:
+    // щелчок перед самым закрытием не теряется.
+    process.Post([&] { ++ran; });
+    process.Stop();
+    EXPECT_EQ(ran.load(), 3);
+
+    EXPECT_FALSE(process.isProcessRunning());
+}
+
+TEST(CheatThread, FindsProcessByNameCaseInsensitively)
+{
+    // Цель — сам тестовый процесс; имя нарочно в другом регистре.
+    wchar_t path[MAX_PATH]{};
+    GetModuleFileNameW(nullptr, path, MAX_PATH);
+    std::wstring exe(path);
+    exe = exe.substr(exe.find_last_of(L"\\/") + 1);
+    for (wchar_t& c : exe) c = static_cast<wchar_t>(towupper(c));
+
+    Cheat process(exe);
+    process.Start();
+
+    for (int i = 0; i < 100 && !process.isProcessRunning(); ++i) Sleep(20);
+    process.Stop();
+
+    EXPECT_TRUE(process.isProcessRunning());
+    EXPECT_EQ(process.GetProcessID(), GetCurrentProcessId());
+}

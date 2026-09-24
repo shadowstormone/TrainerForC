@@ -114,12 +114,17 @@ void MainView::Initialize(Cheat* process,
     }
 }
 
+float MainView::TitleBarHeight()
+{
+    return Layout::Px(34.0f);
+}
+
 bool MainView::IsCaptionPoint(POINT clientPoint) const
 {
     // Только полоса заголовка и только вне кнопок. Всё остальное окно —
     // HTCLIENT, иначе ImGui перестанет получать WM_MOUSEMOVE и виджеты
     // станут некликабельными.
-    if (clientPoint.y < 0 || clientPoint.y >= static_cast<LONG>(TITLE_BAR_HEIGHT)) return false;
+    if (clientPoint.y < 0 || clientPoint.y >= static_cast<LONG>(_titleBarHeight)) return false;
 
     return static_cast<float>(clientPoint.x) < _titleButtonsMinX;
 }
@@ -225,7 +230,7 @@ MainView::Columns MainView::ComputeColumns() const
     c.key = style.WindowPadding.x;
     c.keyWidth = widest;
     c.toggle = c.key + widest + style.ItemSpacing.x * 2.0f;
-    c.name = c.toggle + Layout::TOGGLE_WIDTH + style.ItemSpacing.x * 2.0f;
+    c.name = c.toggle + Layout::ToggleWidth() + style.ItemSpacing.x * 2.0f;
     c.right = ImGui::GetWindowWidth() - style.WindowPadding.x;
     return c;
 }
@@ -237,11 +242,14 @@ void MainView::RenderTitleBar()
     const float winWidth = ImGui::GetWindowWidth();
     const ImVec4 accent = ImGui::GetStyle().Colors[ImGuiCol_CheckMark];
 
+    const float titleH = TitleBarHeight();
+    _titleBarHeight = titleH;
+
     // Фон полосы во всю ширину (рисуем напрямую, минуя отступы окна)
-    draw->AddRectFilled(winPos, ImVec2(winPos.x + winWidth, winPos.y + TITLE_BAR_HEIGHT), IM_COL32(24, 26, 30, 255));
+    draw->AddRectFilled(winPos, ImVec2(winPos.x + winWidth, winPos.y + titleH), IM_COL32(24, 26, 30, 255));
 
     // Тонкая акцентная линия под заголовком: гаснет к краям.
-    const float lineY = winPos.y + TITLE_BAR_HEIGHT - 1.0f;
+    const float lineY = winPos.y + titleH - 1.0f;
     const float mid = winPos.x + winWidth * 0.5f;
     draw->AddRectFilledMultiColor(ImVec2(winPos.x, lineY), ImVec2(mid, lineY + 1.0f),
                                   U32(accent, 0.0f), U32(accent, 0.9f), U32(accent, 0.9f), U32(accent, 0.0f));
@@ -251,21 +259,21 @@ void MainView::RenderTitleBar()
     // Значок: скруглённый квадрат с акцентом — узнаваемо и без картинки.
     const float lineH = ImGui::GetTextLineHeight();
     const float iconSize = lineH;
-    const ImVec2 iconPos(winPos.x + 14.0f, winPos.y + (TITLE_BAR_HEIGHT - iconSize) * 0.5f);
+    const ImVec2 iconPos(winPos.x + Layout::Px(14.0f), winPos.y + (titleH - iconSize) * 0.5f);
     draw->AddRectFilled(iconPos, ImVec2(iconPos.x + iconSize, iconPos.y + iconSize), U32(accent), 4.0f);
     draw->AddRectFilled(ImVec2(iconPos.x + iconSize * 0.30f, iconPos.y + iconSize * 0.30f),
                         ImVec2(iconPos.x + iconSize * 0.70f, iconPos.y + iconSize * 0.70f),
                         IM_COL32(24, 26, 30, 255), 2.0f);
 
     // Название и число функций — как принято у трейнеров: «(+5)».
-    const float textY = (TITLE_BAR_HEIGHT - lineH) * 0.5f;
-    ImGui::SetCursorPos(ImVec2(14.0f + iconSize + 10.0f, textY));
+    const float textY = (titleH - lineH) * 0.5f;
+    ImGui::SetCursorPos(ImVec2(Layout::Px(14.0f) + iconSize + Layout::Px(10.0f), textY));
     ImGui::TextUnformatted(_title.c_str());
     ImGui::SameLine(0.0f, 6.0f);
     ImGui::TextColored(kMuted, "+%d", static_cast<int>(_options.size() + _valueFields.size()));
 
-    const float btnW = 46.0f;
-    const float btnH = TITLE_BAR_HEIGHT - 1.0f;
+    const float btnW = Layout::Px(46.0f);
+    const float btnH = titleH - 1.0f;
     const float minimizeX = winWidth - btnW * 2.0f;
     const float closeX = winWidth - btnW;
 
@@ -301,12 +309,13 @@ void MainView::RenderTitleBar()
     const ImU32 glyph = IM_COL32(220, 222, 226, 255);
     const float cy = winPos.y + btnH * 0.5f;
 
+    const float g = Layout::Px(5.0f);
     const float mcx = winPos.x + minimizeX + btnW * 0.5f;
-    draw->AddLine(ImVec2(mcx - 5.0f, cy), ImVec2(mcx + 5.0f, cy), glyph, 1.0f);
+    draw->AddLine(ImVec2(mcx - g, cy), ImVec2(mcx + g, cy), glyph, Layout::Px(1.0f));
 
     const float ccx = winPos.x + closeX + btnW * 0.5f;
-    draw->AddLine(ImVec2(ccx - 5.0f, cy - 5.0f), ImVec2(ccx + 5.0f, cy + 5.0f), glyph, 1.2f);
-    draw->AddLine(ImVec2(ccx + 5.0f, cy - 5.0f), ImVec2(ccx - 5.0f, cy + 5.0f), glyph, 1.2f);
+    draw->AddLine(ImVec2(ccx - g, cy - g), ImVec2(ccx + g, cy + g), glyph, Layout::Px(1.2f));
+    draw->AddLine(ImVec2(ccx + g, cy - g), ImVec2(ccx - g, cy + g), glyph, Layout::Px(1.2f));
 }
 
 // Состояние игры — первое, что нужно знать, поэтому оно наверху, а не
@@ -322,7 +331,7 @@ void MainView::RenderStatusStrip()
 
     _runningFade = UIControls::Approach(_runningFade, running ? 1.0f : 0.0f, 6.0f);
 
-    const float height = ImGui::GetFrameHeight() + 6.0f;
+    const float height = ImGui::GetFrameHeight() + Layout::Px(6.0f);
     const ImVec2 p = ImGui::GetCursorScreenPos();
     const float width = ImGui::GetWindowWidth() - style.WindowPadding.x * 2.0f;
     const ImVec2 max(p.x + width, p.y + height);
@@ -336,20 +345,20 @@ void MainView::RenderStatusStrip()
     const float textY = p.y + (height - lineH) * 0.5f;
 
     // Точка: пульсирует, пока ждём игру.
-    UIControls::StatusDot(ImVec2(p.x + 14.0f, p.y + height * 0.5f), 4.0f, U32(tone),
+    UIControls::StatusDot(ImVec2(p.x + Layout::Px(14.0f), p.y + height * 0.5f), Layout::Px(4.0f), U32(tone),
                           running || denied ? 0.0f : Pulse(1.6f));
 
-    const float textX = p.x + 28.0f;
+    const float textX = p.x + Layout::Px(28.0f);
     if (running)
     {
         draw->AddText(ImVec2(textX, textY), U32(style.Colors[ImGuiCol_Text]), exe.c_str());
         const float nameW = ImGui::CalcTextSize(exe.c_str()).x;
-        draw->AddText(ImVec2(textX + nameW + 8.0f, textY), U32(kGood), "подключено");
+        draw->AddText(ImVec2(textX + nameW + Layout::Px(8.0f), textY), U32(kGood), "подключено");
 
         const std::string info = std::format("PID {}  ·  {}", _process->GetProcessID(),
                                              _process->IsTargetX64() ? "x64" : "x86");
         const float infoW = ImGui::CalcTextSize(info.c_str()).x;
-        draw->AddText(ImVec2(max.x - infoW - 12.0f, textY), U32(kMuted), info.c_str());
+        draw->AddText(ImVec2(max.x - infoW - Layout::Px(12.0f), textY), U32(kMuted), info.c_str());
     }
     else if (denied)
     {
@@ -395,7 +404,8 @@ void MainView::RenderToggles(const Columns& columns)
     const bool gameRunning = _process->isProcessRunning();
 
     const float itemH = Layout::RowHeight();
-    const float rowH = itemH + ROW_PAD_Y * 2.0f;
+    const float rowH = itemH + Layout::Px(ROW_PAD_Y) * 2.0f;
+    const float rowGap = Layout::Px(ROW_GAP);
     const float winX = ImGui::GetWindowPos().x;
 
     for (CheatOption* option : _options)
@@ -409,8 +419,8 @@ void MainView::RenderToggles(const Columns& columns)
         const bool oneShot = option->IsOneShot();
 
         const ImVec2 rowPos = ImGui::GetCursorScreenPos();
-        const ImVec2 rowMin(winX + columns.key - 6.0f, rowPos.y);
-        const ImVec2 rowMax(winX + columns.right + 6.0f - style.ScrollbarSize * 0.0f, rowPos.y + rowH);
+        const ImVec2 rowMin(winX + columns.key - Layout::Px(6.0f), rowPos.y);
+        const ImVec2 rowMax(winX + columns.right + Layout::Px(6.0f), rowPos.y + rowH);
 
         const bool rowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
                               && ImGui::IsMouseHoveringRect(rowMin, rowMax);
@@ -430,7 +440,7 @@ void MainView::RenderToggles(const Columns& columns)
         if (glow > 0.01f)
         {
             draw->AddRectFilled(rowMin, rowMax, U32(accent, 0.09f * glow), 6.0f);
-            draw->AddRectFilled(ImVec2(rowMin.x, rowMin.y + 5.0f), ImVec2(rowMin.x + 3.0f, rowMax.y - 5.0f),
+            draw->AddRectFilled(ImVec2(rowMin.x, rowMin.y + Layout::Px(5.0f)), ImVec2(rowMin.x + Layout::Px(3.0f), rowMax.y - Layout::Px(5.0f)),
                                 U32(accent, glow), 2.0f);
         }
         if (failFlash > 0.0f) draw->AddRectFilled(rowMin, rowMax, U32(kBad, 0.22f * failFlash), 6.0f);
@@ -451,20 +461,20 @@ void MainView::RenderToggles(const Columns& columns)
         // даёт понятный ответ («игра не запущена»), а не мёртвую кнопку.
         if (!gameRunning) ImGui::PushStyleVar(ImGuiStyleVar_Alpha, style.Alpha * 0.55f);
 
-        ImGui::SetCursorScreenPos(ImVec2(winX + columns.toggle, centerY - Layout::TOGGLE_HEIGHT * 0.5f));
+        ImGui::SetCursorScreenPos(ImVec2(winX + columns.toggle, centerY - Layout::ToggleHeight() * 0.5f));
         bool requested = false;
         bool state = enabled;
 
         if (oneShot)
         {
             requested = UIControls::ActionPill("##action", "SET", enabled,
-                                               ImVec2(Layout::TOGGLE_WIDTH, Layout::TOGGLE_HEIGHT));
+                                               ImVec2(Layout::ToggleWidth(), Layout::ToggleHeight()));
             state = true;
         }
         else
         {
             requested = UIControls::AnimatedToggleSwitch("##toggle", &state,
-                                                         ImVec2(Layout::TOGGLE_WIDTH, Layout::TOGGLE_HEIGHT));
+                                                         ImVec2(Layout::ToggleWidth(), Layout::ToggleHeight()));
         }
 
         if (!gameRunning) ImGui::PopStyleVar();
@@ -543,7 +553,7 @@ void MainView::RenderToggles(const Columns& columns)
 
         // Строка целиком — один элемент для раскладки: следующая встанет под ней.
         ImGui::SetCursorScreenPos(rowPos);
-        ImGui::Dummy(ImVec2(columns.right - columns.key, rowH + ROW_GAP));
+        ImGui::Dummy(ImVec2(columns.right - columns.key, rowH + rowGap));
 
         ImGui::PopID();
     }
@@ -612,13 +622,14 @@ void MainView::RenderInputFields(const Columns& columns)
     }
 
     const float buttonWidth = ImGui::CalcTextSize("Записать").x + style.FramePadding.x * 2.0f;
-    const float stepperWidth = Layout::INPUT_WIDTH;
+    const float stepperWidth = Layout::InputWidth();
 
     const float buttonX = columns.right - buttonWidth;
     const float stepperX = buttonX - style.ItemSpacing.x - stepperWidth;
 
     const float itemH = Layout::RowHeight();
-    const float rowH = itemH + ROW_PAD_Y * 2.0f;
+    const float rowH = itemH + Layout::Px(ROW_PAD_Y) * 2.0f;
+    const float rowGap = Layout::Px(ROW_GAP);
 
     for (InputFieldView& field : _valueFields)
     {
@@ -661,7 +672,7 @@ void MainView::RenderInputFields(const Columns& columns)
         if (submit) WriteValueField(field);
 
         ImGui::SetCursorScreenPos(rowPos);
-        ImGui::Dummy(ImVec2(columns.right - columns.key, rowH + ROW_GAP));
+        ImGui::Dummy(ImVec2(columns.right - columns.key, rowH + rowGap));
 
         ImGui::PopID();
     }
@@ -698,8 +709,8 @@ void MainView::RenderToasts(ID3D11ShaderResourceView* successIcon, ID3D11ShaderR
     const ImVec2 winPos = ImGui::GetWindowPos();
     const ImVec2 winSize = ImGui::GetWindowSize();
 
-    const float width = (std::min)(300.0f, winSize.x - 32.0f);
-    const float padding = 8.0f;
+    const float width = (std::min)(Layout::Px(300.0f), winSize.x - Layout::Px(32.0f));
+    const float padding = Layout::Px(8.0f);
     const float lineH = ImGui::GetTextLineHeight();
     const float iconSize = lineH;
     const float textWidth = width - padding * 2.0f - iconSize - 8.0f;
@@ -780,7 +791,7 @@ void MainView::FitWindowHeightToContent(float chromeHeight)
     const int maxHeight = static_cast<int>((work.bottom - work.top) * 0.85f);
 
     int desired = static_cast<int>(std::ceil(content));
-    desired = Utils::Clamp(desired, static_cast<int>(MIN_HEIGHT), maxHeight);
+    desired = Utils::Clamp(desired, static_cast<int>(MIN_HEIGHT * Layout::Scale()), maxHeight);
 
     if (desired == _fittedHeight) return;
     _fittedHeight = desired;
@@ -830,7 +841,7 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
     RenderTitleBar();
 
     const ImGuiStyle& style = ImGui::GetStyle();
-    ImGui::SetCursorPos(ImVec2(style.WindowPadding.x, TITLE_BAR_HEIGHT + 10.0f));
+    ImGui::SetCursorPos(ImVec2(style.WindowPadding.x, TitleBarHeight() + Layout::Px(10.0f)));
 
     RenderStatusStrip();
     ImGui::Dummy(ImVec2(0.0f, 2.0f));
@@ -856,7 +867,7 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
     RenderToggles(columns);
     RenderInputFields(columns);
 
-    _measuredListHeight = ImGui::GetCursorPosY() + 4.0f;
+    _measuredListHeight = ImGui::GetCursorPosY() + Layout::Px(2.0f);
 
     ImGui::EndChild();
     ImGui::PopStyleVar(2);
@@ -874,7 +885,7 @@ void MainView::Draw(ID3D11ShaderResourceView* successIcon, ID3D11ShaderResourceV
     RenderFooter();
 
     // Всё, что не список: заголовок, статус, шапка, подвал, отступы.
-    FitWindowHeightToContent(listTop + footerHeight);
+    FitWindowHeightToContent(listTop + footerHeight + style.WindowPadding.y);
 
     RenderToasts(successIcon, errorIcon);
 

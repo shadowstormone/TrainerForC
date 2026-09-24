@@ -15,19 +15,37 @@
 // элементы прижаты к правому краю, а то, что между ними, тянется.
 namespace Layout
 {
+    // Размер шрифта, под который нарисованы все размеры в пикселях:
+    // 11 pt × 1.5 — Full HD. На 1440p и 4K шрифт крупнее, и вместе с ним
+    // во столько же раз растут отступы, переключатели и окно. Раньше рос
+    // только шрифт, и на 4K панель становилась тесной.
+    inline constexpr float REFERENCE_FONT_SIZE = 16.5f;
+
+    // Во сколько раз интерфейс крупнее эталонного.
+    inline float Scale()
+    {
+        return ImGui::GetFontSize() / REFERENCE_FONT_SIZE;
+    }
+
+    // Пиксели эталонного макета -> пиксели текущего экрана.
+    inline float Px(float referencePixels)
+    {
+        return referencePixels * Scale();
+    }
+
     // Меньше этого подписи сжимать бессмысленно — останется одно многоточие.
     inline constexpr float MIN_LABEL_WIDTH = 90.0f;
 
     // Ширина поля ввода значения. Подпись получает всё, что останется.
-    inline constexpr float INPUT_WIDTH = 150.0f;
+    inline float InputWidth() { return Px(150.0f); }
 
     // Размеры переключателя. Должны совпадать со значением по умолчанию
     // у AnimatedToggleSwitch.
     //
     // Высоту строки задаёт именно тумблер, а не текст: пока он был 25 px,
     // строки не ужимались, сколько ни уменьшай шрифт.
-    inline constexpr float TOGGLE_WIDTH = 38.0f;
-    inline constexpr float TOGGLE_HEIGHT = 18.0f;
+    inline float ToggleWidth() { return Px(38.0f); }
+    inline float ToggleHeight() { return Px(18.0f); }
 
     inline float ContentLeft()
     {
@@ -123,7 +141,7 @@ namespace Layout
     // с переключателем и ряды с полем ввода были разной высоты.
     inline float RowHeight()
     {
-        const float byToggle = TOGGLE_HEIGHT;
+        const float byToggle = ToggleHeight();
         const float byWidget = ImGui::GetFrameHeight();
 
         return (std::max)(byToggle, byWidget);

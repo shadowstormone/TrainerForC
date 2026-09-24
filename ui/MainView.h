@@ -86,6 +86,10 @@ class MainView
     // Окно, которым управляют кнопки заголовка
     HWND _windowHandle = nullptr;
 
+    // Высота заголовка на прошлом кадре — для хиттеста из оконной процедуры,
+    // которая вызывается вне кадра ImGui.
+    float _titleBarHeight = 34.0f;
+
     // Левая граница блока кнопок заголовка (клиентские координаты).
     // До первого кадра — "бесконечность", чтобы окно таскалось сразу.
     float _titleButtonsMinX = 3.4e38f;
@@ -115,8 +119,8 @@ class MainView
     void RenderAuthorLink(const char* text, const char* url);
 
 public:
-    // Высота полосы заголовка, которую рисует ImGui
-    static constexpr float TITLE_BAR_HEIGHT = 34.0f;
+    // Высота полосы заголовка, которую рисует ImGui (растёт с масштабом).
+    static float TitleBarHeight();
 
     MainView() = default;
     MainView(const MainView&) = delete;

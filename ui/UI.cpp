@@ -488,9 +488,15 @@ void UI::Render(MainView& view, Console& console)
     {
         auto displayInfo = DisplayManager::getDisplayInfo();
 
+        // Окно растёт вместе со шрифтом: макет нарисован под Full HD
+        // (масштаб 1.5), на 1440p и 4K всё пропорционально крупнее.
+        const float uiScale = displayInfo.scale / 1.5f;
+        const int windowWidth = static_cast<int>(WIDTH * uiScale);
+        const int windowHeight = static_cast<int>(HEIGHT * uiScale);
+
         // Вычисление позиции окна для центрирования на экране
-        const int posX = displayInfo.centerX - WIDTH / 2;
-        const int posY = displayInfo.centerY - HEIGHT / 2;
+        const int posX = displayInfo.centerX - windowWidth / 2;
+        const int posY = displayInfo.centerY - windowHeight / 2;
 
         // Инициализация окна
         ImGui_ImplWin32_EnableDpiAwareness();
@@ -508,8 +514,8 @@ void UI::Render(MainView& view, Console& console)
         view.SetTitle("Test Trainer");
         desc.x = posX;
         desc.y = posY;
-        desc.width = WIDTH;
-        desc.height = HEIGHT;
+        desc.width = windowWidth;
+        desc.height = windowHeight;
         desc.icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON2));
         desc.iconSmall = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
         desc.borderless = true;      // системный заголовок убран, свой рисует ImGui
@@ -582,6 +588,7 @@ void UI::Render(MainView& view, Console& console)
 		io.IniFilename = nullptr;       // Отключаем сохранение настроек в ini-файл
 
 		SetModernDarkStyle(); // Установка стиля интерфейса
+		ImGui::GetStyle().ScaleAllSizes(uiScale); // отступы и скругления — под масштаб шрифта
 
 #ifdef _DEBUG
         {
@@ -610,9 +617,10 @@ void UI::Render(MainView& view, Console& console)
         // с шрифтом по умолчанию кириллица не отрисуется.
         ConsoleWindow consoleWindow;
         consoleWindow.Create(console, instance,
-            [scale = displayInfo.scale](ImGuiIO& consoleIo)
+            [scale = displayInfo.scale, uiScale](ImGuiIO& consoleIo)
             {
                 SetModernDarkStyle();
+                ImGui::GetStyle().ScaleAllSizes(uiScale);
                 FontManager::SetupFont(consoleIo, scale);
             });
 
