@@ -247,7 +247,7 @@ private:
 
             for (const auto& [key, cmd] : console->commandMap)
             {
-                std::string line = " - !" + cmd.name + ": " + cmd.description;
+                std::string line = " - " + cmd.name + ": " + cmd.description;
                 console->addLog("INFO", line);
             }
             });
@@ -591,68 +591,112 @@ public:
         scrollToBottom = true;
     }
 
-    // Рисует сообщение, подсвечивая числа.
-    //
-    // "Process ID: 24672" читается быстрее, когда значение видно сразу,
-    // а не сливается с текстом. Понимает и десятичные, и 0x-шестнадцатеричные.
-    static void DrawMessageWithAccents(const std::string& text)
+    // Делит сообщение на куски: {текст, это число}. Числом считается
+    // слово целиком — десятичное (1080, 1.5), с префиксом (0x3E8) или
+    // шестнадцатеричное, начинающееся с цифры (7FF612340000, 346C10):
+    // так адреса и оффсеты в выводе подсвечиваются целиком. Цифры внутри
+    // имён (x86_64, Num1) числом не считаются.
+    static std::vector<std::pair<std::string, bool>> SplitAccents(const std::string& text)
     {
-        const ImVec4 accent(0.45f, 0.78f, 1.00f, 1.00f);
-
         const auto isDigit = [](char c) { return c >= '0' && c <= '9'; };
         const auto isHex = [&](char c)
         {
             return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
         };
+        const auto isWordChar = [&](char c)
+        {
+            return isDigit(c) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+        };
 
-        std::size_t i = 0;
-        bool first = true;
+        const auto isNumber = [&](const std::string& word)
+        {
+            if (word.empty() || !isDigit(word[0])) return false;
 
-        const auto emit = [&](const std::string& part, bool highlighted)
+            if (word.size() > 2 && word[0] == '0' && (word[1] == 'x' || word[1] == 'X'))
+            {
+                return std::all_of(word.begin() + 2, word.end(), isHex);
+            }
+
+            // Десятичная дробь: одна точка между цифрами.
+            if (word.find('.') != std::string::npos)
+            {
+                const std::size_t dot = word.find('.');
+                return word.find('.', dot + 1) == std::string::npos && dot + 1 < word.size()
+                    && std::all_of(word.begin(), word.begin() + dot, isDigit)
+                    && std::all_of(word.begin() + dot + 1, word.end(), isDigit);
+            }
+
+            return std::all_of(word.begin(), word.end(), isHex);
+        };
+
+        std::vector<std::pair<std::string, bool>> parts;
+        const auto push = [&](std::string part, bool number)
         {
             if (part.empty()) return;
-
-            if (!first) ImGui::SameLine(0.0f, 0.0f);
-            first = false;
-
-            if (highlighted) ImGui::TextColored(accent, "%s", part.c_str());
-            else             ImGui::TextUnformatted(part.c_str());
+            if (!parts.empty() && parts.back().second == number) parts.back().first += part;
+            else parts.emplace_back(std::move(part), number);
         };
 
-        // Цифра внутри слова (x86_64, Num1) — часть имени, а не число.
-        const auto isWordChar = [](char c)
-        {
-            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-';
-        };
-
+        std::size_t i = 0;
         while (i < text.size())
         {
-            if (isDigit(text[i]) && (i == 0 || !(isWordChar(text[i - 1]) || isDigit(text[i - 1]))))
+            if (!isWordChar(text[i]))
             {
-                const std::size_t start = i;
-
-                if (text[i] == '0' && i + 1 < text.size() && (text[i + 1] == 'x' || text[i + 1] == 'X'))
-                {
-                    i += 2;
-                    while (i < text.size() && isHex(text[i])) ++i;
-                }
-                else
-                {
-                    while (i < text.size() && (isDigit(text[i])
-                           || (text[i] == '.' && i + 1 < text.size() && isDigit(text[i + 1])))) ++i;
-                }
-
-                emit(text.substr(start, i - start), true);
+                push(std::string(1, text[i]), false);
+                ++i;
                 continue;
             }
 
-            // Обычный текст — до следующего числа, стоящего отдельно.
-            const std::size_t start = i;
-            do
+            // Слово; точка входит в него, только если стоит между цифрами.
+            std::size_t end = i;
+            while (end < text.size()
+                   && (isWordChar(text[end])
+                       || (text[end] == '.' && end > i && isDigit(text[end - 1])
+                           && end + 1 < text.size() && isDigit(text[end + 1]))))
             {
-                ++i;
-            } while (i < text.size() && !(isDigit(text[i]) && !isWordChar(text[i - 1]) && !isDigit(text[i - 1])));
-            emit(text.substr(start, i - start), false);
+                ++end;
+            }
+
+            std::string word = text.substr(i, end - i);
+
+            // Размер вида 1920x1080 — два числа через x.
+            const std::size_t cross = word.find_first_of("xX");
+            if (cross != std::string::npos && cross > 0 && word != "0x" && !(cross == 1 && word[0] == '0')
+                && cross + 1 < word.size()
+                && std::all_of(word.begin(), word.begin() + cross, isDigit)
+                && std::all_of(word.begin() + cross + 1, word.end(), isDigit))
+            {
+                push(word.substr(0, cross), true);
+                push(word.substr(cross, 1), false);
+                push(word.substr(cross + 1), true);
+                i = end;
+                continue;
+            }
+
+            const bool number = isNumber(word);
+            push(std::move(word), number);
+            i = end;
+        }
+
+        return parts;
+    }
+
+    // Рисует сообщение, подсвечивая числа.
+    //
+    // "Process ID: 24672" читается быстрее, когда значение видно сразу,
+    // а не сливается с текстом.
+    static void DrawMessageWithAccents(const std::string& text)
+    {
+        const ImVec4 accent(0.45f, 0.78f, 1.00f, 1.00f);
+        bool first = true;
+
+        for (const auto& [part, number] : SplitAccents(text))
+        {
+            if (!first) ImGui::SameLine(0.0f, 0.0f);
+            first = false;
+
+            if (number) ImGui::TextColored(accent, "%s", part.c_str());
+            else        ImGui::TextUnformatted(part.c_str());
         }
 
         if (first) ImGui::TextUnformatted("");

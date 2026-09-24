@@ -213,3 +213,50 @@ TEST(CheatDsl, ValueFieldTypeFollowsDefault)
     EXPECT_TRUE(std::holds_alternative<std::int32_t>(ValueField(L"a", Address::Module(1)).defaultValue));
     EXPECT_TRUE(std::holds_alternative<float>(ValueField(L"a", Address::Module(1), 1.5f).defaultValue));
 }
+
+// --- Подсветка чисел в консоли ---
+
+#include "ui/ImGuiConsole.h"
+
+namespace
+{
+    // Подсвеченные куски сообщения, через запятую.
+    std::string Accents(const std::string& text)
+    {
+        std::string out;
+        for (const auto& [part, number] : Console::SplitAccents(text))
+        {
+            if (!number) continue;
+            if (!out.empty()) out += ",";
+            out += part;
+        }
+        return out;
+    }
+}
+
+TEST(ConsoleAccents, HexAddressesAreHighlightedWhole)
+{
+    // Регрессия: подсвечивалась только первая цифра — "7", а "FF612340000" нет.
+    EXPECT_EQ(Accents("mem 7FF612340000 16"), "7FF612340000,16");
+    EXPECT_EQ(Accents("ptr 346C10 800"), "346C10,800");
+    EXPECT_EQ(Accents("Адрес: 0x3E8, база 0x7FF6A0000000"), "0x3E8,0x7FF6A0000000");
+    EXPECT_EQ(Accents("(exe+1480)"), "1480");
+}
+
+TEST(ConsoleAccents, DigitsInsideNamesAreNotNumbers)
+{
+    EXPECT_EQ(Accents("Tutorial-x86_64.exe"), "");
+    EXPECT_EQ(Accents("Num1 и r8d"), "");
+    EXPECT_EQ(Accents("1st"), "");
+}
+
+TEST(ConsoleAccents, DecimalsAndPlainText)
+{
+    EXPECT_EQ(Accents("Версия: 1.0, PID 40"), "1.0,40");
+    EXPECT_EQ(Accents("Screen resolution: 1920x1080"), "1920,1080");
+    EXPECT_EQ(Accents("без чисел"), "");
+
+    std::string joined;
+    for (const auto& [part, number] : Console::SplitAccents("ptr 346C10 800")) joined += part;
+    EXPECT_EQ(joined, "ptr 346C10 800") << "куски складываются обратно в исходный текст";
+}
