@@ -213,16 +213,20 @@ void UIControls::StatusDot(const ImVec2& center, float radius, ImU32 color, floa
     draw->AddCircleFilled(center, radius, color);
 }
 
-bool UIControls::ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width,
-                              bool* submitted)
+bool UIControls::NumberField(const char* id, ImGuiDataType type, void* value, double step,
+                             const ImVec2& size, bool* submitted)
 {
     if (!value) return false;
 
     ImGui::PushID(id);
 
     const ImGuiStyle& style = ImGui::GetStyle();
-    const float arrow = ImGui::GetFrameHeight(); // стрелки квадратные
-    const float fieldWidth = width - arrow * 2.0f - style.ItemInnerSpacing.x * 2.0f;
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    const ImVec2 p = ImGui::GetCursorScreenPos();
+    const ImVec2 max(p.x + size.x, p.y + size.y);
+    const float rounding = style.FrameRounding;
+    const float button = size.y; // − и + квадратные
+    const bool disabled = (ImGui::GetItemFlags() & ImGuiItemFlags_Disabled) != 0;
 
     bool changed = false;
 
@@ -230,48 +234,153 @@ bool UIControls::ValueStepper(const char* id, ImGuiDataType type, void* value, d
     {
         switch (type)
         {
-        case ImGuiDataType_S32:    *static_cast<int*>(value)    += static_cast<int>(step * direction); break;
-        case ImGuiDataType_Float:  *static_cast<float*>(value)  += static_cast<float>(step * direction); break;
-        case ImGuiDataType_Double: *static_cast<double*>(value) += step * direction; break;
+        case ImGuiDataType_S32:    *static_cast<int*>(value)       += static_cast<int>(step * direction); break;
         case ImGuiDataType_S64:    *static_cast<long long*>(value) += static_cast<long long>(step * direction); break;
+        case ImGuiDataType_Float:  *static_cast<float*>(value)     += static_cast<float>(step * direction); break;
+        case ImGuiDataType_Double: *static_cast<double*>(value)    += step * direction; break;
         default: break;
         }
         changed = true;
     };
 
-    // Удержание стрелки повторяет шаг: набирать большое значение по одному
-    // щелчку невозможно.
-    ImGui::PushItemFlag(ImGuiItemFlags_ButtonRepeat, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemInnerSpacing.x, style.ItemSpacing.y));
+    // Рамка поля целиком — один элемент, как у настоящего spin box.
+    const ImGuiID editingId = ImGui::GetID("##editing");
+    ImGuiStorage* storage = ImGui::GetStateStorage();
+    const bool wasEditing = storage->GetBool(editingId, false);
 
-    if (ImGui::ArrowButton("##dec", ImGuiDir_Left)) nudge(-1.0);
+    const ImU32 frame = ImGui::GetColorU32(ImGuiCol_FrameBg);
+    draw->AddRectFilled(p, max, frame, rounding);
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(fieldWidth > 0.0f ? fieldWidth : 1.0f);
+    // Кнопки − и +: невидимые, рисуем сами. Удержание повторяет шаг.
+    const auto sideButton = [&](const char* buttonId, float x, bool plus)
+    {
+        ImGui::SetCursorScreenPos(ImVec2(x, p.y));
+        ImGui::PushItemFlag(ImGuiItemFlags_ButtonRepeat, true);
+        const bool pressed = ImGui::InvisibleButton(buttonId, ImVec2(button, size.y));
+        ImGui::PopItemFlag();
 
-    const char* format = (type == ImGuiDataType_Float || type == ImGuiDataType_Double) ? "%.3f" : nullptr;
+        const bool hovered = ImGui::IsItemHovered();
+        const bool held = ImGui::IsItemActive();
+
+        if (hovered || held)
+        {
+            const ImDrawFlags corners = plus ? ImDrawFlags_RoundCornersRight : ImDrawFlags_RoundCornersLeft;
+            draw->AddRectFilled(ImVec2(x, p.y), ImVec2(x + button, max.y),
+                                ImGui::GetColorU32(held ? ImGuiCol_FrameBgActive : ImGuiCol_FrameBgHovered),
+                                rounding, corners);
+        }
+
+        // Знаки рисуем линиями: ровно по центру и одной толщины на любом шрифте.
+        const ImVec2 c(x + button * 0.5f, p.y + size.y * 0.5f);
+        const float arm = size.y * 0.18f;
+        const float thick = (std::max)(1.2f, size.y * 0.06f);
+        const ImU32 glyph = ImGui::GetColorU32(disabled ? ImGuiCol_TextDisabled : ImGuiCol_Text,
+                                               hovered ? 1.0f : 0.7f);
+        draw->AddLine(ImVec2(c.x - arm, c.y), ImVec2(c.x + arm, c.y), glyph, thick);
+        if (plus) draw->AddLine(ImVec2(c.x, c.y - arm), ImVec2(c.x, c.y + arm), glyph, thick);
+
+        return pressed;
+    };
+
+    if (sideButton("##dec", p.x, false)) nudge(-1.0);
+    if (sideButton("##inc", max.x - button, true)) nudge(1.0);
+
+    // Тонкие разделители между кнопками и числом.
+    const ImU32 divider = ImGui::GetColorU32(ImGuiCol_Border, 0.9f);
+    draw->AddLine(ImVec2(p.x + button, p.y + size.y * 0.22f), ImVec2(p.x + button, max.y - size.y * 0.22f), divider);
+    draw->AddLine(ImVec2(max.x - button, p.y + size.y * 0.22f), ImVec2(max.x - button, max.y - size.y * 0.22f), divider);
+
+    // Само число. Пока его не редактируют — по центру: отступ считается от
+    // ширины текста (своего выравнивания у InputText нет).
+    const float fieldW = size.x - button * 2.0f;
+    const char* format = (type == ImGuiDataType_Float || type == ImGuiDataType_Double) ? "%g" : nullptr;
+
+    char preview[64]{};
+    ImGui::DataTypeFormatString(preview, sizeof(preview), type, value,
+                                format ? format : ImGui::DataTypeGetInfo(type)->PrintFmt);
+    const float textW = ImGui::CalcTextSize(preview).x;
+    const float padX = wasEditing ? style.FramePadding.x
+                                  : (std::max)(style.FramePadding.x, (fieldW - textW) * 0.5f);
+
+    ImGui::SetCursorScreenPos(ImVec2(p.x + button, p.y));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(0, 0, 0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                        ImVec2(padX, (size.y - ImGui::GetTextLineHeight()) * 0.5f));
+    ImGui::SetNextItemWidth(fieldW);
+
     if (ImGui::InputScalar("##value", type, value, nullptr, nullptr, format)) changed = true;
 
+    const bool editing = ImGui::IsItemActive();
+    storage->SetBool(editingId, editing);
+
     // Enter в поле — то же, что кнопка рядом.
-    if (submitted && (ImGui::IsItemActive() || ImGui::IsItemDeactivated())
+    if (submitted && (editing || ImGui::IsItemDeactivated())
         && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
     {
         *submitted = true;
     }
 
-    ImGui::SameLine();
-    if (ImGui::ArrowButton("##inc", ImGuiDir_Right)) nudge(1.0);
-
     ImGui::PopStyleVar();
-    ImGui::PopItemFlag();
-    ImGui::PopID();
+    ImGui::PopStyleColor(3);
 
+    // Рамка: при редактировании — акцентная, как фокус у полей Windows.
+    const ImVec4 accent = style.Colors[ImGuiCol_CheckMark];
+    draw->AddRect(p, max, editing ? ImGui::ColorConvertFloat4ToU32(ImVec4(accent.x, accent.y, accent.z, 0.85f))
+                                  : IM_COL32(255, 255, 255, 18), rounding);
+
+    // Раскладка: поле — один элемент нужного размера.
+    ImGui::SetCursorScreenPos(p);
+    ImGui::Dummy(size);
+
+    ImGui::PopID();
     return changed;
 }
 
-bool UIControls::ValueStepper(const char* id, int* value, int step, int minValue, int maxValue, float width)
+bool UIControls::AccentButton(const char* id, const char* label, const ImVec2& size)
 {
-    const bool changed = ValueStepper(id, ImGuiDataType_S32, value, static_cast<double>(step), width);
-    if (changed) *value = Utils::Clamp(*value, minValue, maxValue);
-    return changed;
+    const ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    const ImVec2 p = ImGui::GetCursorScreenPos();
+    const ImVec2 max(p.x + size.x, p.y + size.y);
+
+    const bool pressed = ImGui::InvisibleButton(id, size);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool held = ImGui::IsItemActive();
+
+    const ImVec4 accent = style.Colors[ImGuiCol_CheckMark];
+    const float fill = held ? 0.55f : hovered ? 0.30f : 0.14f;
+
+    draw->AddRectFilled(p, max, ImGui::ColorConvertFloat4ToU32(ImVec4(accent.x, accent.y, accent.z, fill)),
+                        style.FrameRounding);
+    draw->AddRect(p, max, ImGui::ColorConvertFloat4ToU32(ImVec4(accent.x, accent.y, accent.z, hovered ? 0.9f : 0.5f)),
+                  style.FrameRounding);
+
+    const ImVec2 textSize = ImGui::CalcTextSize(label);
+    const ImVec4 text = hovered ? ImVec4(1, 1, 1, 1) : Mix(style.Colors[ImGuiCol_Text], accent, 0.25f);
+    draw->AddText(ImVec2(p.x + (size.x - textSize.x) * 0.5f, p.y + (size.y - textSize.y) * 0.5f),
+                  ImGui::ColorConvertFloat4ToU32(text), label);
+
+    if (hovered) ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+    return pressed;
+}
+
+void UIControls::TagPill(const char* text, const ImVec2& size)
+{
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    const ImVec2 p = ImGui::GetCursorScreenPos();
+    ImGui::Dummy(size);
+
+    const float rounding = size.y * 0.5f;
+    draw->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), IM_COL32(255, 255, 255, 10), rounding);
+    draw->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), IM_COL32(255, 255, 255, 22), rounding);
+
+    // Мельче основного текста: это подпись, а не содержимое.
+    ImFont* font = ImGui::GetFont();
+    const float fontSize = ImGui::GetFontSize() * 0.78f;
+    const ImVec2 textSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, text);
+    draw->AddText(font, fontSize,
+                  ImVec2(p.x + (size.x - textSize.x) * 0.5f, p.y + (size.y - textSize.y) * 0.5f),
+                  ImGui::GetColorU32(ImGuiCol_Text, 0.55f), text);
 }

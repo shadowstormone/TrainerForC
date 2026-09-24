@@ -6,17 +6,19 @@
 
 namespace UIControls
 {
-    // Числовой регулятор: < значение >
-    //
-    // Стрелки меняют значение шагом step и повторяются при удержании,
-    // само поле остаётся редактируемым — вводить 999999 стрелками никто
-    // не станет. Тип значения — любой из ImGuiDataType (int, float, double).
-    // submitted — выставляется в true, если в поле нажали Enter.
-    bool ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width,
-                      bool* submitted = nullptr);
+    // Числовое поле «− значение +» в одной рамке: кнопки по краям, число
+    // по центру. Высота — height (обычно высота строки таблицы).
+    // Удержание − / + повторяет шаг, Enter в поле выставляет submitted.
+    bool NumberField(const char* id, ImGuiDataType type, void* value, double step,
+                     const ImVec2& size, bool* submitted = nullptr);
 
-    // Для int — прежняя форма с границами.
-    bool ValueStepper(const char* id, int* value, int step, int minValue, int maxValue, float width);
+    // Кнопка действия в стиле панели: контур акцентного цвета, заливка
+    // при наведении. Не стандартная серая кнопка ImGui.
+    bool AccentButton(const char* id, const char* label, const ImVec2& size);
+
+    // Плашка-подпись того же размера, что переключатель: тип поля (INT).
+    void TagPill(const char* text, const ImVec2& size);
+
 
     // Переключатель с анимацией.
     bool AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size = ImVec2(38, 18), float animationSpeed = 0.1f);
