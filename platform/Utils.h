@@ -16,17 +16,6 @@ namespace Utils
         return value;
     }
 
-    // Быстрая хэш-функция для строк (компилируется во время компиляции)
-    static constexpr unsigned int hash(const char* str)
-    {
-        unsigned int hash = 5381;
-        while (*str)
-        {
-            hash = ((hash << 5) + hash) + (*str++);
-        }
-        return hash;
-    }
-
     // Конвертация wstring в UTF-8 строку
     std::string WStringToUtf8(const std::wstring& wstr);
     std::string WStringToUtf8(LPCWSTR wstr);
@@ -34,10 +23,4 @@ namespace Utils
     void* LoadResourceToMemory(UINT resourceID, DWORD& sizeOut);
     ImFont* LoadFontFromResource(ImGuiIO& io, UINT resourceID, float fontSize, const ImFontConfig* fontConfig = nullptr, const ImWchar* glyphRanges = nullptr);
 
-    //void TemporaryToggleOff(std::unordered_map<std::string, bool>& toggleMap, const std::string& toggleId,int delayMs = 250, std::function<void()> onFinish);
-    // Выполнить действие через delayMs миллисекунд.
-    // Раньше здесь был DelayedToggleOff, который захватывал карту состояний
-    // UI по ссылке и писал в неё из отдельного потока, пока UI-поток читал
-    // и вставлял в ту же unordered_map каждый кадр — это гонка и UB.
-    void RunAfter(int delayMs, std::function<void()> action);
 }

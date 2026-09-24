@@ -444,41 +444,6 @@ private:
 // а создание окна и диспетчеризация сообщений — в класс Window (ui/Window.h).
 
 /**
- * @brief Получает путь к шрифту в системной папке
- * @return Строка с путем к файлу шрифта
- */
-std::string UI::getFontPath()
-{
-    PWSTR path = nullptr;
-    std::string fontPath;
-
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path)))
-    {
-        // Конвертация WCHAR* в string
-        int size = WideCharToMultiByte(CP_UTF8, 0, path, -1, nullptr, 0, nullptr, nullptr);
-        if (size > 0)
-        {
-            std::string localAppData(size - 1, 0); // -1 чтобы исключить null terminator
-            WideCharToMultiByte(CP_UTF8, 0, path, -1, &localAppData[0], size, nullptr, nullptr);
-            fontPath = localAppData + "\\Microsoft\\Windows\\Fonts\\FRIZQT.ttf";
-        }
-        CoTaskMemFree(path);
-    }
-
-    return fontPath;
-}
-
-/**
- * @brief Получает центр экрана
- * @return Пара координат центра экрана (X, Y)
- */
-std::pair<int, int> UI::getScreenCenter()
-{
-    auto displayInfo = DisplayManager::getDisplayInfo();
-    return { displayInfo.centerX, displayInfo.centerY };
-}
-
-/**
  * @brief Основная функция рендеринга интерфейса
  * @details Инициализирует окно, DirectX 11, ImGui и запускает основной цикл рендеринга
  */
@@ -667,9 +632,6 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
     const ImVec4 clear_color = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
     bool done = false;
 
-    // Флаги для отслеживания состояния окна
-    static int framesRendered = 0;
-
     while (!done)
     {
         // Обработка сообщений
@@ -725,9 +687,6 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
         }
 
         consoleWindow.Draw();
-
-        // Увеличиваем счетчик кадров
-        framesRendered++;
 
 #ifndef _WINDLL
         if (!view.isActive())

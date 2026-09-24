@@ -57,30 +57,6 @@ namespace Layout
         return ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x;
     }
 
-    inline float ContentWidth()
-    {
-        return ContentRight() - ContentLeft();
-    }
-
-    // Сколько места остаётся подписи, если справа стоят элементы общей
-    // шириной controlsWidth.
-    //
-    // Считается именно так, а не долей от ширины окна: тумблеру нужно 50 px,
-    // и отдавать под него половину строки, обрезая имя чита, незачем.
-    inline float LabelWidthFor(float controlsWidth)
-    {
-        const float available = ContentWidth() - controlsWidth - ImGui::GetStyle().ItemSpacing.x;
-
-        // Скобки вокруг std::max не случайны: Windows.h определяет max
-        // макросом, и без них он подменяет вызов.
-        return (std::max)(MIN_LABEL_WIDTH, available);
-    }
-
-    // X, с которого начинается элемент шириной controlWidth, прижатый вправо.
-    inline float ControlX(float controlWidth)
-    {
-        return ContentRight() - controlWidth;
-    }
 
     // Убирает с конца один символ UTF-8 целиком, а не байт: иначе кириллица
     // распадается на мусор.
@@ -122,17 +98,6 @@ namespace Layout
         {
             ImGui::SetTooltip("%s", text.c_str());
         }
-    }
-
-    // Промежуток между смысловыми группами — разделитель с воздухом,
-    // а не подобранный на глаз отступ.
-    inline void GroupGap()
-    {
-        const float gap = ImGui::GetStyle().ItemSpacing.y * 1.5f;
-
-        ImGui::Dummy(ImVec2(0.0f, gap));
-        ImGui::Separator();
-        ImGui::Dummy(ImVec2(0.0f, gap));
     }
 
     // Единая высота строки таблицы.
