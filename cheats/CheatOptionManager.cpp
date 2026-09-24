@@ -1,13 +1,14 @@
 #include "cheats/CheatOptionManager.h"
-#include "platform/AudioService.h"
-#include "platform/Logger.h"
 
-#include "cheats/CheatDefinition.h"
+#include <exception>
+
 #include "cheats/CheatFactory.h"
 #include "cheats/CheatOption.h"
 #include "cheats/CheatRegistry.h"
 #include "core/Cheat.h"
-#include "platform/Utils.h" // WStringToUtf8, RunAfter
+#include "platform/AudioService.h"
+#include "platform/Logger.h"
+#include "platform/Utils.h"
 
 CheatOptionManager::CheatOptionManager(Cheat* cheatProcess)
     : _cheatProcess(cheatProcess)
@@ -23,68 +24,18 @@ void CheatOptionManager::LoadFromRegistry()
 
     for (const auto& definition : definitions)
     {
-        auto option = CreateCheatFromDefinition(definition, _cheatProcess);
+        auto option = CreateCheatFromDefinition(definition);
         if (!option)
         {
             Log::Error("Не удалось создать опцию: " + Utils::WStringToUtf8(definition.name));
             continue;
         }
 
-        CheatOption* raw = option.get();
-        _options.push_back(std::move(option));
-
         // Регистрируем опцию в процессе (Cheat не владеет и не удаляет)
-        if (_cheatProcess)
-        {
-            _cheatProcess->AddCheatOption(raw);
-        }
+        if (_cheatProcess) _cheatProcess->AddCheatOption(option.get());
 
-        RegisterToggleHandler(definition, raw);
+        _options.push_back(std::move(option));
     }
-}
-
-void CheatOptionManager::RegisterToggleHandler(const CheatDefinition& definition, CheatOption* option)
-{
-    const std::string optionName = Utils::WStringToUtf8(definition.name);
-
-    _toggleHandlers[optionName] = [definition, option](bool enabled, DWORD processId)
-        {
-            const std::string name = Utils::WStringToUtf8(definition.name);
-
-            if (enabled)
-            {
-                if (!option->Enable(processId))
-                {
-                    // Патч не применился — опция остаётся выключенной.
-                    // Лезть в UI не нужно: переключатели рисуются по
-                    // IsEnabled(), поэтому интерфейс сам покажет верное
-                    // состояние на следующем кадре.
-                    option->IsEnabled(false);
-                    Log::Error("Не удалось применить " + name + " — опция выключена");
-                    return;
-                }
-
-                Log::Info("Переключатель " + name + " активирован");
-                option->IsEnabled(true);
-
-                if (definition.autoDisable)
-                {
-                    Utils::RunAfter(definition.autoDisableDelay,
-                        [option, processId, name]()
-                        {
-                            option->Disable(processId);
-                            option->IsEnabled(false);
-                            Log::Info("Опция " + name + " была временной и выключена автоматически");
-                        });
-                }
-            }
-            else
-            {
-                Log::Info("Опция " + name + " выключена");
-                option->Disable(processId);
-                option->IsEnabled(false);
-            }
-        };
 }
 
 std::vector<CheatOption*> CheatOptionManager::GetAllOptions() const
@@ -98,15 +49,23 @@ std::vector<CheatOption*> CheatOptionManager::GetAllOptions() const
     return result;
 }
 
-void CheatOptionManager::HandleToggle(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState)
+void CheatOptionManager::SetEnabled(CheatOption* option, bool enabled)
 {
-    if (currentState == previousState) return;
+    if (!option) return;
 
-    auto it = _toggleHandlers.find(optionName);
-    if (it != _toggleHandlers.end())
+    if (!_cheatProcess)
     {
-        it->second(currentState, _cheatProcess->GetProcessID());
+        option->SetEnabled(enabled, 0);
+        return;
     }
+
+    // Само включение — в фоновом потоке, окно тем временем рисует индикатор.
+    option->BeginPending();
+    _cheatProcess->Post([option, enabled, process = _cheatProcess]()
+    {
+        option->SetEnabled(enabled, process->GetProcessID());
+        option->EndPending();
+    });
 }
 
 CheatOption* CheatOptionManager::GetOption(std::size_t index) const
@@ -119,7 +78,7 @@ int CheatOptionManager::DisableAll()
 {
     if (!_cheatProcess) return 0;
 
-    const int processId = _cheatProcess->GetProcessID();
+    const DWORD processId = _cheatProcess->GetProcessID();
     if (processId == 0) return 0;
 
     // Откат на выходе — это не пользовательское действие, а уборка.
@@ -141,13 +100,13 @@ int CheatOptionManager::DisableAll()
 
     for (const std::unique_ptr<CheatOption>& option : _options)
     {
-        if (!option || !option->IsEnabled()) continue;
+        if (!option || !option->IsEnabled() || option->IsOneShot()) continue;
 
         // Ошибка отката одной опции не должна мешать откатить остальные:
         // выйти, оставив игру частично пропатченной, хуже всего.
         try
         {
-            if (option->Disable(processId)) ++restored;
+            if (option->SetEnabled(false, processId)) ++restored;
         }
         catch (const std::exception& e)
         {

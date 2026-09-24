@@ -11,6 +11,8 @@
 #include <Windows.h>
 #include <functional>
 #include <format>
+#include <map>
+#include <mutex>
 #include <utility>
 
 #include "core/Cheat.h"
@@ -106,7 +108,7 @@ private:
     {
         std::string key = caseSensitive ? name : toLower(name);
         commandMap[key] = Command(name, description, callback, caseSensitive);
-        availableCommands.push_back("!" + name); // для автодополнения
+        availableCommands.push_back(name); // для автодополнения
     }
 
     /**
@@ -162,6 +164,11 @@ private:
         if (data->EventFlag == ImGuiInputTextFlags_CallbackCompletion)
         {
             std::string prefix(data->Buf, data->BufTextLen);
+
+            // Необязательный '!' сохраняем как есть и в сравнении не учитываем.
+            const std::string bang = (!prefix.empty() && prefix[0] == '!') ? "!" : "";
+            prefix.erase(0, bang.size());
+
             std::string match;
             int matches = 0;
             for (const auto& cmd : availableCommands)
@@ -184,15 +191,12 @@ private:
                     ++matches;
                 }
             }
-            if (matches == 1)
+            if (matches >= 1 && !match.empty())
             {
+                // Единственное совпадение — сразу с пробелом под аргументы.
+                const std::string completed = bang + match + (matches == 1 ? " " : "");
                 data->DeleteChars(0, data->BufTextLen);
-                data->InsertChars(0, match.c_str());
-            }
-            else if (matches > 1 && !match.empty())
-            {
-                data->DeleteChars(0, data->BufTextLen);
-                data->InsertChars(0, match.c_str());
+                data->InsertChars(0, completed.c_str());
             }
         }
         else if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)    // История команд (↑ / ↓)
@@ -294,7 +298,7 @@ private:
                 }
             });
 
-        AddCommand("asm", "Собрать ассемблер и показать байты: asm mov qword ptr [rbx+8], 1", [](Console* console, const std::vector<std::string>& args)
+        AddCommand("asm", "Собрать ассемблер: asm mov qword ptr [rbx+8], 1  (запись CE: asm ce ...)", [](Console* console, const std::vector<std::string>& args)
             {
                 if (args.size() < 2) { console->addLog("ERROR", "Нужен текст ассемблера"); return; }
 
@@ -315,7 +319,15 @@ private:
                     if (mem.IsValid()) is64 = mem.IsTargetX64();
                 }
 
-                const AssembleResult assembled = Assembler::Assemble(text, is64);
+                // Команда asm понимает и запись CE: "asm ce mov [rbx+800],3E8".
+                AsmSyntax syntax = AsmSyntax::Standard;
+                if (text.rfind("ce ", 0) == 0)
+                {
+                    syntax = AsmSyntax::CheatEngine;
+                    text.erase(0, 3);
+                }
+
+                const AssembleResult assembled = Assembler::Assemble(text, is64, 0, syntax);
                 if (!assembled.ok) { console->addLog("ERROR", assembled.error); return; }
 
                 std::string hex;
@@ -404,17 +416,56 @@ private:
                 std::size_t count = args.size() > 2 ? std::strtoul(args[2].c_str(), nullptr, 10) : 16;
                 if (count == 0 || count > 64) count = 16;
 
-                auto* bytes = static_cast<unsigned char*>(mem.Read(reinterpret_cast<LPVOID>(address), count));
-                if (!bytes) { console->addLog("ERROR", "Не удалось прочитать память"); return; }
+                const std::vector<std::uint8_t> bytes = mem.ReadBytes(address, count);
+                if (bytes.empty()) { console->addLog("ERROR", "Не удалось прочитать память"); return; }
 
                 std::string dump;
-                for (std::size_t i = 0; i < count; ++i)
+                for (std::uint8_t b : bytes)
                 {
-                    dump += std::format("{:02X} ", bytes[i]);
+                    dump += std::format("{:02X} ", b);
                 }
-                delete[] bytes;
 
                 console->addLog("INFO", std::format("0x{:X}: {}", address, dump));
+            });
+
+        AddCommand("aob", "Найти сигнатуру в игре: aob 29 93 ?? ?? 8B", [](Console* console, const std::vector<std::string>& args)
+            {
+                if (args.size() < 2) { console->addLog("ERROR", "Нужна сигнатура"); return; }
+
+                Cheat* proc = console->GetProcess();
+                if (!proc) { console->addLog("ERROR", "Процесс не задан"); return; }
+
+                MemoryAccess mem(proc->GetProcessID());
+                if (!mem.IsValid()) { console->addLog("ERROR", "Процесс не открыт"); return; }
+
+                std::vector<std::uint8_t> pattern;
+                std::wstring mask;
+                for (std::size_t i = 1; i < args.size(); ++i)
+                {
+                    const std::string& tok = args[i];
+                    if (tok.find_first_of("?*") != std::string::npos) { pattern.push_back(0); mask += L'?'; }
+                    else { pattern.push_back(static_cast<std::uint8_t>(std::strtoul(tok.c_str(), nullptr, 16))); mask += L'x'; }
+                }
+
+                const MemoryAccess::ModuleInfo module = mem.MainModule();
+                std::uintptr_t from = module.base;
+                const std::uintptr_t end = module.base + module.size;
+                int found = 0;
+
+                // Все совпадения, а не первое: сигнатура для патча должна
+                // быть уникальной, и это надо видеть до того, как её вписать.
+                while (from < end && found < 10)
+                {
+                    const std::uintptr_t hit = mem.ScanSignature(from, end - from, pattern, mask);
+                    if (hit == 0) break;
+                    console->addLog("INFO", std::format("0x{:X}  (exe+{:X})", hit, hit - module.base));
+                    ++found;
+                    from = hit + 1;
+                }
+
+                if (found == 0) console->addLog("ERROR", "Не найдено");
+                else if (found == 1) console->addLog("INFO", "Совпадение одно — сигнатура годится");
+                else console->addLog("ERROR", std::format("Совпадений: {}{} — удлините сигнатуру", found, found >= 10 ? "+" : ""));
             });
 
         AddCommand("log", "Путь к файлу лога", [](Console* console, const std::vector<std::string>& args)
@@ -423,7 +474,7 @@ private:
                 const DWORD length = GetModuleFileNameW(nullptr, path, MAX_PATH);
 
                 std::wstring full(path, length);
-                const size_t slash = full.find_last_of(L"\/");
+                const size_t slash = full.find_last_of(L"\\/");
                 const std::wstring dir = slash == std::wstring::npos ? L"" : full.substr(0, slash + 1);
 
                 console->addLog("INFO", "Лог: " + Utils::WStringToUtf8(dir + L"trainer.log"));
@@ -465,6 +516,9 @@ private:
 
     std::map<std::string, Command> commandMap;       ///< Карта команд: ключ -> команда (для быстрого поиска).
     std::vector<LogEntry> items;                     ///< Список всех записей в консоли.
+    std::vector<LogEntry> _pending;                  ///< Записи из других потоков, ещё не перенесённые.
+    std::mutex _pendingMutex;
+    static constexpr std::size_t MAX_ENTRIES = 5000;
     std::vector<std::string> availableCommands;      ///< Список команд для автодополнения (с префиксом '!').
     std::vector<std::string> commandHistory;         ///< История введённых команд.
     int historyPos;                                  ///< Текущая позиция в истории (для навигации стрелками).
@@ -482,8 +536,7 @@ public:
 
         RegisterBuildInCommands();
 
-        addLog("INFO", "Добро пожаловать в консоль разработчика");
-        addLog("INFO", "Версия: 1.0 (Debug)");
+        addLog("INFO", "Консоль разработчика. help — список команд, Tab — дополнение, стрелки — история");
     }
 
     /**
@@ -505,9 +558,37 @@ public:
     Cheat* GetProcess() const { return _process; }
 
     // ILogger: домен пишет сюда, не зная про ImGui.
+    //
+    // Пишут сюда из ДВУХ потоков: UI и фонового потока читов. Раньше запись
+    // сразу уходила в items — вектор, который UI-поток в это же время
+    // обходит при отрисовке; перераспределение памяти посреди обхода роняло
+    // программу. Теперь сообщение ложится в очередь под мьютексом, а в
+    // items его переносит сам UI-поток в начале отрисовки.
     void Log(const std::string& level, const std::string& message) override
     {
-        addLog(level, message);
+        LogEntry entry;
+        entry.timestamp = GetCurrentTimestamp();
+        entry.type = level;
+        entry.message = message;
+
+        std::lock_guard lock(_pendingMutex);
+        _pending.push_back(std::move(entry));
+
+        // Консоль могут не открывать весь сеанс — очередь не должна расти вечно.
+        if (_pending.size() > MAX_ENTRIES) _pending.erase(_pending.begin(), _pending.begin() + MAX_ENTRIES / 2);
+    }
+
+    // Переносит накопленные сообщения в журнал. Только из UI-потока.
+    void FlushPending()
+    {
+        std::lock_guard lock(_pendingMutex);
+        if (_pending.empty()) return;
+
+        for (LogEntry& entry : _pending) items.push_back(std::move(entry));
+        _pending.clear();
+
+        if (items.size() > MAX_ENTRIES) items.erase(items.begin(), items.begin() + (items.size() - MAX_ENTRIES));
+        scrollToBottom = true;
     }
 
     // Рисует сообщение, подсвечивая числа.
@@ -538,9 +619,15 @@ public:
             else             ImGui::TextUnformatted(part.c_str());
         };
 
+        // Цифра внутри слова (x86_64, Num1) — часть имени, а не число.
+        const auto isWordChar = [](char c)
+        {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-';
+        };
+
         while (i < text.size())
         {
-            if (isDigit(text[i]))
+            if (isDigit(text[i]) && (i == 0 || !(isWordChar(text[i - 1]) || isDigit(text[i - 1]))))
             {
                 const std::size_t start = i;
 
@@ -559,8 +646,12 @@ public:
                 continue;
             }
 
+            // Обычный текст — до следующего числа, стоящего отдельно.
             const std::size_t start = i;
-            while (i < text.size() && !isDigit(text[i])) ++i;
+            do
+            {
+                ++i;
+            } while (i < text.size() && !(isDigit(text[i]) && !isWordChar(text[i - 1]) && !isDigit(text[i - 1])));
             emit(text.substr(start, i - start), false);
         }
 
@@ -607,6 +698,8 @@ public:
             ImGui::SetNextWindowSize(ImVec2(viewport.x * 0.9f, viewport.y * 0.6f), ImGuiCond_FirstUseEver);
             ImGui::SetNextWindowSizeConstraints(ImVec2(200.0f, 120.0f), viewport);
         }
+
+        FlushPending();
 
         if (!ImGui::Begin(title, p_open, flags))
         {
@@ -714,14 +807,11 @@ public:
                 }
                 else
                 {
+                    // '!' перед командой необязателен: консоль и так
+                    // принимает только команды, а лишний символ мешал.
                     std::string cmdName = args[0];
-                    if (cmdName.empty() || cmdName[0] != '!')
                     {
-                        addLog("WARNING", "Команда должна начинаться с '!'");;
-                    }
-                    else
-                    {
-                        std::string baseName = cmdName.substr(1);
+                        std::string baseName = (!cmdName.empty() && cmdName[0] == '!') ? cmdName.substr(1) : cmdName;
                         std::string key = toLower(baseName);
                         auto it = commandMap.find(key);
                         if (it != commandMap.end())
@@ -737,7 +827,7 @@ public:
                         }
                         else
                         {
-                            addLog("WARNING", "Команда '" + baseName + "' не найдена. Введите !help для списка.");
+                            addLog("WARNING", "Команда '" + baseName + "' не найдена. Введите help для списка.");
                         }
                     }
                 }

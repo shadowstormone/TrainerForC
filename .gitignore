@@ -17,6 +17,7 @@
 mono_crash.*
 
 # Build results
+# (исходники в libs/ не трогаем: правило x86/ выкидывало бэкенд asmjit)
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -362,3 +363,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 *.rar
+
+# Исходники сторонних библиотек — целиком в репозитории
+!libs/**
+
+# CMake
+build/
+out/

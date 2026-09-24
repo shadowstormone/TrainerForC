@@ -4,7 +4,9 @@
  * @details Содержит реализацию класса UI и вспомогательных классов для работы с DirectX 11, ImGui и системными ресурсами
  */
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include "resource.h"
 #include "platform/Logger.h"
 #include "ui/UI.h"
@@ -14,6 +16,7 @@
 #include "ui/ImGuiThemes.h"
 #include "ui/ImGuiConsole.h"
 #include "ui/Window.h"
+#include "platform/Hotkey.h"
 #include <imgui_internal.h>
 #include <shlobj.h>
 #include <KnownFolders.h>
@@ -109,7 +112,7 @@ static ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, I
  */
 namespace UIConstants
 {
-    constexpr float FADE_DURATION = 1.5f;           ///< Продолжительность анимации затухания в секундах
+    constexpr float FADE_DURATION = 0.3f;           ///< Появление окна: коротко, чтобы не ждать интерфейс
     constexpr float DEFAULT_FONT_SIZE = 11.0f;      ///< Размер шрифта по умолчанию
     constexpr UINT BUFFER_COUNT = 2;                ///< Количество буферов обмена
     constexpr UINT REFRESH_RATE = 60;               ///< Частота обновления экрана
@@ -441,41 +444,6 @@ private:
 // а создание окна и диспетчеризация сообщений — в класс Window (ui/Window.h).
 
 /**
- * @brief Получает путь к шрифту в системной папке
- * @return Строка с путем к файлу шрифта
- */
-std::string UI::getFontPath()
-{
-    PWSTR path = nullptr;
-    std::string fontPath;
-
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path)))
-    {
-        // Конвертация WCHAR* в string
-        int size = WideCharToMultiByte(CP_UTF8, 0, path, -1, nullptr, 0, nullptr, nullptr);
-        if (size > 0)
-        {
-            std::string localAppData(size - 1, 0); // -1 чтобы исключить null terminator
-            WideCharToMultiByte(CP_UTF8, 0, path, -1, &localAppData[0], size, nullptr, nullptr);
-            fontPath = localAppData + "\\Microsoft\\Windows\\Fonts\\FRIZQT.ttf";
-        }
-        CoTaskMemFree(path);
-    }
-
-    return fontPath;
-}
-
-/**
- * @brief Получает центр экрана
- * @return Пара координат центра экрана (X, Y)
- */
-std::pair<int, int> UI::getScreenCenter()
-{
-    auto displayInfo = DisplayManager::getDisplayInfo();
-    return { displayInfo.centerX, displayInfo.centerY };
-}
-
-/**
  * @brief Основная функция рендеринга интерфейса
  * @details Инициализирует окно, DirectX 11, ImGui и запускает основной цикл рендеринга
  */
@@ -485,9 +453,15 @@ void UI::Render(MainView& view, Console& console)
     {
         auto displayInfo = DisplayManager::getDisplayInfo();
 
+        // Окно растёт вместе со шрифтом: макет нарисован под Full HD
+        // (масштаб 1.5), на 1440p и 4K всё пропорционально крупнее.
+        const float uiScale = displayInfo.scale / 1.5f;
+        const int windowWidth = static_cast<int>(WIDTH * uiScale);
+        const int windowHeight = static_cast<int>(HEIGHT * uiScale);
+
         // Вычисление позиции окна для центрирования на экране
-        const int posX = displayInfo.centerX - WIDTH / 2;
-        const int posY = displayInfo.centerY - HEIGHT / 2;
+        const int posX = displayInfo.centerX - windowWidth / 2;
+        const int posY = displayInfo.centerY - windowHeight / 2;
 
         // Инициализация окна
         ImGui_ImplWin32_EnableDpiAwareness();
@@ -502,10 +476,11 @@ void UI::Render(MainView& view, Console& console)
         WindowDesc desc;
         desc.className = L"TestTrainerWindow";
         desc.title = L"Test Trainer";
+        view.SetTitle("Test Trainer");
         desc.x = posX;
         desc.y = posY;
-        desc.width = WIDTH;
-        desc.height = HEIGHT;
+        desc.width = windowWidth;
+        desc.height = windowHeight;
         desc.icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON2));
         desc.iconSmall = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
         desc.borderless = true;      // системный заголовок убран, свой рисует ImGui
@@ -578,6 +553,7 @@ void UI::Render(MainView& view, Console& console)
 		io.IniFilename = nullptr;       // Отключаем сохранение настроек в ini-файл
 
 		SetModernDarkStyle(); // Установка стиля интерфейса
+		ImGui::GetStyle().ScaleAllSizes(uiScale); // отступы и скругления — под масштаб шрифта
 
 #ifdef _DEBUG
         {
@@ -606,9 +582,10 @@ void UI::Render(MainView& view, Console& console)
         // с шрифтом по умолчанию кириллица не отрисуется.
         ConsoleWindow consoleWindow;
         consoleWindow.Create(console, instance,
-            [scale = displayInfo.scale](ImGuiIO& consoleIo)
+            [scale = displayInfo.scale, uiScale](ImGuiIO& consoleIo)
             {
                 SetModernDarkStyle();
+                ImGui::GetStyle().ScaleAllSizes(uiScale);
                 FontManager::SetupFont(consoleIo, scale);
             });
 
@@ -650,11 +627,10 @@ void UI::Render(MainView& view, Console& console)
  */
 void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWindow& consoleWindow, ImGuiIO& io, TextureManager& textureManager)
 {
-    const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    // Цвет очистки — цвет фона окна. Раньше был серо-голубой, и пока окно
+    // проявлялось, сквозь него просвечивала голубая заливка.
+    const ImVec4 clear_color = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
     bool done = false;
-
-    // Флаги для отслеживания состояния окна
-    static int framesRendered = 0;
 
     while (!done)
     {
@@ -664,8 +640,10 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
             done = true;
         }
 
-        // Проверка клавиши выхода
-        if (GetAsyncKeyState(VK_END) & 1)
+        // End закрывает трейнер, только когда его окно активно. Раньше
+        // клавиша читалась глобально, и End, нажатый в самой игре, молча
+        // закрывал трейнер.
+        if (::GetForegroundWindow() == window.Handle() && (GetAsyncKeyState(VK_END) & 0x8000))
         {
             done = true;
         }
@@ -680,7 +658,12 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::GetStyle().Alpha = fadeAnimation.getAlpha();
+        // Пока в поле значения набирают число, горячие клавиши молчат.
+        Hotkey::SetSuppressed(io.WantTextInput && ::GetForegroundWindow() == window.Handle());
+
+        // Плавное появление с замедлением к концу.
+        const float fade = fadeAnimation.getAlpha();
+        ImGui::GetStyle().Alpha = 1.0f - (1.0f - fade) * (1.0f - fade);
         view.Draw(textureManager.getSuccessIcon(), textureManager.getErrorIcon());
 
         ImGui::EndFrame();
@@ -704,9 +687,6 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
         }
 
         consoleWindow.Draw();
-
-        // Увеличиваем счетчик кадров
-        framesRendered++;
 
 #ifndef _WINDLL
         if (!view.isActive())

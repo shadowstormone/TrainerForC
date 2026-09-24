@@ -1,5 +1,3 @@
-#include <thread>
-#include <chrono>
 #include <Windows.h>
 #include "platform/Utils.h"
 #include <codecvt>
@@ -115,16 +113,4 @@ ImFont* Utils::LoadFontFromResource(ImGuiIO& io, UINT resourceID, float fontSize
     }
 
     return font;
-}
-
-// std::function<void()> onFinish лямбда-обработчик завершения
-void Utils::RunAfter(int delayMs, std::function<void()> action)
-{
-    if (!action) return;
-
-    std::thread([delayMs, action = std::move(action)]()
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-            action();
-        }).detach();
 }

@@ -16,6 +16,15 @@ bool Hotkey::AllKeysDown() const
 bool Hotkey::JustPressed()
 {
     const bool down = AllKeysDown();
+
+    // Заглушены — нажатие запоминаем, но не отдаём: иначе клавиша,
+    // зажатая во время ввода, сработала бы сразу после него.
+    if (s_suppressed)
+    {
+        _wasDown = down;
+        return false;
+    }
+
     const bool justPressed = down && !_wasDown;
     _wasDown = down;
     return justPressed;

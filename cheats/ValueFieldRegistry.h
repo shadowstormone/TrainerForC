@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "cheats/CheatDefinition.h" // Address
+#include "cheats/CheatDefinition.h" // Address, PatchValue
 
 // Поле ввода значения: подпись, адрес и кнопка записи.
 //
@@ -16,20 +16,31 @@ struct ValueFieldDefinition
 {
     std::wstring name;                    // подпись в UI
     std::vector<std::uintptr_t> offsets;  // цепочка адреса
+    std::wstring module;                  // модуль адреса; пусто — exe игры
     bool absoluteAddress = false;         // offsets.back() — готовый адрес
-    int defaultValue = 1;                 // что показывать в пустом поле
+
+    // Что показывать в пустом поле. ТИП значения задаёт тип поля:
+    // 1 — целое (4 байта), 1.0f — float, 1.0 — double.
+    PatchValue defaultValue = std::int32_t{ 1 };
+
+    std::wstring hint;                    // подсказка при наведении
 };
 
 // Описание одной строкой, тем же Address, что и у читов:
 //
-//   REGISTER_VALUE_FIELD(ValueField(L"Set HP", Address::Module(0x240600).Deref(0x4B4)))
-inline ValueFieldDefinition ValueField(std::wstring name, const Address& address, int defaultValue = 1)
+//   REGISTER_VALUE_FIELD(ValueField(L"Золото", Address::Module(0x240600).Deref(0x4B4), 1000))
+//   REGISTER_VALUE_FIELD(ValueField(L"Скорость", Address::Module(0x240600).Deref(0x10), 1.0f))
+template <typename T = std::int32_t>
+inline ValueFieldDefinition ValueField(std::wstring name, const Address& address, T defaultValue = T{ 1 },
+                                       std::wstring hint = {})
 {
     ValueFieldDefinition field;
     field.name = std::move(name);
     field.offsets = address.offsets;
+    field.module = address.module;
     field.absoluteAddress = address.absolute;
-    field.defaultValue = defaultValue;
+    field.defaultValue = detail::ToPatchValue(defaultValue);
+    field.hint = std::move(hint);
     return field;
 }
 

@@ -11,7 +11,7 @@ extern LPCWSTR WindowTitle; // Объявление, а не определен�
 // Иначе релизный трейнер тянул бы за собой gtest и gmock: их библиотеки
 // подставляет автолинковка vcpkg, и рядом с exe приходилось держать
 // gmock.dll — при том, что тесты в релизе не запускаются никогда.
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(TRAINER_NO_TESTS)
 
 #include <gtest/gtest.h>
 

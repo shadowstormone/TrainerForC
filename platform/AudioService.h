@@ -50,4 +50,5 @@ private:
 
     struct Impl;
     Impl* _impl = nullptr;
+    bool _enabled = true;
 };

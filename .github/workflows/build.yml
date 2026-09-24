@@ -1,0 +1,51 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Основная сборка: MSVC, как у разработчика, и прогон тестов.
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        # Генератор не задаём: CMake берёт установленную на раннере студию.
+        run: cmake -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config Debug --parallel
+
+      - name: Test
+        run: build\Debug\TrainerTests.exe --gtest_brief=1
+
+      - name: Build Release
+        run: cmake --build build --config Release --parallel --target Trainer
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Trainer-Release
+          path: build/Release/Trainer.exe
+
+  # Та же сборка другим компилятором: mingw ловит то, что MSVC прощает
+  # (забытые include, расширения MSVC). Тесты — под wine.
+  linux-mingw:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mingw-w64 wine64
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64.cmake -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: WINEDEBUG=-all /usr/lib/wine/wine64 build/TrainerTests.exe --gtest_brief=1

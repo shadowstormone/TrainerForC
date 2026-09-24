@@ -29,8 +29,6 @@ public:
 
     // Main methods
     static void Render(MainView& view, Console& console);
-    static std::string getFontPath();
-    static std::pair<int, int> getScreenCenter();
 
 private:
     // Private helper methods

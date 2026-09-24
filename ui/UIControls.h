@@ -1,7 +1,7 @@
 #pragma once
 #include <imgui.h>
-#include <map>
 #include <string>
+
 #include "platform/Utils.h"
 
 namespace UIControls
@@ -10,21 +10,38 @@ namespace UIControls
     //
     // Стрелки меняют значение шагом step и повторяются при удержании,
     // само поле остаётся редактируемым — вводить 999999 стрелками никто
-    // не станет.
+    // не станет. Тип значения — любой из ImGuiDataType (int, float, double).
+    // submitted — выставляется в true, если в поле нажали Enter.
+    bool ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width,
+                      bool* submitted = nullptr);
+
+    // Для int — прежняя форма с границами.
     bool ValueStepper(const char* id, int* value, int step, int minValue, int maxValue, float width);
 
-    // Функция рендера переключателя с анимацией
+    // Переключатель с анимацией.
     bool AnimatedToggleSwitch(const char* id, bool* v, const ImVec2& size = ImVec2(38, 18), float animationSpeed = 0.1f);
 
-    // Константы для элементов интерфейса
-    namespace Constants
-    {
-        constexpr int INPUT_WIDTH = 158;
-        constexpr int MIN_VALUE = 1;
-        constexpr float LABEL_WIDTH = 150.0f;
-        constexpr float TEXT_WIDTH = 315.0f;
+    // Кнопка того же размера, что и переключатель, — для разовых действий
+    // («записать 9999»). lit — подсветить, пока действие «горит».
+    bool ActionPill(const char* id, const char* label, bool lit, const ImVec2& size = ImVec2(38, 18));
 
-        // Должна совпадать со значением по умолчанию у AnimatedToggleSwitch.
-        constexpr float TOGGLE_WIDTH = 50.0f;
-    }
+    // Клавиша в рамке, как на клавиатуре: [Ctrl+Num 1].
+    // width > 0 — ширина рамки (чтобы столбец был ровным).
+    void KeyCap(const char* text, float width = 0.0f);
+
+    // Круглый значок «!» — ошибка; подсказка с причиной при наведении.
+    // Возвращает true, если на него навели.
+    bool ErrorBadge(const char* id, const std::string& tooltip, float pulse = 0.0f);
+
+    // Крутящаяся дуга «идёт работа» в квадрате size x size.
+    void Spinner(const char* id, float size, ImU32 color);
+
+    // Точка состояния с мягким свечением. pulse 0..1 — фаза пульсации.
+    void StatusDot(const ImVec2& center, float radius, ImU32 color, float pulse = 0.0f);
+
+    // Цвет между a и b.
+    ImVec4 Mix(const ImVec4& a, const ImVec4& b, float t);
+
+    // Сглаживание к цели, не зависящее от частоты кадров.
+    float Approach(float current, float target, float speed);
 }

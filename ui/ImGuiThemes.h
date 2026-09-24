@@ -9,14 +9,14 @@ void SetModernDarkStyle()
     // Базовые цвета
     colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.36f, 0.42f, 0.47f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+    colors[ImGuiCol_WindowBg] = ImVec4(0.105f, 0.11f, 0.125f, 1.00f);
     colors[ImGuiCol_ChildBg] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+    colors[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.14f, 0.16f, 0.98f);
     colors[ImGuiCol_Border] = ImVec4(0.20f, 0.20f, 0.20f, 0.50f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.18f, 0.18f, 0.18f, 1.00f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.24f, 0.24f, 1.00f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+    colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.17f, 0.19f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.23f, 0.26f, 1.00f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.27f, 0.30f, 1.00f);
     colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
     colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
     colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.05f, 0.05f, 0.05f, 0.79f);
@@ -34,7 +34,7 @@ void SetModernDarkStyle()
     colors[ImGuiCol_Header] = ImVec4(0.20f, 0.25f, 0.30f, 1.00f);
     colors[ImGuiCol_HeaderHovered] = ImVec4(0.25f, 0.30f, 0.35f, 1.00f);
     colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.35f, 0.40f, 1.00f);
-    colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.20f, 0.20f, 0.50f);
+    colors[ImGuiCol_Separator] = ImVec4(1.00f, 1.00f, 1.00f, 0.07f);
     colors[ImGuiCol_SeparatorHovered] = ImVec4(0.25f, 0.25f, 0.25f, 0.78f);
     colors[ImGuiCol_SeparatorActive] = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
     colors[ImGuiCol_ResizeGrip] = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
@@ -59,14 +59,18 @@ void SetModernDarkStyle()
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
     // Настройки стиля
+    style.WindowPadding = ImVec2(16.0f, 10.0f);
     style.WindowRounding = 5.0f;
     style.FrameRounding = 5.0f;
+    style.PopupRounding = 6.0f;
     style.ScrollbarRounding = 5.0f;
     style.GrabRounding = 5.0f;
     style.TabRounding = 5.0f;
     style.FramePadding = ImVec2(8.0f, 4.0f);
     style.ItemSpacing = ImVec2(8.0f, 6.0f);
-    style.ItemInnerSpacing = ImVec2(6.0f, 4.0f);
+    style.ItemInnerSpacing = ImVec2(4.0f, 4.0f);
+    style.ScrollbarSize = 8.0f;
+    style.PopupBorderSize = 1.0f;
 }
 
 void SetAdvancedPurpleDarkStyle()

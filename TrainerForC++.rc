@@ -68,6 +68,8 @@ IDR_WAVE1               WAVE                    "ResourceExtern\\activ.wav"
 
 IDR_WAVE2               WAVE                    "ResourceExtern\\deactiv.wav"
 
+IDR_WAVE3               WAVE                    "ResourceExtern\\error.wav"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

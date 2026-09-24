@@ -1,25 +1,16 @@
 #pragma once
-#include <Windows.h>
 #include <cstddef>
-#include <functional>
 #include <memory>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 class Cheat;
 class CheatOption;
-struct CheatDefinition;
 
-// Владеет опциями чита и связывает их с UI-переключателями.
-// Порядок опций задаётся CheatRegistry, поэтому отдельные ID не нужны.
+// Владеет опциями чита. Порядок опций задаётся CheatRegistry.
 class CheatOptionManager
 {
     Cheat* _cheatProcess;
     std::vector<std::unique_ptr<CheatOption>> _options; // в порядке реестра
-    std::unordered_map<std::string, std::function<void(bool, DWORD)>> _toggleHandlers;
-
-    void RegisterToggleHandler(const CheatDefinition& definition, CheatOption* option);
 
 public:
     explicit CheatOptionManager(Cheat* cheatProcess);
@@ -37,14 +28,14 @@ public:
     // Все опции (сырые указатели) в порядке реестра
     std::vector<CheatOption*> GetAllOptions() const;
 
+    // Переключатель в окне: включить/выключить опцию в текущей игре.
+    void SetEnabled(CheatOption* option, bool enabled);
+
     // Выключает все включённые опции и возвращает память игры как было.
     // Вызывается при закрытии трейнера: оставить игру пропатченной после
     // выхода — худшее, что может сделать трейнер.
     // Возвращает, сколько опций пришлось откатить.
     int DisableAll();
-
-    // Обработка переключения (вызывается Drawing)
-    void HandleToggle(const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState);
 
     CheatOption* GetOption(std::size_t index) const;
 };

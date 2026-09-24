@@ -1,81 +1,132 @@
 #include "core/Cheat.h"
+
+#include <chrono>
+#include <exception>
+#include <format>
+#include <memory>
+
+#include "cheats/CheatOption.h"
+#include "core/MemoryAccess.h"
 #include "core/Memory_Functions.h"
+#include "platform/Logger.h"
+#include "platform/Utils.h"
 
-void Cheat::ProcessorOptions()
+namespace
 {
-	std::thread processorThread([&]()
-		{
-			while (isRunning)
-			{
-				processId = GetProcessIdByProcessName(_processName);
-				if (processId)
-				{
-					for (CheatOption* option : options)
-					{
-						option->Process(processId);
-						m_optionsState[option->GetDescription()] = option->IsEnabled();
-					}
-				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(16));
-			}
-		});
-	processorThread.detach();
+	constexpr auto TICK = std::chrono::milliseconds(16);
+
+	// Список процессов — снимок всей системы, он дорогой. Пока игры нет,
+	// ищем её раз в полсекунды, а не 60 раз в секунду, как раньше.
+	constexpr auto SEARCH_INTERVAL = std::chrono::milliseconds(500);
 }
 
-void Cheat::StopCheat()
+void Cheat::Start()
 {
-	isRunning = false;
+	if (_running.exchange(true)) return;
+	_thread = std::thread(&Cheat::Run, this);
 }
 
-void Cheat::DisableAllFunctionMem()
+void Cheat::Stop()
 {
-	for (CheatOption* option : options)
+	_running = false;
+	if (_thread.joinable()) _thread.join();
+
+	// Что не успело выполниться — выполняем здесь: щелчок, сделанный перед
+	// самым закрытием, не должен потеряться.
+	RunPostedTasks();
+}
+
+void Cheat::Post(std::function<void()> task)
+{
+	if (!task) return;
+
+	if (!_running)
 	{
-		option->Disable(processId);
+		task();
+		return;
+	}
+
+	std::lock_guard lock(_tasksMutex);
+	_tasks.push_back(std::move(task));
+}
+
+void Cheat::RunPostedTasks()
+{
+	std::vector<std::function<void()>> tasks;
+	{
+		std::lock_guard lock(_tasksMutex);
+		tasks.swap(_tasks);
+	}
+
+	for (auto& task : tasks)
+	{
+		try
+		{
+			task();
+		}
+		catch (const std::exception& e)
+		{
+			Log::Error(std::string("Фоновая задача упала: ") + e.what());
+		}
 	}
 }
 
-void Cheat::OpenConsole()
+void Cheat::Run()
 {
-	AllocConsole();
-	FILE* pCout;
-	freopen_s(&pCout, "CONOUT$", "w", stdout);
-}
+	std::unique_ptr<MemoryAccess> mem;
+	DWORD deniedPid = 0; // процесс, который не удалось открыть: не спамим логом
+	auto nextSearch = std::chrono::steady_clock::now();
 
-void Cheat::ImGuiOpenConsole()
-{
-	// Создаем консоль
-	//if (AllocConsole())
-	//{
-	//	// Перенаправляем стандартные потоки
-	//	FILE* fDummy;
-	//	freopen_s(&fDummy, "CONIN$", "r", stdin);
-	//	freopen_s(&fDummy, "CONOUT$", "w", stdout);
-	//	freopen_s(&fDummy, "CONOUT$", "w", stderr);
+	while (_running)
+	{
+		const auto now = std::chrono::steady_clock::now();
 
-	//	// Устанавливаем стандартный режим работы
-	//	HANDLE hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	//	HANDLE hConIn = GetStdHandle(STD_INPUT_HANDLE);
-	//	SetConsoleMode(hConOut, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
-	//	SetConsoleMode(hConIn, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+		// Игра закрылась. Опции забывают прежний процесс: иначе после
+		// перезапуска игры переключатели показывали бы «включено», хотя
+		// в новом процессе ничего не пропатчено.
+		if (mem && !mem->IsAlive())
+		{
+			mem.reset();
+			_processId = 0;
 
-	//	// Устанавливаем заголовок консоли
-	//	SetConsoleTitle(L"Debug Console");
+			for (CheatOption* option : _options) option->OnProcessLost();
+			Log::Info("Игра закрыта — опции сброшены");
+		}
 
-	//	// Устанавливаем буферизацию для stdout
-	//	std::ios::sync_with_stdio(true);
-	//}
-}
+		if (!mem && now >= nextSearch)
+		{
+			nextSearch = now + SEARCH_INTERVAL;
 
-int Cheat::AddCheatOption(CheatOption* option)
-{
-	options.push_back(option);
-	m_optionsState.insert(std::make_pair(option->GetDescription(), option->IsEnabled()));
-	return static_cast<int>(options.size()) - 1; // Явное преобразование size_t в int
-}
+			const DWORD pid = GetProcessIdByProcessName(_processName.c_str());
+			_accessDenied = (pid != 0 && pid == deniedPid);
 
-void Cheat::RemoveCheatOption(int index)
-{
-	m_optionsState.erase(options[index]->GetDescription());
-	options.erase(options.begin() + index);
+			if (pid != 0 && pid != deniedPid)
+			{
+				auto opened = std::make_unique<MemoryAccess>(pid);
+				if (!opened->IsValid())
+				{
+					deniedPid = pid;
+					_accessDenied = true;
+				}
+				else
+				{
+					_isX64 = opened->IsTargetX64();
+					mem = std::move(opened);
+					_processId = pid;
+					Log::Info(std::format("Найдена игра {}, PID {} ({})",
+						Utils::WStringToUtf8(_processName), pid, _isX64 ? "x64" : "x86"));
+				}
+			}
+		}
+
+		RunPostedTasks();
+
+		const DWORD pid = _processId.load();
+		for (CheatOption* option : _options)
+		{
+			option->Process(pid, mem.get());
+		}
+
+		std::this_thread::sleep_for(TICK);
+	}
 }

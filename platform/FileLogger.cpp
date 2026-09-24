@@ -3,6 +3,7 @@
 #include <Windows.h>
 
 #include <chrono>
+#include <filesystem>
 #include <format>
 
 namespace
@@ -30,7 +31,7 @@ namespace
 
 FileLogger::FileLogger(const std::wstring& fileName)
 {
-    _file.open(ExeDirectory() + fileName, std::ios::out | std::ios::trunc);
+    _file.open(std::filesystem::path(ExeDirectory() + fileName), std::ios::out | std::ios::trunc);
 
     if (_file.is_open())
     {

@@ -15,19 +15,37 @@
 // элементы прижаты к правому краю, а то, что между ними, тянется.
 namespace Layout
 {
+    // Размер шрифта, под который нарисованы все размеры в пикселях:
+    // 11 pt × 1.5 — Full HD. На 1440p и 4K шрифт крупнее, и вместе с ним
+    // во столько же раз растут отступы, переключатели и окно. Раньше рос
+    // только шрифт, и на 4K панель становилась тесной.
+    inline constexpr float REFERENCE_FONT_SIZE = 16.5f;
+
+    // Во сколько раз интерфейс крупнее эталонного.
+    inline float Scale()
+    {
+        return ImGui::GetFontSize() / REFERENCE_FONT_SIZE;
+    }
+
+    // Пиксели эталонного макета -> пиксели текущего экрана.
+    inline float Px(float referencePixels)
+    {
+        return referencePixels * Scale();
+    }
+
     // Меньше этого подписи сжимать бессмысленно — останется одно многоточие.
     inline constexpr float MIN_LABEL_WIDTH = 90.0f;
 
     // Ширина поля ввода значения. Подпись получает всё, что останется.
-    inline constexpr float INPUT_WIDTH = 150.0f;
+    inline float InputWidth() { return Px(150.0f); }
 
     // Размеры переключателя. Должны совпадать со значением по умолчанию
     // у AnimatedToggleSwitch.
     //
     // Высоту строки задаёт именно тумблер, а не текст: пока он был 25 px,
     // строки не ужимались, сколько ни уменьшай шрифт.
-    inline constexpr float TOGGLE_WIDTH = 38.0f;
-    inline constexpr float TOGGLE_HEIGHT = 18.0f;
+    inline float ToggleWidth() { return Px(38.0f); }
+    inline float ToggleHeight() { return Px(18.0f); }
 
     inline float ContentLeft()
     {
@@ -39,30 +57,6 @@ namespace Layout
         return ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x;
     }
 
-    inline float ContentWidth()
-    {
-        return ContentRight() - ContentLeft();
-    }
-
-    // Сколько места остаётся подписи, если справа стоят элементы общей
-    // шириной controlsWidth.
-    //
-    // Считается именно так, а не долей от ширины окна: тумблеру нужно 50 px,
-    // и отдавать под него половину строки, обрезая имя чита, незачем.
-    inline float LabelWidthFor(float controlsWidth)
-    {
-        const float available = ContentWidth() - controlsWidth - ImGui::GetStyle().ItemSpacing.x;
-
-        // Скобки вокруг std::max не случайны: Windows.h определяет max
-        // макросом, и без них он подменяет вызов.
-        return (std::max)(MIN_LABEL_WIDTH, available);
-    }
-
-    // X, с которого начинается элемент шириной controlWidth, прижатый вправо.
-    inline float ControlX(float controlWidth)
-    {
-        return ContentRight() - controlWidth;
-    }
 
     // Убирает с конца один символ UTF-8 целиком, а не байт: иначе кириллица
     // распадается на мусор.
@@ -106,24 +100,13 @@ namespace Layout
         }
     }
 
-    // Промежуток между смысловыми группами — разделитель с воздухом,
-    // а не подобранный на глаз отступ.
-    inline void GroupGap()
-    {
-        const float gap = ImGui::GetStyle().ItemSpacing.y * 1.5f;
-
-        ImGui::Dummy(ImVec2(0.0f, gap));
-        ImGui::Separator();
-        ImGui::Dummy(ImVec2(0.0f, gap));
-    }
-
     // Единая высота строки таблицы.
     //
     // Раньше высоту задавал самый высокий элемент строки, поэтому ряды
     // с переключателем и ряды с полем ввода были разной высоты.
     inline float RowHeight()
     {
-        const float byToggle = TOGGLE_HEIGHT;
+        const float byToggle = ToggleHeight();
         const float byWidget = ImGui::GetFrameHeight();
 
         return (std::max)(byToggle, byWidget);
