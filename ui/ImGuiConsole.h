@@ -108,7 +108,7 @@ private:
     {
         std::string key = caseSensitive ? name : toLower(name);
         commandMap[key] = Command(name, description, callback, caseSensitive);
-        availableCommands.push_back("!" + name); // для автодополнения
+        availableCommands.push_back(name); // для автодополнения
     }
 
     /**
@@ -164,6 +164,11 @@ private:
         if (data->EventFlag == ImGuiInputTextFlags_CallbackCompletion)
         {
             std::string prefix(data->Buf, data->BufTextLen);
+
+            // Необязательный '!' сохраняем как есть и в сравнении не учитываем.
+            const std::string bang = (!prefix.empty() && prefix[0] == '!') ? "!" : "";
+            prefix.erase(0, bang.size());
+
             std::string match;
             int matches = 0;
             for (const auto& cmd : availableCommands)
@@ -186,15 +191,12 @@ private:
                     ++matches;
                 }
             }
-            if (matches == 1)
+            if (matches >= 1 && !match.empty())
             {
+                // Единственное совпадение — сразу с пробелом под аргументы.
+                const std::string completed = bang + match + (matches == 1 ? " " : "");
                 data->DeleteChars(0, data->BufTextLen);
-                data->InsertChars(0, match.c_str());
-            }
-            else if (matches > 1 && !match.empty())
-            {
-                data->DeleteChars(0, data->BufTextLen);
-                data->InsertChars(0, match.c_str());
+                data->InsertChars(0, completed.c_str());
             }
         }
         else if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)    // История команд (↑ / ↓)
@@ -534,8 +536,7 @@ public:
 
         RegisterBuildInCommands();
 
-        addLog("INFO", "Добро пожаловать в консоль разработчика");
-        addLog("INFO", "Версия: 1.0 (Debug)");
+        addLog("INFO", "Консоль разработчика. help — список команд, Tab — дополнение, стрелки — история");
     }
 
     /**
@@ -618,9 +619,15 @@ public:
             else             ImGui::TextUnformatted(part.c_str());
         };
 
+        // Цифра внутри слова (x86_64, Num1) — часть имени, а не число.
+        const auto isWordChar = [](char c)
+        {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-';
+        };
+
         while (i < text.size())
         {
-            if (isDigit(text[i]))
+            if (isDigit(text[i]) && (i == 0 || !(isWordChar(text[i - 1]) || isDigit(text[i - 1]))))
             {
                 const std::size_t start = i;
 
@@ -639,8 +646,12 @@ public:
                 continue;
             }
 
+            // Обычный текст — до следующего числа, стоящего отдельно.
             const std::size_t start = i;
-            while (i < text.size() && !isDigit(text[i])) ++i;
+            do
+            {
+                ++i;
+            } while (i < text.size() && !(isDigit(text[i]) && !isWordChar(text[i - 1]) && !isDigit(text[i - 1])));
             emit(text.substr(start, i - start), false);
         }
 
@@ -796,14 +807,11 @@ public:
                 }
                 else
                 {
+                    // '!' перед командой необязателен: консоль и так
+                    // принимает только команды, а лишний символ мешал.
                     std::string cmdName = args[0];
-                    if (cmdName.empty() || cmdName[0] != '!')
                     {
-                        addLog("WARNING", "Команда должна начинаться с '!'");;
-                    }
-                    else
-                    {
-                        std::string baseName = cmdName.substr(1);
+                        std::string baseName = (!cmdName.empty() && cmdName[0] == '!') ? cmdName.substr(1) : cmdName;
                         std::string key = toLower(baseName);
                         auto it = commandMap.find(key);
                         if (it != commandMap.end())
@@ -819,7 +827,7 @@ public:
                         }
                         else
                         {
-                            addLog("WARNING", "Команда '" + baseName + "' не найдена. Введите !help для списка.");
+                            addLog("WARNING", "Команда '" + baseName + "' не найдена. Введите help для списка.");
                         }
                     }
                 }

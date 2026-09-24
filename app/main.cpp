@@ -9,7 +9,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     UNREFERENCED_PARAMETER(lpCmdLine);
     UNREFERENCED_PARAMETER(nCmdShow);
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(TRAINER_NO_TESTS)
     if (__argc > 1 && wcscmp(__wargv[1], L"--run-tests") == 0)
     {
         return RunTests();

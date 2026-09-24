@@ -33,6 +33,17 @@ FetchContent_Declare(imgui
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(imgui)
 
+if(TRAINER_BUILD_TESTS)
+    FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        v1.17.0
+        GIT_SHALLOW    TRUE)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+endif()
+
 # --- Сторонние библиотеки ---
 
 file(GLOB_RECURSE ASMJIT_SOURCES CONFIGURE_DEPENDS
@@ -74,6 +85,15 @@ file(GLOB TRAINER_REGISTRY_SOURCES CONFIGURE_DEPENDS cheats/registry/*.cpp)
 add_library(trainer_core STATIC ${TRAINER_CORE_SOURCES})
 target_include_directories(trainer_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(trainer_core PUBLIC UNICODE _UNICODE NOMINMAX)
+
+# MSVC определяет _DEBUG сам (/MDd); mingw — нет, а на нём держатся
+# отладочная консоль, лог в файл и --run-tests.
+if(NOT MSVC)
+    target_compile_definitions(trainer_core PUBLIC $<$<CONFIG:Debug>:_DEBUG>)
+endif()
+if(NOT TRAINER_BUILD_TESTS)
+    target_compile_definitions(trainer_core PUBLIC TRAINER_NO_TESTS)
+endif()
 target_link_libraries(trainer_core PUBLIC trainer_thirdparty trainer_imgui
     psapi winmm ole32 shell32 user32 gdi32
     $<IF:$<BOOL:${MSVC}>,xaudio2,xaudio2_8>)
@@ -107,20 +127,16 @@ if(NOT MSVC)
     # Точка входа — wWinMain, а mingw по умолчанию ищет WinMain.
     target_link_options(Trainer PRIVATE -municode -static)
 endif()
-target_link_libraries(Trainer PRIVATE trainer_core trainer_registry)
 
-# --- Тесты ---
+file(GLOB TRAINER_TEST_SOURCES CONFIGURE_DEPENDS tests/*.cpp)
 
 if(TRAINER_BUILD_TESTS)
-    FetchContent_Declare(googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG        v1.17.0
-        GIT_SHALLOW    TRUE)
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
+    # Отладочный трейнер умеет --run-tests (как в .vcxproj): тесты
+    # и gtest входят в него только в Debug.
+    target_sources(Trainer PRIVATE "$<$<CONFIG:Debug>:${TRAINER_TEST_SOURCES}>")
+    target_link_libraries(Trainer PRIVATE $<$<CONFIG:Debug>:GTest::gtest>)
 
-    file(GLOB TRAINER_TEST_SOURCES CONFIGURE_DEPENDS tests/*.cpp)
+    # Отдельный исполняемый файл тестов — для CI и запуска из консоли.
     add_executable(TrainerTests ${TRAINER_TEST_SOURCES})
     target_link_libraries(TrainerTests PRIVATE trainer_core trainer_registry GTest::gtest_main)
 
@@ -131,3 +147,6 @@ if(TRAINER_BUILD_TESTS)
     enable_testing()
     add_test(NAME TrainerTests COMMAND TrainerTests)
 endif()
+
+target_link_libraries(Trainer PRIVATE trainer_core trainer_registry)
+
