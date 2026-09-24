@@ -5,6 +5,7 @@
 #include <imgui_impl_win32.h>
 
 #include "platform/Logger.h"
+#include "resource.h"
 #include "ui/ImGuiConsole.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -47,8 +48,10 @@ bool ConsoleWindow::Create(Console& console, HINSTANCE instance,
 
     if (instance)
     {
-        desc.icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_APPLICATION));
-        desc.iconSmall = desc.icon;
+        // Значок трейнера, а не безликий системный: консоль — отдельное
+        // окно на панели задач, и его надо отличать от чужих.
+        desc.icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON2));
+        desc.iconSmall = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
     }
 
     if (!_window.Create(desc))

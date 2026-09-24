@@ -745,6 +745,7 @@
   <ItemGroup>
     <Media Include="ResourceExtern\activ.wav" />
     <Media Include="ResourceExtern\deactiv.wav" />
+    <Media Include="ResourceExtern\error.wav" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TrainerForC++.rc" />

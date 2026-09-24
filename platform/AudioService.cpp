@@ -3,6 +3,7 @@
 #include <xaudio2.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <unordered_map>
 #include <vector>

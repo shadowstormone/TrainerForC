@@ -423,7 +423,7 @@ private:
                 const DWORD length = GetModuleFileNameW(nullptr, path, MAX_PATH);
 
                 std::wstring full(path, length);
-                const size_t slash = full.find_last_of(L"\/");
+                const size_t slash = full.find_last_of(L"\\/");
                 const std::wstring dir = slash == std::wstring::npos ? L"" : full.substr(0, slash + 1);
 
                 console->addLog("INFO", "Лог: " + Utils::WStringToUtf8(dir + L"trainer.log"));

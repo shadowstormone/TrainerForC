@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <windows.h>
+#include <cstring>
 #include <string>
 #include "core/Memory_Functions.h"
 #include "patches/CavePatch.h"

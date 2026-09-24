@@ -554,6 +554,9 @@
     <Media Include="ResourceExtern\deactiv.wav">
       <Filter>ResourceExtern</Filter>
     </Media>
+    <Media Include="ResourceExtern\error.wav">
+      <Filter>ResourceExtern</Filter>
+    </Media>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TrainerForC++.rc" />
