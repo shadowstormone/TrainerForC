@@ -109,7 +109,7 @@ static ID3D11ShaderResourceView* LoadTextureFromResource(ID3D11Device* device, I
  */
 namespace UIConstants
 {
-    constexpr float FADE_DURATION = 1.5f;           ///< Продолжительность анимации затухания в секундах
+    constexpr float FADE_DURATION = 0.3f;           ///< Появление окна: коротко, чтобы не ждать интерфейс
     constexpr float DEFAULT_FONT_SIZE = 11.0f;      ///< Размер шрифта по умолчанию
     constexpr UINT BUFFER_COUNT = 2;                ///< Количество буферов обмена
     constexpr UINT REFRESH_RATE = 60;               ///< Частота обновления экрана
@@ -502,6 +502,7 @@ void UI::Render(MainView& view, Console& console)
         WindowDesc desc;
         desc.className = L"TestTrainerWindow";
         desc.title = L"Test Trainer";
+        view.SetTitle("Test Trainer");
         desc.x = posX;
         desc.y = posY;
         desc.width = WIDTH;
@@ -650,7 +651,9 @@ void UI::Render(MainView& view, Console& console)
  */
 void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWindow& consoleWindow, ImGuiIO& io, TextureManager& textureManager)
 {
-    const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    // Цвет очистки — цвет фона окна. Раньше был серо-голубой, и пока окно
+    // проявлялось, сквозь него просвечивала голубая заливка.
+    const ImVec4 clear_color = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
     bool done = false;
 
     // Флаги для отслеживания состояния окна
@@ -664,8 +667,10 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
             done = true;
         }
 
-        // Проверка клавиши выхода
-        if (GetAsyncKeyState(VK_END) & 1)
+        // End закрывает трейнер, только когда его окно активно. Раньше
+        // клавиша читалась глобально, и End, нажатый в самой игре, молча
+        // закрывал трейнер.
+        if (::GetForegroundWindow() == window.Handle() && (GetAsyncKeyState(VK_END) & 0x8000))
         {
             done = true;
         }
@@ -680,7 +685,9 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::GetStyle().Alpha = fadeAnimation.getAlpha();
+        // Плавное появление с замедлением к концу.
+        const float fade = fadeAnimation.getAlpha();
+        ImGui::GetStyle().Alpha = 1.0f - (1.0f - fade) * (1.0f - fade);
         view.Draw(textureManager.getSuccessIcon(), textureManager.getErrorIcon());
 
         ImGui::EndFrame();

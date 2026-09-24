@@ -1,410 +1,54 @@
 #include "core/Memory_Functions.h"
 
-#include <psapi.h>
+#include <TlHelp32.h>
 
-#include <format>
+#include <cwchar>
 
-#include "platform/Logger.h"
-
-int GetProcessIdByWindowName(LPCWSTR className, LPCWSTR windowName)
+DWORD GetProcessIdByProcessName(LPCWSTR processName)
 {
-	HWND window = FindWindow(className, windowName);
-	int pid = 0;
-	GetWindowThreadProcessId(window, reinterpret_cast<LPDWORD>(&pid));
-	return pid;
-}
+	if (!processName || !*processName) return 0;
 
-int GetProcessIdByProcessName(LPCWSTR processName)
-{
-	int pid = 0;
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (snapshot == INVALID_HANDLE_VALUE) return 0;
 
-	if (!snapshot)
-	{
-		ShowErrorMessage(NULL, L"Snapshot creation failed with error");
-		return 0;
-	}
+	DWORD pid = 0;
+	PROCESSENTRY32W pe{};
+	pe.dwSize = sizeof(pe);
 
-	PROCESSENTRY32W pe = {};
-	pe.dwSize = sizeof(PROCESSENTRY32W);
-
-	if (Process32First(snapshot, &pe))
+	if (Process32FirstW(snapshot, &pe))
 	{
 		do
 		{
-			if (wcscmp(processName, pe.szExeFile) == 0)
+			// Без учёта регистра: Windows имена файлов не различает, и
+			// "tutorial-x86_64.exe" — тот же процесс.
+			if (_wcsicmp(processName, pe.szExeFile) == 0)
 			{
 				pid = pe.th32ProcessID;
 				break;
 			}
-		} while (Process32Next(snapshot, &pe));
+		} while (Process32NextW(snapshot, &pe));
 	}
+
 	CloseHandle(snapshot);
 	return pid;
 }
 
-DWORD_PTR GetProcessBaseAddress(HANDLE hProcess)
-{
-	if (!hProcess) return 0;
-
-	const DWORD pid = GetProcessId(hProcess);
-	if (pid == 0)
-	{
-		// Тихо выходить нельзя: именно так эта функция молча возвращала
-		// ноль, и патч целился не туда без единого сообщения.
-		Log::Error(std::format("Дескриптор процесса непригоден: GetProcessId дал 0, код {}",
-		                       GetLastError()));
-		return 0;
-	}
-
-	// Снимок Toolhelp, а не EnumProcessModules.
-	//
-	// Обычный EnumProcessModules не видит модули 32-битного процесса, когда
-	// трейнер собран как x64 — в x86-играх база выходила нулевой. Вариант с
-	// EnumProcessModulesEx на проверке возвращал успех с пустым модулем.
-	// Toolhelp со снимком SNAPMODULE32 отрабатывает для обеих разрядностей,
-	// и этим же способом в проекте уже ищутся модули по имени.
-	//
-	// Первый модуль в снимке — всегда сам исполняемый файл процесса.
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
-	if (snapshot == INVALID_HANDLE_VALUE)
-	{
-		Log::Error(std::format("Не удалось сделать снимок модулей, код {}", GetLastError()));
-		return 0;
-	}
-
-	MODULEENTRY32W entry{};
-	entry.dwSize = sizeof(entry);
-
-	DWORD_PTR baseAddress = 0;
-	if (Module32FirstW(snapshot, &entry))
-	{
-		baseAddress = reinterpret_cast<DWORD_PTR>(entry.modBaseAddr);
-	}
-	else
-	{
-		Log::Error(std::format("Снимок модулей пуст, код {}", GetLastError()));
-	}
-
-	CloseHandle(snapshot);
-	return baseAddress;
-}
-
-DWORD_PTR GetModuleBaseAddress(HANDLE hProcess, LPCWSTR lpszModuleName)
-{
-	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetProcessId(hProcess));
-	DWORD_PTR dwModuleBaseAddress = 0;
-
-	if (hSnapshot != INVALID_HANDLE_VALUE)
-	{
-		MODULEENTRY32 ModuleEntry32 = { 0 };
-		ModuleEntry32.dwSize = sizeof(MODULEENTRY32);
-
-		if (Module32First(hSnapshot, &ModuleEntry32))
-		{
-			do
-			{
-				if (wcscmp(ModuleEntry32.szModule, lpszModuleName) == 0)
-				{
-					dwModuleBaseAddress = reinterpret_cast<DWORD_PTR>(ModuleEntry32.modBaseAddr);
-					break;
-				}
-			} while (Module32Next(hSnapshot, &ModuleEntry32));
-		}
-		CloseHandle(hSnapshot);
-	}
-	return dwModuleBaseAddress;
-}
-
-int WriteMem(HANDLE hProcess, LPVOID address, LPVOID source, SIZE_T writeAmount)
-{
-	if (!hProcess)
-	{
-		ShowErrorMessage(NULL, L"Failed to open process.\r\nError code: ");
-		return -1;
-	}
-
-	SIZE_T bytesWritten = 0;
-	DWORD oldProtect = 0;
-
-	if (!VirtualProtectEx(hProcess, address, writeAmount, PAGE_READWRITE, &oldProtect))
-	{
-		ShowErrorMessage(NULL, L"VirtualProtectEx failed.\r\nError code: ");
-		return -1;
-	}
-
-	if (!WriteProcessMemory(hProcess, address, source, writeAmount, &bytesWritten))
-	{
-		ShowErrorMessage(NULL, L"WriteProcessMemory failed.\r\nError code: ");
-		VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect);
-		return -1;
-	}
-
-	if (bytesWritten != writeAmount)
-	{
-		ShowErrorMessage(NULL, L"Failed to write specified bytes.\r\nBytes written: ");
-		VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect);
-		return -1;
-	}
-
-	if (!VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect))
-	{
-		ShowErrorMessage(NULL, L"VirtualProtectEx failed.\r\nError code: ");
-		return -1;
-	}
-
-	return 0;
-	/*if (!hProcess)
-	{
-		ShowErrorMessage(NULL, L"Failed to open process.\r\nError code: ");
-		return -1;
-	}
-
-	SIZE_T bytesWrite = 0;
-	DWORD oldProtect = 0;
-
-	VirtualProtectEx(hProcess, address, writeAmount, PAGE_READWRITE, &oldProtect);
-
-	WriteProcessMemory(hProcess, address, source, writeAmount, &bytesWrite);
-
-	if (!bytesWrite)
-	{
-		ShowErrorMessage(NULL, L"Write memory failed.\r\nError code: ");
-	}
-
-	VirtualProtectEx(hProcess, address, writeAmount, oldProtect, &oldProtect);
-	return 0;*/
-}
-
-int WriteMem(HANDLE hProcess, uintptr_t address, int value)
-{
-	return WriteMem(hProcess, reinterpret_cast<LPVOID>(address), &value, sizeof(value));
-}
-
-LPVOID ReadMem(HANDLE hProcess, LPVOID address, SIZE_T readAmount)
-{
-	if (!hProcess)
-	{
-		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
-		return nullptr;
-	}
-
-	SIZE_T bytesRead = 0;
-
-	unsigned char* buf = new unsigned char[readAmount];
-	memset(buf, 0, readAmount);
-
-	ReadProcessMemory(hProcess, address, buf, readAmount, &bytesRead);
-	if (!bytesRead)
-	{
-		ShowErrorMessage(NULL, L"Read memory failed.\r\nError code: ");
-	}
-	return reinterpret_cast<LPVOID>(buf);
-}
-
-uintptr_t ReadMem(HANDLE hProcess, uintptr_t address)
-{
-	if (!hProcess)
-	{
-		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
-		return 0;
-	}
-
-	LPVOID result = ReadMem(hProcess, reinterpret_cast<LPVOID>(address), sizeof(uintptr_t));
-	if (result == nullptr)
-	{
-		ShowErrorMessage(NULL, L"Read memory failed.\r\nError code: ");
-		return 0;
-	}
-	uintptr_t value = *reinterpret_cast<uintptr_t*>(result);
-	delete[] reinterpret_cast<unsigned char*>(result);
-	return value;
-}
-
-LPVOID AllocMem(HANDLE hProcess, LPVOID startAddress, SIZE_T allocationAmount)
-{
-	if (!hProcess)
-	{
-		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
-		return NULL;
-	}
-
-	LPVOID ptr = VirtualAllocEx(hProcess, startAddress, allocationAmount, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-
-	if (!ptr)
-	{
-		ShowErrorMessage(NULL, L"Allocation failed.\r\nError code: ");
-	}
-	return ptr;
-}
-
-//int FreeMem(HANDLE hProcess, LPVOID address, SIZE_T amount)
-//{
-//	if (!hProcess)
-//	{
-//		ShowErrorMessage(NULL, L"Failed to opeen process.\r\nError code: ");
-//		return -1;
-//	}
-//
-//	bool result = VirtualFreeEx(hProcess, address, amount, MEM_DECOMMIT);
-//
-//	if (!result)
-//	{
-//		ShowErrorMessage(NULL, L"Free memory failed.\r\nError code: ");
-//	}
-//	return 0;
-//}
-
-int FreeMem(HANDLE hProcess, LPVOID address, SIZE_T amount)
-{
-	if (!hProcess || !address)
-	{
-		//ShowErrorMessage(NULL, L"Failed to open process.\r\nError code: ");
-		return -1;
-	}
-
-	// MEM_RELEASE требует size = 0
-	if (!VirtualFreeEx(hProcess, address, 0, MEM_RELEASE))
-	{
-		//ShowErrorMessage(NULL, L"Free memory failed.\r\nError code: ");
-		return -1;
-	}
-
-	return 0;
-}
-
-LPVOID ScanSignature(HANDLE hProcess, ULONG_PTR startAddress, SIZE_T scanSize, PBYTE pattern, std::wstring& mask)
-{
-	DWORD_PTR result = 0;
-	MEMORY_BASIC_INFORMATION mbi = { 0 };
-	DWORD offset = 0;
-	SIZE_T bytesRead = 0;
-
-	if (!hProcess)
-	{
-		return reinterpret_cast<LPVOID>(result);
-	}
-
-	while (offset < (scanSize - mask.size()) && result == 0)
-	{
-		SIZE_T count = VirtualQueryEx(hProcess, reinterpret_cast<LPCVOID>(startAddress + offset), &mbi, sizeof(mbi));
-
-		if (!count)
-		{
-			break;
-		}
-
-		if (mbi.State != MEM_FREE)
-		{
-			BYTE* buffer = new BYTE[mbi.RegionSize];
-			void* baseAddress = mbi.BaseAddress;
-			ReadProcessMemory(hProcess, baseAddress, buffer, mbi.RegionSize, &bytesRead);
-
-			if (bytesRead == 0)
-			{
-				break;
-			}
-
-			for (int i = 0; i < (mbi.RegionSize - mask.size()); i++)
-			{
-				if (CheckSignature(buffer + i, pattern, mask))
-				{
-					result = startAddress + offset + i;
-					break;
-				}
-			}
-			delete[] buffer;
-		}
-		offset += static_cast<DWORD>(mbi.RegionSize);
-
-	}
-	return reinterpret_cast<LPVOID>(result);
-}
-
-bool CheckSignature(PBYTE source, PBYTE pattern, std::wstring& mask)
-{
-	for (int i = 0; i < mask.size(); i++)
-	{
-		if (mask.at(i) == L'?' || (*(source + i) == *(pattern + i)))
-		{
-			continue;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-//void ShowErrorMessage(HWND hWnd, LPCWSTR errorMassage)
-//{
-//	int err = GetLastError();
-//	std::wstring errStr(errorMassage);
-//	errStr += L" " + err;
-//	MessageBox(NULL, errStr.c_str(), L"ERROR", MB_OK | MB_ICONERROR);
-//}
-
-void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage, DWORD errCode)
-{
-	// Буфер для сообщения об ошибке
-	LPWSTR errBuffer = nullptr;
-
-	// Форматируем сообщение об ошибке
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errBuffer, 0, NULL);
-
-	// Создаем итоговое сообщение
-	std::wstringstream ss;
-	ss << errorMessage << L" " << errCode << L": " << (errBuffer ? errBuffer : L"Unknown error");
-
-	// Показ сообщения в MessageBox
-	MessageBox(hWnd, ss.str().c_str(), L"ERROR", MB_OK | MB_ICONERROR);
-
-	// Освобождаем буфер с сообщением об ошибке
-	if (errBuffer)
-	{
-		LocalFree(errBuffer);
-	}
-}
-
-void ShowErrorMessage(HWND hWnd, LPCWSTR errorMessage)
-{
-	// Получаем последний код ошибки
-	DWORD errCode = GetLastError();
-
-	// Буфер для сообщения об ошибке
-	LPWSTR errBuffer = nullptr;
-
-	// Форматируем сообщение об ошибке
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errBuffer, 0, NULL);
-
-	// Создаем итоговое сообщение
-	std::wstringstream ss;
-	ss << errorMessage << L" " << errCode << L": " << (errBuffer ? errBuffer : L"Unknown error");
-
-	// Показ сообщения в MessageBox
-	MessageBox(hWnd, ss.str().c_str(), L"ERROR", MB_OK | MB_ICONERROR);
-
-	// Освобождаем буфер с сообщением об ошибке
-	if (errBuffer)
-	{
-		LocalFree(errBuffer);
-	}
-}
-
 bool isTargetX64Process(HANDLE hProcess)
 {
-	if (hProcess)
-	{
-		USHORT pProc = 0;
-		USHORT pNative = 0;
+	if (!hProcess) return false;
 
-		IsWow64Process2(hProcess, &pProc, &pNative);
-		return !pProc;
+	USHORT processMachine = IMAGE_FILE_MACHINE_UNKNOWN;
+	USHORT nativeMachine = IMAGE_FILE_MACHINE_UNKNOWN;
+
+	if (!IsWow64Process2(hProcess, &processMachine, &nativeMachine))
+	{
+#ifdef _WIN64
+		return true;
+#else
+		return false;
+#endif
 	}
-	return false;
+
+	// UNKNOWN — процесс не под WOW64, то есть родной разрядности системы.
+	return processMachine == IMAGE_FILE_MACHINE_UNKNOWN;
 }

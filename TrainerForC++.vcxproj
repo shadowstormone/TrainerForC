@@ -694,7 +694,11 @@
     <ClCompile Include="core/Relocator.cpp" />
     <ClCompile Include="core/Assembler.cpp" />
     <ClCompile Include="patches/NopPatch.cpp" />
-    <ClCompile Include="tests/Errors_test.cpp">
+    <ClCompile Include="patches/Patch.cpp" />
+    <ClCompile Include="tests/Memory_test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Release'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tests/TestMain.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)'=='Release'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="tests/CheatRegistry_test.cpp">

@@ -1,57 +1,46 @@
 #include "cheats/CheatFactory.h"
 
-#include <variant>
-
 #include "cheats/CheatDefinition.h"
 #include "cheats/CheatOption.h"
-#include "core/Cheat.h"
 #include "platform/Utils.h" // Utf8ToWString
 
-std::unique_ptr<CheatOption> CreateCheatFromDefinition(const CheatDefinition& def, Cheat* game)
+std::unique_ptr<CheatOption> CreateCheatFromDefinition(const CheatDefinition& def)
 {
-    // Имя берётся из определения, которое живёт в реестре всё время работы
-    // программы, поэтому c_str() остаётся валидным.
-    auto option = std::make_unique<CheatOption>(nullptr, def.name.c_str(), def.keys);
+    auto option = std::make_unique<CheatOption>(def.name, def.keys, def.module);
+    option->SetAutoOff(def.autoOffMs);
+    option->SetHint(def.hint);
 
     for (const auto& spec : def.patches)
     {
+        const std::wstring wsig = Utils::Utf8ToWString(spec.signature);
+
         switch (spec.kind)
         {
         case PatchSpec::Kind::Nop:
-        {
-            const std::wstring wsig = Utils::Utf8ToWString(spec.signature);
-            option->AddNopPatch(wsig.c_str(), static_cast<SIZE_T>(spec.length));
+            option->AddNopPatch(wsig.c_str(), static_cast<SIZE_T>(spec.length), spec.offset);
             break;
-        }
 
         case PatchSpec::Kind::Cave:
-        {
-            const std::wstring wsig = Utils::Utf8ToWString(spec.signature);
             if (!spec.patchAsm.empty())
             {
-                option->AddCavePatchAsm(wsig.c_str(), spec.patchAsm,
-                                        spec.caveMode, spec.preserveRegisters);
-                break;
+                option->AddCavePatchAsm(wsig.c_str(), spec.patchAsm, spec.asmSyntax,
+                                        spec.caveMode, spec.preserveRegisters, spec.offset);
             }
-
-            // Байты живут в определении чита, а оно — в реестре, то есть всё
-            // время работы программы.
-            auto* bytes = reinterpret_cast<PBYTE>(const_cast<std::uint8_t*>(spec.patchBytes.data()));
-            option->AddCavePatch(wsig.c_str(), bytes, static_cast<SIZE_T>(spec.patchBytes.size()),
-                                 spec.caveMode, spec.preserveRegisters);
+            else
+            {
+                option->AddCavePatch(wsig.c_str(), spec.patchBytes.data(), spec.patchBytes.size(),
+                                     spec.caveMode, spec.preserveRegisters, spec.offset);
+            }
             break;
-        }
 
         case PatchSpec::Kind::WriteValue:
-        {
-            std::visit(
-                [&](auto&& v)
-                {
-                    option->AddWriteValuePatch(game, spec.offsets, v, spec.absoluteAddress);
-                },
-                spec.value);
+        case PatchSpec::Kind::Freeze:
+            option->AddWriteValuePatch(spec.offsets, spec.value, spec.absoluteAddress,
+                                       spec.kind == PatchSpec::Kind::Freeze
+                                           ? WriteAddressPatch::Mode::Freeze
+                                           : WriteAddressPatch::Mode::OneShot,
+                                       spec.module);
             break;
-        }
         }
     }
 

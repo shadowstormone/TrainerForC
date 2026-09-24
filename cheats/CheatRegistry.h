@@ -38,14 +38,13 @@ public:
 #define CHEAT_REGISTRY_CONCAT_INNER(a, b) a##b
 #define CHEAT_REGISTRY_CONCAT(a, b) CHEAT_REGISTRY_CONCAT_INNER(a, b)
 
-// Добавление чита одной записью:
+// Добавление чита одной записью, поля — по именам:
 //
 //   REGISTER_CHEAT({
-//       L"[Numpad 2] - Set 9999 HP",
-//       { VKeys::KEY_NUMPAD2 },
-//       { WriteValue({ 0x00240600, 0x4B4 }, 9999) },
-//       true, 450
-//   });
+//       .name    = L"Set 9999 HP",
+//       .keys    = { VKeys::KEY_NUMPAD2 },
+//       .patches = { WriteValue(Address::Module(0x240600).Deref(0x4B4), 9999) },
+//   })
 //
 // __VA_ARGS__ нужен из-за запятых внутри фигурных скобок.
 #define REGISTER_CHEAT(...)                                                        \

@@ -1,5 +1,6 @@
 #include "app/Application.h"
 
+#include "cheats/CheatOption.h"
 #include "cheats/CheatOptionManager.h"
 #include "cheats/ValueFieldRegistry.h"
 #include "core/Cheat.h"
@@ -43,7 +44,7 @@ bool Application::Initialize(const wchar_t* targetProcessName)
 
     Log::Info("Трейнер запущен");
 
-    _process = std::make_unique<Cheat>(targetProcessName);
+    _process = std::make_unique<Cheat>(std::wstring(targetProcessName));
     _console->SetProcess(_process.get()); // для команд GetPID/status
 
     // Команда cheats берёт список отсюда: консоль не знает про менеджер.
@@ -64,9 +65,9 @@ bool Application::Initialize(const wchar_t* targetProcessName)
 
     _view = std::make_unique<MainView>();
     _view->SetToggleHandler(
-        [this](const std::string& toggleId, const std::string& optionName, bool currentState, bool previousState)
+        [this](CheatOption* option, bool enabled)
         {
-            _cheats->HandleToggle(toggleId, optionName, currentState, previousState);
+            _cheats->SetEnabled(option, enabled);
         });
     // Поля ввода описаны в том же реестре, что и читы.
     _view->Initialize(_process.get(),
@@ -84,16 +85,17 @@ int Application::Run()
     _process->Start();
 
     // Откат — через страж, чтобы он сработал и при выходе по исключению.
-    // Раньше здесь звался Cheat::DisableAllFunctionMem, который обходил
-    // список Cheat::options — а он ВСЕГДА пуст: метод AddOption, который
-    // его наполняет, не вызывается нигде. То есть при закрытии трейнера
-    // игра оставалась пропатченной.
+    // Порядок важен: сначала останавливается фоновый поток (чтобы горячая
+    // клавиша или заморозка не включили что-то заново посреди отката),
+    // затем откатываются опции.
     struct RestoreOnExit
     {
+        Cheat* process;
         CheatOptionManager* cheats;
 
         ~RestoreOnExit()
         {
+            if (process) process->Stop();
             if (!cheats) return;
 
             const int restored = cheats->DisableAll();
@@ -102,10 +104,9 @@ int Application::Run()
                 Log::Info(std::format("Откачено опций перед выходом: {}", restored));
             }
         }
-    } restoreGuard{ _cheats.get() };
+    } restoreGuard{ _process.get(), _cheats.get() };
 
     UI::Render(*_view, *_console);
-    _process->Stop();
 
     return 0;
 }

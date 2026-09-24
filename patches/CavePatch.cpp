@@ -1,9 +1,7 @@
 #include "patches/CavePatch.h"
 
 #include <cstring>
-#include <memory>
 #include <format>
-#include <stdexcept>
 #include <vector>
 
 #include "cheats/CheatOption.h"
@@ -33,119 +31,90 @@ namespace
     }
 }
 
-PBYTE CavePatch::CalculateJumpBytes(LPVOID from, LPVOID to, BYTE& outSize)
+std::vector<BYTE> CavePatch::CalculateJumpBytes(uintptr_t from, uintptr_t to, bool is64Bit)
 {
-    const uintptr_t delta = reinterpret_cast<uintptr_t>(to) - reinterpret_cast<uintptr_t>(from);
-    const uintptr_t normalized_delta = std::abs(static_cast<intptr_t>(delta));
+    const std::int64_t delta = static_cast<std::int64_t>(to) - static_cast<std::int64_t>(from + 5);
 
-    PBYTE bytes;
-
-    if (normalized_delta < (1ULL << 31))
+    if (!is64Bit || (delta >= INT32_MIN && delta <= INT32_MAX))
     {
-        // E9 rel32 — короткий прыжок, достаёт в пределах ±2 ГБ
-        bytes = new BYTE[5];
+        // E9 rel32 — прыжок в пределах ±2 ГБ
+        std::vector<BYTE> bytes(5);
         bytes[0] = 0xE9;
-        const uint32_t relative_addr = static_cast<uint32_t>(delta - 5);
-        std::memcpy(bytes + 1, &relative_addr, sizeof(relative_addr));
-        outSize = 5;
-    }
-    else
-    {
-        // FF 25 00000000 + абсолютный адрес — прыжок куда угодно, но 14 байт
-        bytes = new BYTE[14];
-        bytes[0] = 0xFF;
-        bytes[1] = 0x25;
-        std::memset(bytes + 2, 0, 4);
-        const uintptr_t to_address = reinterpret_cast<uintptr_t>(to);
-        std::memcpy(bytes + 6, &to_address, sizeof(to_address));
-        outSize = 14;
+        const std::uint32_t rel = static_cast<std::uint32_t>(delta);
+        std::memcpy(bytes.data() + 1, &rel, sizeof(rel));
+        return bytes;
     }
 
+    // FF 25 00000000 + абсолютный адрес — прыжок куда угодно, но 14 байт
+    std::vector<BYTE> bytes(14, 0);
+    bytes[0] = 0xFF;
+    bytes[1] = 0x25;
+    const std::uint64_t target = to;
+    std::memcpy(bytes.data() + 6, &target, sizeof(target));
     return bytes;
+}
+
+void CavePatch::FreeCave(MemoryAccess& mem)
+{
+    if (allocatedAddress)
+    {
+        mem.Free(allocatedAddress);
+        allocatedAddress = nullptr;
+    }
+    originalSize = 0;
 }
 
 bool CavePatch::Apply(MemoryAccess& mem)
 {
-    originalSize = 0;
+    lastError.clear();
 
-    if (!mem.IsValid()) return false;
+    if (!mem.IsValid()) return Fail("Процесс игры недоступен");
+
+    // Уже стоит — второй раз не ставим: иначе потеряли бы настоящий оригинал.
+    if (originalSize > 0) return true;
 
     const bool is64BitProcess = mem.IsTargetX64();
-    const uintptr_t scanSize = is64BitProcess ? 0x7FFFFFFFFFFFFFFF : 0x7FFFFFFF;
 
     // Код патча. Если он задан текстом — собираем ИМЕННО СЕЙЧАС, под
     // разрядность цели: одна и та же мнемоника кодируется по-разному.
     std::vector<BYTE> code;
     if (!patchAsm.empty())
     {
-        const AssembleResult assembled = Assembler::Assemble(patchAsm, is64BitProcess);
+        const AssembleResult assembled = Assembler::Assemble(patchAsm, is64BitProcess, 0, asmSyntax);
         if (!assembled.ok)
         {
-            Log::Error("Не удалось собрать патч: " + assembled.error);
-            return false;
+            return Fail("Ассемблер: " + assembled.error);
         }
         code.assign(assembled.bytes.begin(), assembled.bytes.end());
     }
     else
     {
-        code.assign(patchBytes, patchBytes + patchSize);
+        code = patchBytes;
     }
 
-    if (code.empty())
-    {
-        Log::Error("Патч пуст");
-        return false;
-    }
+    if (code.empty()) return Fail("Патч пуст");
 
-    const LPCWSTR moduleName = parent ? parent->GetModuleName() : nullptr;
-    const uintptr_t baseAddress = (moduleName && wcslen(moduleName) > 0)
-                                      ? mem.ModuleBase(moduleName)
-                                      : mem.ProcessBase();
-    if (!baseAddress)
-    {
-        Log::Error("Не удалось получить базовый адрес процесса");
-        return false;
-    }
+    const uintptr_t site = Locate(mem);
+    if (site == 0) return false;
 
-    patternAddress = mem.ScanSignature(baseAddress, scanSize, pattern.data(), mask);
-    if (!patternAddress)
-    {
-        // Раньше отсюда шли дальше с нулём и патчили по адресу patchOffset.
-        Log::Error("Сигнатура не найдена — патч не применён");
-        return false;
-    }
+    originalAddress = reinterpret_cast<LPVOID>(site);
 
-    patchAddress = static_cast<LPBYTE>(patternAddress) + patchOffset;
-    originalAddress = reinterpret_cast<LPVOID>(patchAddress);
-
-    originalBytes = static_cast<PBYTE>(mem.Read(originalAddress, PROBE_SIZE));
-    if (!originalBytes)
+    originalBytes = mem.ReadBytes(site, PROBE_SIZE);
+    if (originalBytes.empty())
     {
-        Log::Error("Не удалось прочитать оригинальные байты");
-        return false;
+        return Fail("Не удалось прочитать оригинальные байты");
     }
 
     // Кейв рядом с целью — тогда хватит короткого прыжка и красть придётся
     // меньше инструкций.
-    allocatedAddress = mem.AllocNear(reinterpret_cast<uintptr_t>(originalAddress), CAVE_SIZE);
+    allocatedAddress = mem.AllocNear(site, CAVE_SIZE);
     if (!allocatedAddress)
     {
-        Log::Error("Не удалось выделить память под кейв");
-        return false;
+        return Fail("Не удалось выделить память под кейв");
     }
 
-    const auto freeCave = [&]()
-    {
-        if (allocatedAddress)
-        {
-            mem.Free(allocatedAddress, CAVE_SIZE);
-            allocatedAddress = nullptr;
-        }
-        originalSize = 0;
-    };
-
-    BYTE jmpSize = 0;
-    const std::unique_ptr<BYTE[]> jmpBytes(CalculateJumpBytes(originalAddress, allocatedAddress, jmpSize));
+    const uintptr_t cave = reinterpret_cast<uintptr_t>(allocatedAddress);
+    const std::vector<BYTE> jmpBytes = CalculateJumpBytes(site, cave, is64BitProcess);
 
     // --- Пролог и эпилог: спасаем регистры, которые портит патч ---
     //
@@ -179,27 +148,22 @@ bool CavePatch::Apply(MemoryAccess& mem)
     }
 
     // Куда в кейве лягут перенесённые оригинальные инструкции.
-    const uintptr_t stolenAtCave = reinterpret_cast<uintptr_t>(allocatedAddress)
-                                 + prologue.size() + code.size() + epilogue.size();
+    const uintptr_t stolenAtCave = cave + prologue.size() + code.size() + epilogue.size();
 
     // Сколько ЦЕЛЫХ инструкций займёт прыжок — считает Zydis.
-    // Раньше это делал длино-дизассемблер, который на непонятных байтах
-    // возвращал 0: счётчик не двигался и цикл висел вечно.
     std::vector<BYTE> relocated;
     size_t stolen = 0;
 
     if (mode == CaveMode::KeepOriginal)
     {
         const RelocationResult reloc = Relocator::Relocate(
-            reinterpret_cast<uintptr_t>(originalAddress),
-            originalBytes, PROBE_SIZE,
-            is64BitProcess, stolenAtCave, jmpSize);
+            site, originalBytes.data(), originalBytes.size(),
+            is64BitProcess, stolenAtCave, jmpBytes.size());
 
         if (!reloc.ok)
         {
-            freeCave();
-            Log::Error("Патч невозможен: " + reloc.error);
-            return false;
+            FreeCave(mem);
+            return Fail("Патч невозможен: " + reloc.error);
         }
 
         relocated = reloc.bytes;
@@ -211,21 +175,19 @@ bool CavePatch::Apply(MemoryAccess& mem)
         // граница. Отдельный путь, чтобы не отказывать из-за инструкции,
         // которую мы всё равно не переносим.
         std::string error;
-        if (!Relocator::Measure(originalBytes, PROBE_SIZE, is64BitProcess, jmpSize, stolen, error))
+        if (!Relocator::Measure(originalBytes.data(), originalBytes.size(), is64BitProcess,
+                                jmpBytes.size(), stolen, error))
         {
-            freeCave();
-            Log::Error("Патч невозможен: " + error);
-            return false;
+            FreeCave(mem);
+            return Fail("Патч невозможен: " + error);
         }
     }
 
     if (stolen == 0 || stolen > PROBE_SIZE || stolen > 0xFF)
     {
-        freeCave();
-        return false;
+        FreeCave(mem);
+        return Fail("Не удалось определить границу инструкций на месте патча");
     }
-
-    originalSize = static_cast<BYTE>(stolen);
 
     // --- Сборка кейва ---
     //
@@ -234,86 +196,66 @@ bool CavePatch::Apply(MemoryAccess& mem)
     //   pop  их же
     //   перенесённые оригинальные инструкции   (только в режиме KeepOriginal)
     //   прыжок обратно — на адрес сразу за украденными байтами
-    std::vector<BYTE> cave;
-    cave.insert(cave.end(), prologue.begin(), prologue.end());
-    cave.insert(cave.end(), code.begin(), code.end());
-    cave.insert(cave.end(), epilogue.begin(), epilogue.end());
-    cave.insert(cave.end(), relocated.begin(), relocated.end());
+    std::vector<BYTE> caveCode;
+    caveCode.insert(caveCode.end(), prologue.begin(), prologue.end());
+    caveCode.insert(caveCode.end(), code.begin(), code.end());
+    caveCode.insert(caveCode.end(), epilogue.begin(), epilogue.end());
+    caveCode.insert(caveCode.end(), relocated.begin(), relocated.end());
 
-    BYTE backSize = 0;
-    const std::unique_ptr<BYTE[]> backJmp(CalculateJumpBytes(
-        static_cast<PBYTE>(allocatedAddress) + cave.size(),
-        static_cast<PBYTE>(originalAddress) + originalSize,
-        backSize));
+    const std::vector<BYTE> backJmp = CalculateJumpBytes(cave + caveCode.size(), site + stolen, is64BitProcess);
+    caveCode.insert(caveCode.end(), backJmp.begin(), backJmp.end());
 
-    cave.insert(cave.end(), backJmp.get(), backJmp.get() + backSize);
-
-    if (cave.size() > CAVE_SIZE)
+    if (caveCode.size() > CAVE_SIZE)
     {
-        freeCave();
-        Log::Error("Кейв не помещается в выделенный блок");
-        return false;
+        FreeCave(mem);
+        return Fail("Кейв не помещается в выделенный блок");
     }
 
-    if (!mem.Write(allocatedAddress, cave.data(), cave.size()))
+    if (!mem.Write(allocatedAddress, caveCode.data(), caveCode.size()))
     {
-        freeCave();
-        Log::Error("Не удалось записать кейв");
-        return false;
+        FreeCave(mem);
+        return Fail("Не удалось записать кейв");
     }
 
     // --- На месте патча: прыжок, остаток добиваем NOP-ами ---
-    std::vector<BYTE> site(originalSize, 0x90);
-    std::memcpy(site.data(), jmpBytes.get(), jmpSize);
+    std::vector<BYTE> siteBytes(stolen, 0x90);
+    std::memcpy(siteBytes.data(), jmpBytes.data(), jmpBytes.size());
 
-    if (!mem.Write(originalAddress, site.data(), site.size()))
+    if (!mem.Write(site, siteBytes.data(), siteBytes.size()))
     {
-        freeCave();
-        Log::Error("Не удалось записать прыжок на месте патча");
-        return false;
+        FreeCave(mem);
+        return Fail("Не удалось записать прыжок на месте патча");
     }
 
+    originalSize = static_cast<BYTE>(stolen);
     return true;
 }
 
 bool CavePatch::Restore(MemoryAccess& mem)
 {
-    // Возвращаем оригинальные байты
-    if (mem.IsValid() && originalAddress && originalAddress != INVALID_HANDLE_VALUE && originalSize > 0)
+    if (originalSize == 0) return true; // не стоит — откатывать нечего
+
+    bool ok = true;
+
+    if (mem.IsAlive())
     {
-        DWORD exitCode;
-        if (GetExitCodeProcess(mem.Handle(), &exitCode) && exitCode == STILL_ACTIVE)
+        // Сначала возвращаем код игры и только потом освобождаем кейв:
+        // в обратном порядке игра могла бы прыгнуть в уже освобождённую память.
+        if (originalAddress && !originalBytes.empty())
         {
-            MEMORY_BASIC_INFORMATION mbi;
-            if (VirtualQueryEx(mem.Handle(), (LPCVOID)originalAddress, &mbi, sizeof(mbi)) != 0)
-            {
-                if (mbi.State == MEM_COMMIT)
-                {
-                    mem.Write(originalAddress, originalBytes, originalSize);
-                }
-            }
+            ok = mem.Write(originalAddress, originalBytes.data(), originalSize);
+            if (!ok) Fail("Не удалось вернуть оригинальные байты");
         }
+
+        // Кейв освобождаем, только если код вернулся: иначе прыжок остался
+        // бы в пустоту.
+        if (ok) FreeCave(mem);
     }
-
-    // Освобождаем кейв
-    if (mem.IsValid() && allocatedAddress && allocatedAddress != INVALID_HANDLE_VALUE)
+    else
     {
-        DWORD exitCode;
-        if (GetExitCodeProcess(mem.Handle(), &exitCode) && exitCode == STILL_ACTIVE)
-        {
-            MEMORY_BASIC_INFORMATION mbi;
-            if (VirtualQueryEx(mem.Handle(), (LPCVOID)allocatedAddress, &mbi, sizeof(mbi)) != 0)
-            {
-                if (mbi.State == MEM_COMMIT)
-                {
-                    mem.Free(allocatedAddress, CAVE_SIZE);
-                }
-            }
-        }
-
-        allocatedAddress = nullptr;
+        allocatedAddress = nullptr; // процесса нет — и памяти его нет
     }
 
     originalSize = 0;
-    return true;
+    return ok;
 }

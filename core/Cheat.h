@@ -1,75 +1,53 @@
 #pragma once
 #include <Windows.h>
-#include <vector>
+#include <atomic>
 #include <string>
-#include <map>
 #include <thread>
-#include "cheats/CheatOption.h"
-#include "core/Memory_Functions.h"
+#include <vector>
 
-class CheatOption; // Предварительное объявление класса CheatOption
+class CheatOption;
 
+// Процесс-цель и фоновый поток трейнера.
+//
+// Поток ищет игру, следит, жива ли она, опрашивает горячие клавиши и тикает
+// опции (автовыключение, заморозка значений).
+//
+// Раньше поток был detached и продолжал работать после уничтожения
+// объекта; теперь он принадлежит объекту и дожидается в Stop()/деструкторе.
 class Cheat
 {
-	std::vector<CheatOption*> options;
-	std::map<LPCWSTR, bool> m_optionsState;
-	LPCWSTR _processName = NULL;
-	int processId = 0;
+	std::wstring _processName;
+	std::vector<CheatOption*> _options;
 
-	static DWORD WINAPI ProcessorStarter(void* param) 
-	{
-		Cheat* that = reinterpret_cast<Cheat*>(param);
-		that->ProcessorOptions();
-		return 0;
-	}
+	std::atomic<DWORD> _processId{ 0 };
+	std::atomic<bool> _isX64{ false };
+	std::atomic<bool> _running{ false };
+	std::atomic<bool> _accessDenied{ false };
+	std::thread _thread;
 
-	bool isRunning = false;
-	void ProcessorOptions();
+	void Run();
+
 public:
-	void OpenConsole();
-	void ImGuiOpenConsole();
-	void StopCheat();
-	void DisableAllFunctionMem();
+	explicit Cheat(std::wstring processName) : _processName(std::move(processName)) {}
+	~Cheat() { Stop(); }
 
-	Cheat(LPCWSTR processName) : _processName(processName) 
-	{
-	}
+	Cheat(const Cheat&) = delete;
+	Cheat& operator=(const Cheat&) = delete;
 
-	void Start()
-	{
-		if (!isRunning) 
-		{
-			isRunning = true;
-			DWORD threadId;
-			CreateThread(NULL, 0, ProcessorStarter, this, NULL, &threadId);
-		}
-	}
+	// Опции подключаются до Start(): поток читает список без блокировки.
+	void AddCheatOption(CheatOption* option) { _options.push_back(option); }
 
-	void Stop() 
-	{
-		isRunning = false;
-	}
+	void Start();
+	void Stop();
 
-	std::map<LPCWSTR, bool>& GetCheatOptionState()
-	{
-		return m_optionsState;
-	}
+	LPCWSTR GetProcessName() const { return _processName.c_str(); }
+	DWORD GetProcessID() const { return _processId.load(); }
+	bool isProcessRunning() const { return _processId.load() != 0; }
 
-	LPCWSTR GetProcessName()
-	{
-		return _processName;
-	}
+	// Разрядность найденной игры (для строки состояния).
+	bool IsTargetX64() const { return _isX64.load(); }
 
-	bool isProcessRunning()
-	{
-		return processId;
-	}
-
-	DWORD GetProcessID() const
-	{
-		return processId;
-	}
-
-	int AddCheatOption(CheatOption* option);
-	void RemoveCheatOption(int index);
+	// Игра запущена, но открыть её не дали — обычно она запущена от
+	// администратора, а трейнер нет.
+	bool IsAccessDenied() const { return _accessDenied.load(); }
 };

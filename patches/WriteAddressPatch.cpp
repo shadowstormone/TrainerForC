@@ -4,73 +4,92 @@
 
 #include "cheats/CheatOption.h"
 #include "platform/Logger.h"
+#include "platform/Utils.h"
 
-uintptr_t WriteAddressPatch::ResolveAddress(MemoryAccess& mem) const
+std::size_t WriteAddressPatch::ValueSize(const PatchValue& value)
 {
-    if (offsets.empty()) return 0;
-
-    // Адрес уже абсолютный — база не прибавляется.
-    if (m_absolute) return offsets.back();
-
-    const LPCWSTR moduleName = parent ? parent->GetModuleName() : nullptr;
-    const DWORD_PTR base = (moduleName && wcslen(moduleName) > 0)
-                               ? mem.ModuleBase(moduleName)
-                               : mem.ProcessBase();
-    if (base == 0) return 0;
-
-    return mem.ResolveChain(base, offsets);
+    return std::visit([](const auto& v) { return sizeof(v); }, value);
 }
 
-bool WriteAddressPatch::Apply(MemoryAccess& mem)
+std::uintptr_t WriteAddressPatch::ResolveAddress(MemoryAccess& mem)
 {
-    // Процесс больше не открывается здесь: раньше патч игнорировал
-    // переданный дескриптор и делал собственный OpenProcess.
-    if (!mem.IsValid()) return false;
-    if (m_isApplied) return false;
+    if (m_offsets.empty()) return 0;
 
-    m_finalAddress = ResolveAddress(mem);
-    if (m_finalAddress == 0)
+    // Адрес уже абсолютный — база не прибавляется.
+    if (m_absolute) return m_offsets.back();
+
+    const std::wstring module = !m_module.empty() ? m_module
+                              : m_parent ? m_parent->GetModuleName()
+                              : std::wstring();
+
+    if (m_basePid != mem.Pid() || m_base == 0)
     {
-        Log::Error("Не удалось вычислить адрес для записи значения");
+        m_base = mem.ModuleOrMain(module).base;
+        m_basePid = mem.Pid();
+    }
+    if (m_base == 0) return 0;
+
+    return mem.ResolveChain(m_base, m_offsets);
+}
+
+bool WriteAddressPatch::WriteNow(MemoryAccess& mem, bool logErrors)
+{
+    const std::uintptr_t address = ResolveAddress(mem);
+    if (address == 0)
+    {
+        m_lastError = "Адрес не вычислился: цепочка указателей оборвалась "
+                      "(в игре ещё не загружен нужный объект?)";
+        if (logErrors) Log::Error(m_lastError);
+        return false;
+    }
+
+    const bool ok = std::visit([&](const auto& v) { return mem.WriteValue(address, v); }, m_value);
+    if (!ok)
+    {
+        m_lastError = std::format("Не удалось записать значение по адресу 0x{:X}", address);
+        if (logErrors) Log::Error(m_lastError);
         return false;
     }
 
 #ifdef _DEBUG
-    Log::Debug(std::format("Финальный адрес значения: 0x{:X}", m_finalAddress));
+    if (logErrors) Log::Debug(std::format("Значение записано по адресу 0x{:X}", address));
 #endif
 
-    const void* source = nullptr;
-    SIZE_T size = 0;
+    return true;
+}
 
-    switch (m_type)
-    {
-    case ValueType::Int:    source = &value;  size = sizeof(value);  break;
-    case ValueType::Float:  source = &fvalue; size = sizeof(fvalue); break;
-    case ValueType::Double: source = &dvalue; size = sizeof(dvalue); break;
-    }
+bool WriteAddressPatch::Apply(MemoryAccess& mem)
+{
+    m_lastError.clear();
 
-    SIZE_T written = 0;
-    if (!WriteProcessMemory(mem.Handle(), reinterpret_cast<LPVOID>(m_finalAddress), source, size, &written)
-        || written != size)
+    // Процесс больше не открывается здесь: раньше патч игнорировал
+    // переданный дескриптор и делал собственный OpenProcess.
+    if (!mem.IsValid())
     {
-        Log::Error("Не удалось записать значение в память");
+        m_lastError = "Процесс игры недоступен";
         return false;
     }
 
-    // Флаг ставим только при успехе: раньше он взводился до записи и врал,
-    // если запись не удалась.
-    m_isApplied = true;
+    if (!WriteNow(mem, true)) return false;
+
+    m_active = (m_mode == Mode::Freeze);
     return true;
+}
+
+void WriteAddressPatch::Tick(MemoryAccess& mem)
+{
+    if (!m_active) return;
+
+    // Молча: заморозка пишет 60 раз в секунду, и на экране загрузки, где
+    // объекта ещё нет, лог утонул бы в одинаковых сообщениях.
+    WriteNow(mem, false);
 }
 
 bool WriteAddressPatch::Restore(MemoryAccess& mem)
 {
-    // Это одноразовая запись значения: прежнее значение не сохранялось,
-    // поэтому «откат» лишь снимает флаг применённости.
+    // Прежнее значение не сохраняется намеренно: вернуть здоровье к тому,
+    // что было при включении заморозки, — не то, чего ждёт игрок.
     (void)mem;
-
-    if (!m_isApplied) return false;
-
-    m_isApplied = false;
+    m_active = false;
     return true;
 }

@@ -375,6 +375,9 @@
     <ClCompile Include="patches/NopPatch.cpp">
       <Filter>patches</Filter>
     </ClCompile>
+    <ClCompile Include="patches/Patch.cpp">
+      <Filter>patches</Filter>
+    </ClCompile>
     <ClCompile Include="patches/WriteAddressPatch.cpp">
       <Filter>patches</Filter>
     </ClCompile>
@@ -432,7 +435,10 @@
     <ClCompile Include="platform/KeyNames.cpp">
       <Filter>platform</Filter>
     </ClCompile>
-    <ClCompile Include="tests/Errors_test.cpp">
+    <ClCompile Include="tests/Memory_test.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tests/TestMain.cpp">
       <Filter>tests</Filter>
     </ClCompile>
     <ClCompile Include="tests/CheatRegistry_test.cpp">

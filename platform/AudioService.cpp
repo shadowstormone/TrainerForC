@@ -230,6 +230,9 @@ void AudioService::Shutdown()
 
 void AudioService::Play(Sound sound)
 {
+    // Выключенный звук не поднимает движок вовсе: так его можно заглушить
+    // заранее (тесты, машины без звуковой карты).
+    if (!_enabled) return;
     if (!_impl && !Initialize()) return;
     if (!_impl->enabled) return;
 
@@ -270,13 +273,13 @@ void AudioService::Play(Sound sound)
 
 void AudioService::SetEnabled(bool enabled)
 {
-    if (!_impl && !Initialize()) return;
-    _impl->enabled = enabled;
+    _enabled = enabled;
+    if (_impl) _impl->enabled = enabled;
 }
 
 bool AudioService::IsEnabled() const
 {
-    return _impl ? _impl->enabled : true;
+    return _enabled;
 }
 
 void AudioService::SetVolume(float volume)
