@@ -21,8 +21,6 @@ bool showConsole = false;
 
 namespace
 {
-    bool isKeyHold = false;
-
     // Палитра панели. Акцент берётся из темы (CheckMark), остальное — здесь,
     // чтобы строки, статус и уведомления говорили одним языком цветов.
     const ImVec4 kMuted(0.56f, 0.59f, 0.64f, 1.0f);
@@ -67,6 +65,8 @@ namespace
 }
 
 #ifdef _DEBUG
+static bool isKeyHold = false;
+
 static void ImGuiDebugConsoleActivation()
 {
     // Клавиша ` открывает консоль, только когда окно трейнера активно:
@@ -522,8 +522,14 @@ void MainView::RenderToggles(const Columns& columns)
             draw->AddText(ImVec2(tagMin.x + 6.0f, tagMin.y + 1.0f), U32(tagColor, 0.9f), tag.c_str());
         }
 
-        // --- значок ошибки ---
-        if (showError)
+        // --- идёт включение / значок ошибки ---
+        if (option->IsBusy())
+        {
+            const float size = ImGui::GetTextLineHeight();
+            ImGui::SetCursorScreenPos(ImVec2(winX + columns.right - size, centerY - size * 0.5f));
+            UIControls::Spinner("##busy", size, U32(accent));
+        }
+        else if (showError)
         {
             const float size = ImGui::GetTextLineHeight();
             ImGui::SetCursorScreenPos(ImVec2(winX + columns.right - size, centerY - size * 0.5f));
@@ -631,18 +637,19 @@ void MainView::RenderInputFields(const Columns& columns)
         const double step = (type == ImGuiDataType_Float || type == ImGuiDataType_Double) ? 0.1 : 1.0;
 
         ImGui::SetCursorPos(ImVec2(stepperX, frameY));
+        bool submit = false;
         std::visit([&](auto& v)
         {
             using T = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<T, std::int32_t> || std::is_same_v<T, float>
                        || std::is_same_v<T, double> || std::is_same_v<T, std::int64_t>)
             {
-                UIControls::ValueStepper("##stepper", type, &v, step, stepperWidth);
+                UIControls::ValueStepper("##stepper", type, &v, step, stepperWidth, &submit);
             }
             else
             {
                 int proxy = static_cast<int>(v);
-                if (UIControls::ValueStepper("##stepper", ImGuiDataType_S32, &proxy, 1.0, stepperWidth))
+                if (UIControls::ValueStepper("##stepper", ImGuiDataType_S32, &proxy, 1.0, stepperWidth, &submit))
                     v = static_cast<T>(proxy);
             }
         }, field.value);
@@ -650,7 +657,7 @@ void MainView::RenderInputFields(const Columns& columns)
         ImGui::SetCursorPos(ImVec2(buttonX, frameY));
 
         // Enter в поле — то же, что кнопка.
-        const bool submit = ImGui::Button("Записать", ImVec2(buttonWidth, 0.0f));
+        if (ImGui::Button("Записать", ImVec2(buttonWidth, 0.0f))) submit = true;
         if (submit) WriteValueField(field);
 
         ImGui::SetCursorScreenPos(rowPos);

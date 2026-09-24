@@ -53,6 +53,9 @@ private:
 	mutable std::mutex m_errorMutex;
 	void SetLastError(std::string error);
 
+	// Сколько запросов на переключение ждут фонового потока.
+	std::atomic<int> m_pending{ 0 };
+
 	// Когда последний раз не удалось включить: UI подсвечивает строку.
 	std::atomic<long long> m_failedAtTicks{ 0 };
 
@@ -109,6 +112,11 @@ public:
 
 	// Игра закрылась: забыть всё о прежнем процессе, память не трогать.
 	void OnProcessLost();
+
+	// Запрос на переключение отправлен в фоновый поток и ещё не выполнен.
+	void BeginPending() { ++m_pending; }
+	void EndPending() { --m_pending; }
+	bool IsBusy() const { return m_pending.load() > 0; }
 
 	// --- Сведения для UI ---
 

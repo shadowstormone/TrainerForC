@@ -1,6 +1,7 @@
 #include "core/Cheat.h"
 
 #include <chrono>
+#include <exception>
 #include <format>
 #include <memory>
 
@@ -29,6 +30,45 @@ void Cheat::Stop()
 {
 	_running = false;
 	if (_thread.joinable()) _thread.join();
+
+	// Что не успело выполниться — выполняем здесь: щелчок, сделанный перед
+	// самым закрытием, не должен потеряться.
+	RunPostedTasks();
+}
+
+void Cheat::Post(std::function<void()> task)
+{
+	if (!task) return;
+
+	if (!_running)
+	{
+		task();
+		return;
+	}
+
+	std::lock_guard lock(_tasksMutex);
+	_tasks.push_back(std::move(task));
+}
+
+void Cheat::RunPostedTasks()
+{
+	std::vector<std::function<void()>> tasks;
+	{
+		std::lock_guard lock(_tasksMutex);
+		tasks.swap(_tasks);
+	}
+
+	for (auto& task : tasks)
+	{
+		try
+		{
+			task();
+		}
+		catch (const std::exception& e)
+		{
+			Log::Error(std::string("Фоновая задача упала: ") + e.what());
+		}
+	}
 }
 
 void Cheat::Run()
@@ -78,6 +118,8 @@ void Cheat::Run()
 				}
 			}
 		}
+
+		RunPostedTasks();
 
 		const DWORD pid = _processId.load();
 		for (CheatOption* option : _options)

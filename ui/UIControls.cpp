@@ -182,6 +182,22 @@ bool UIControls::ErrorBadge(const char* id, const std::string& tooltip, float pu
     return hovered;
 }
 
+void UIControls::Spinner(const char* id, float size, ImU32 color)
+{
+    const ImVec2 p = ImGui::GetCursorScreenPos();
+    ImGui::Dummy(ImVec2(size, size));
+    (void)id;
+
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    const ImVec2 c(p.x + size * 0.5f, p.y + size * 0.5f);
+    const float r = size * 0.38f;
+    const float start = static_cast<float>(ImGui::GetTime()) * 7.0f;
+
+    draw->PathClear();
+    draw->PathArcTo(c, r, start, start + 4.2f, 20);
+    draw->PathStroke(color, ImDrawFlags_None, (std::max)(1.5f, size * 0.12f));
+}
+
 void UIControls::StatusDot(const ImVec2& center, float radius, ImU32 color, float pulse)
 {
     ImDrawList* draw = ImGui::GetWindowDrawList();
@@ -196,7 +212,8 @@ void UIControls::StatusDot(const ImVec2& center, float radius, ImU32 color, floa
     draw->AddCircleFilled(center, radius, color);
 }
 
-bool UIControls::ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width)
+bool UIControls::ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width,
+                              bool* submitted)
 {
     if (!value) return false;
 
@@ -233,6 +250,13 @@ bool UIControls::ValueStepper(const char* id, ImGuiDataType type, void* value, d
 
     const char* format = (type == ImGuiDataType_Float || type == ImGuiDataType_Double) ? "%.3f" : nullptr;
     if (ImGui::InputScalar("##value", type, value, nullptr, nullptr, format)) changed = true;
+
+    // Enter в поле — то же, что кнопка рядом.
+    if (submitted && (ImGui::IsItemActive() || ImGui::IsItemDeactivated())
+        && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
+    {
+        *submitted = true;
+    }
 
     ImGui::SameLine();
     if (ImGui::ArrowButton("##inc", ImGuiDir_Right)) nudge(1.0);

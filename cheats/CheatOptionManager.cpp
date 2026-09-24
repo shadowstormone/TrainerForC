@@ -52,7 +52,20 @@ std::vector<CheatOption*> CheatOptionManager::GetAllOptions() const
 void CheatOptionManager::SetEnabled(CheatOption* option, bool enabled)
 {
     if (!option) return;
-    option->SetEnabled(enabled, _cheatProcess ? _cheatProcess->GetProcessID() : 0);
+
+    if (!_cheatProcess)
+    {
+        option->SetEnabled(enabled, 0);
+        return;
+    }
+
+    // Само включение — в фоновом потоке, окно тем временем рисует индикатор.
+    option->BeginPending();
+    _cheatProcess->Post([option, enabled, process = _cheatProcess]()
+    {
+        option->SetEnabled(enabled, process->GetProcessID());
+        option->EndPending();
+    });
 }
 
 CheatOption* CheatOptionManager::GetOption(std::size_t index) const

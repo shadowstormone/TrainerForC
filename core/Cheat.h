@@ -1,6 +1,8 @@
 #pragma once
 #include <Windows.h>
 #include <atomic>
+#include <functional>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -25,7 +27,11 @@ class Cheat
 	std::atomic<bool> _accessDenied{ false };
 	std::thread _thread;
 
+	std::mutex _tasksMutex;
+	std::vector<std::function<void()>> _tasks;
+
 	void Run();
+	void RunPostedTasks();
 
 public:
 	explicit Cheat(std::wstring processName) : _processName(std::move(processName)) {}
@@ -39,6 +45,12 @@ public:
 
 	void Start();
 	void Stop();
+
+	// Выполнить задачу в фоновом потоке. Так включение чита по щелчку
+	// не держит окно: первый поиск сигнатуры в большой игре занимает
+	// заметное время, и раньше интерфейс на это время замирал.
+	// Если поток не запущен — задача выполняется сразу.
+	void Post(std::function<void()> task);
 
 	LPCWSTR GetProcessName() const { return _processName.c_str(); }
 	DWORD GetProcessID() const { return _processId.load(); }

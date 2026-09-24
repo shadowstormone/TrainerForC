@@ -11,7 +11,9 @@ namespace UIControls
     // Стрелки меняют значение шагом step и повторяются при удержании,
     // само поле остаётся редактируемым — вводить 999999 стрелками никто
     // не станет. Тип значения — любой из ImGuiDataType (int, float, double).
-    bool ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width);
+    // submitted — выставляется в true, если в поле нажали Enter.
+    bool ValueStepper(const char* id, ImGuiDataType type, void* value, double step, float width,
+                      bool* submitted = nullptr);
 
     // Для int — прежняя форма с границами.
     bool ValueStepper(const char* id, int* value, int step, int minValue, int maxValue, float width);
@@ -30,6 +32,9 @@ namespace UIControls
     // Круглый значок «!» — ошибка; подсказка с причиной при наведении.
     // Возвращает true, если на него навели.
     bool ErrorBadge(const char* id, const std::string& tooltip, float pulse = 0.0f);
+
+    // Крутящаяся дуга «идёт работа» в квадрате size x size.
+    void Spinner(const char* id, float size, ImU32 color);
 
     // Точка состояния с мягким свечением. pulse 0..1 — фаза пульсации.
     void StatusDot(const ImVec2& center, float radius, ImU32 color, float pulse = 0.0f);

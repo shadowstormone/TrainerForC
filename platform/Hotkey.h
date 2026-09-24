@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <vector>
 
 // Одна горячая комбинация клавиш.
@@ -29,4 +30,12 @@ public:
 
     // true ровно один раз на каждое нажатие комбинации.
     bool JustPressed();
+
+    // Заглушить все горячие клавиши, пока в окне трейнера вводят текст:
+    // иначе число, набранное на цифровой клавиатуре в поле значения,
+    // переключало читы на Num 1..Num 9.
+    static void SetSuppressed(bool suppressed) { s_suppressed = suppressed; }
+
+private:
+    static inline std::atomic<bool> s_suppressed{ false };
 };

@@ -4,7 +4,9 @@
  * @details Содержит реализацию класса UI и вспомогательных классов для работы с DirectX 11, ImGui и системными ресурсами
  */
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include "resource.h"
 #include "platform/Logger.h"
 #include "ui/UI.h"
@@ -14,6 +16,7 @@
 #include "ui/ImGuiThemes.h"
 #include "ui/ImGuiConsole.h"
 #include "ui/Window.h"
+#include "platform/Hotkey.h"
 #include <imgui_internal.h>
 #include <shlobj.h>
 #include <KnownFolders.h>
@@ -684,6 +687,9 @@ void UI::RenderLoop(Window& window, D3DContext& d3d, MainView& view, ConsoleWind
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
+
+        // Пока в поле значения набирают число, горячие клавиши молчат.
+        Hotkey::SetSuppressed(io.WantTextInput && ::GetForegroundWindow() == window.Handle());
 
         // Плавное появление с замедлением к концу.
         const float fade = fadeAnimation.getAlpha();
