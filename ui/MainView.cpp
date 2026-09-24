@@ -607,68 +607,103 @@ void MainView::RenderInputFields(const Columns& columns)
     if (_valueFields.empty()) return;
 
     const ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    const float winX = ImGui::GetWindowPos().x;
 
-    // Раздел «Значения» — продолжение той же таблицы, с подписью.
-    ImGui::Dummy(ImVec2(0.0f, 4.0f));
-    ImGui::SetCursorPosX(columns.key);
-    ImGui::TextColored(kMuted, "Значения");
-    ImGui::SameLine();
+    // Раздел «Значения» — продолжение той же таблицы: подпись в колонке
+    // клавиш и линия до правого края.
+    ImGui::Dummy(ImVec2(0.0f, Layout::Px(4.0f)));
     {
         const ImVec2 p = ImGui::GetCursorScreenPos();
-        const float y = p.y + ImGui::GetTextLineHeight() * 0.5f;
-        ImGui::GetWindowDrawList()->AddLine(ImVec2(p.x + 4.0f, y), ImVec2(ImGui::GetWindowPos().x + columns.right, y),
-                                            ImGui::GetColorU32(ImGuiCol_Separator), 1.0f);
-        ImGui::NewLine();
+        const float lineH = ImGui::GetTextLineHeight();
+        draw->AddText(ImVec2(winX + columns.key, p.y), U32(kMuted), "Значения");
+        const float textW = ImGui::CalcTextSize("Значения").x;
+        draw->AddLine(ImVec2(winX + columns.key + textW + Layout::Px(10.0f), p.y + lineH * 0.5f),
+                      ImVec2(winX + columns.right, p.y + lineH * 0.5f),
+                      ImGui::GetColorU32(ImGuiCol_Separator), 1.0f);
+        ImGui::Dummy(ImVec2(0.0f, lineH + Layout::Px(2.0f)));
     }
 
-    const float buttonWidth = ImGui::CalcTextSize("Записать").x + style.FramePadding.x * 2.0f;
-    const float stepperWidth = Layout::InputWidth();
-
-    const float buttonX = columns.right - buttonWidth;
-    const float stepperX = buttonX - style.ItemSpacing.x - stepperWidth;
-
+    // Строка значения устроена так же, как строка чита:
+    //   [колонка клавиш] [плашка типа на месте переключателя] Название ... [− 100 +] [Записать]
+    // Высота элементов управления — та же, что у строки, без «прыгающих»
+    // стандартных кнопок ImGui другой высоты.
     const float itemH = Layout::RowHeight();
     const float rowH = itemH + Layout::Px(ROW_PAD_Y) * 2.0f;
     const float rowGap = Layout::Px(ROW_GAP);
+    const float controlH = ImGui::GetFrameHeight();
+
+    const float buttonW = ImGui::CalcTextSize("Записать").x + Layout::Px(24.0f);
+    const float fieldW = Layout::InputWidth();
+    const float buttonX = columns.right - buttonW;
+    const float fieldX = buttonX - Layout::Px(8.0f) - fieldW;
 
     for (InputFieldView& field : _valueFields)
     {
         ImGui::PushID(&field);
 
         const ImVec2 rowPos = ImGui::GetCursorScreenPos();
-        const float frameY = ImGui::GetCursorPosY() + (rowH - ImGui::GetFrameHeight()) * 0.5f;
+        const ImVec2 rowMin(winX + columns.key - Layout::Px(6.0f), rowPos.y);
+        const ImVec2 rowMax(winX + columns.right + Layout::Px(6.0f), rowPos.y + rowH);
+        const float centerY = rowPos.y + rowH * 0.5f;
 
-        ImGui::SetCursorPos(ImVec2(columns.name, frameY));
-        ImGui::AlignTextToFramePadding();
-        Layout::RowLabel(field.label, stepperX - columns.name - style.ItemSpacing.x, style.Colors[ImGuiCol_Text]);
-        if (!field.hint.empty() && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", field.hint.c_str());
+        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
+            && ImGui::IsMouseHoveringRect(rowMin, rowMax))
+        {
+            draw->AddRectFilled(rowMin, rowMax, IM_COL32(255, 255, 255, 10), Layout::Px(6.0f));
+        }
 
-        // Поле показывает тип значения: у дробного — дробный шаг.
+        // Тип поля — на месте переключателя: столбец не рвётся, и видно,
+        // что поле ждёт дробь, а не целое.
         const ImGuiDataType type = DataTypeOf(field.value);
-        const double step = (type == ImGuiDataType_Float || type == ImGuiDataType_Double) ? 0.1 : 1.0;
+        const bool fractional = (type == ImGuiDataType_Float || type == ImGuiDataType_Double);
+        const char* typeName = type == ImGuiDataType_Float ? "FLOAT"
+                             : type == ImGuiDataType_Double ? "DOUBLE"
+                             : type == ImGuiDataType_S64 ? "INT64" : "INT";
 
-        ImGui::SetCursorPos(ImVec2(stepperX, frameY));
+        ImGui::SetCursorScreenPos(ImVec2(winX + columns.toggle, centerY - Layout::ToggleHeight() * 0.5f));
+        UIControls::TagPill(typeName, ImVec2(Layout::ToggleWidth(), Layout::ToggleHeight()));
+
+        // Название — в той же колонке и тем же цветом, что названия читов.
+        const float nameW = fieldX - columns.name - Layout::Px(12.0f);
+        const std::string shown = Layout::FitText(field.label, nameW);
+        draw->AddText(ImVec2(winX + columns.name, centerY - ImGui::GetTextLineHeight() * 0.5f),
+                      U32(UIControls::Mix(style.Colors[ImGuiCol_Text], kMuted, 0.25f)), shown.c_str());
+
+        ImGui::SetCursorScreenPos(ImVec2(winX + columns.name, rowPos.y));
+        ImGui::InvisibleButton("##label", ImVec2((std::max)(1.0f, nameW), rowH));
+        if (ImGui::IsItemHovered() && (shown != field.label || !field.hint.empty()))
+        {
+            ImGui::BeginTooltip();
+            if (shown != field.label) ImGui::TextUnformatted(field.label.c_str());
+            if (!field.hint.empty()) ImGui::TextColored(kMuted, "%s", field.hint.c_str());
+            ImGui::EndTooltip();
+        }
+
+        // Поле «− значение +».
         bool submit = false;
+        const double step = fractional ? 0.1 : 1.0;
+        ImGui::SetCursorScreenPos(ImVec2(winX + fieldX, centerY - controlH * 0.5f));
+
         std::visit([&](auto& v)
         {
             using T = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<T, std::int32_t> || std::is_same_v<T, float>
                        || std::is_same_v<T, double> || std::is_same_v<T, std::int64_t>)
             {
-                UIControls::ValueStepper("##stepper", type, &v, step, stepperWidth, &submit);
+                UIControls::NumberField("##value", type, &v, step, ImVec2(fieldW, controlH), &submit);
             }
             else
             {
                 int proxy = static_cast<int>(v);
-                if (UIControls::ValueStepper("##stepper", ImGuiDataType_S32, &proxy, 1.0, stepperWidth, &submit))
+                if (UIControls::NumberField("##value", ImGuiDataType_S32, &proxy, 1.0, ImVec2(fieldW, controlH), &submit))
                     v = static_cast<T>(proxy);
             }
         }, field.value);
 
-        ImGui::SetCursorPos(ImVec2(buttonX, frameY));
+        ImGui::SetCursorScreenPos(ImVec2(winX + buttonX, centerY - controlH * 0.5f));
+        if (UIControls::AccentButton("##write", "Записать", ImVec2(buttonW, controlH))) submit = true;
 
-        // Enter в поле — то же, что кнопка.
-        if (ImGui::Button("Записать", ImVec2(buttonWidth, 0.0f))) submit = true;
         if (submit) WriteValueField(field);
 
         ImGui::SetCursorScreenPos(rowPos);
