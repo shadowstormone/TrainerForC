@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "ui/MainView.h"
 
 #include <algorithm>
